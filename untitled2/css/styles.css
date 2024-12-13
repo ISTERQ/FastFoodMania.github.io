@@ -1,0 +1,302 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Caveat, sans-serif;
+  margin: 0;
+  background-color: #D5CDBF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 80px; /* Отступ для основного контента, чтобы видна была область заголовка */
+}
+
+header {
+  background-color: #f2ad6d; /* Цвет заголовка */
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+  position: fixed; /* Закрепляет заголовок вверху страницы */
+  top: 0; /* Расположение заголовка */
+  left: 0; /* Отступ слева */
+  z-index: 1000; /* Задает уровень наложения, чтобы он был выше остальных элементов */
+}
+
+
+body {
+  font-family: 'CustomFontName', Arial, sans-serif;
+}
+
+.menu-grid {
+  display: flex;
+  flex-wrap: wrap; /* Позволяем элементам переходить на новую строку */
+  justify-content: center; /* Центрируем элементы по горизонтали */
+  margin-top: 20px; /* Отступ сверху */
+}
+
+.menu-item {
+  background-color: #D3975F; /* Цвет фона карточки */
+  border: 1px solid #f2ad6d; /* Цвет рамки */
+  border-radius: 30px; /* Скругление углов */
+  margin: 15px; /* Отступы между карточками */
+  padding: 10px; /* Внутренние отступы */
+  box-shadow: 0 2px 5px rgba(251, 0, 0, 0.1); /* Тень карточек */
+  transition: transform 0.2s; /* Плавный эффект при наведении */
+}
+
+.menu-card:hover {
+  transform: scale(1.05); /* Увеличение карточки при наведении */
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: row; /* Расположение элементов по вертикали */
+  align-items: center; /* Центрирование по горизонтали */
+}
+
+.menu-items div {
+  text-align: center; /* Центрируем текст в карточке */
+}
+
+.menu-items img {
+  border-radius: 8px; /* Скругление углов изображения */
+  max-width: 100%; /* Адаптация изображения под размер карточки */
+  height: auto; /* Автоматическая высота пропорционально ширине */
+}
+
+h1,h2, h3, h4, h5, h6 {
+  margin: 15px 0; /* Отступы для заголовков секций */
+  text-align: center; /* Центрируем текст заголовков */
+}
+
+.menu-card {
+  background-color: #DAD4CB; /* Белый фон для карточки */
+  border: 1px solid #461E11; /* Серый бордер */
+  border-radius: 10px; /* Закругленные углы */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для эффекта глубины */
+  width: 300px; /* Ширина карточки */
+  margin: 20px; /* Отступы вокруг карточки */
+  overflow: hidden; /* Скрыть выходящий контент */
+  font-family: Caveat, sans-serif; /* Шрифт для текста */
+  text-align: center; /* Центровка текста */
+}
+
+.menu-card img {
+  width: 100%; /* Полная ширина изображения */
+  height: auto; /* Автоматическая высота */
+}
+
+.menu-card h4 {
+  margin: 15px 0 10px 0; /* Отступы вокруг заголовка */
+  font-size: 1.5em; /* Размер шрифта */
+  color: #333; /* Цвет текста */
+}
+
+.menu-card p {
+  margin: 0 15px 15px 15px; /* Отступы вокруг описания */
+  font-size: 1em; /* Размер шрифта */
+  color: #461e11; /* Цвет текста описания */
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+.mySlides {
+  display: none; /* Скрывает неактивные слайды */
+  opacity: 0; /* Начальная непрозрачность */
+  transform: translateY(10px); /* Начальная позиция немного ниже */
+  transition: opacity 1s ease-in-out, transform 1s ease-in-out; /* Плавный переход для непрозрачности и позиции */
+}
+
+.mySlides.active {
+  display: block; /* Показывает активный слайд */
+  opacity: 1; /* Полная непрозрачность */
+  transform: translateY(0); /* Возвращаем начальное положение */
+}
+
+img {
+  width: 100vw;
+  height: auto;
+  vertical-align: middle;
+}
+.slideshow-container {
+  position: relative;
+  margin: 150px auto auto;
+}
+.nav-buttons {
+  margin-top: 10px; /* Отступ сверху */
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* Пробел между кнопками */
+}
+
+.nav-button {
+  text-decoration: none;
+  color: #fff;
+  padding: 10px 15px;
+  background-color: #5a3932; /* Цвет фона */
+  border-radius: 20px; /* Закругленные углы */
+  transition: background-color 0.3s;
+}
+
+.nav-button:hover {
+  background-color: #c0392b; /* Цвет при наведении */
+}
+
+/* Стиль для кнопки "Войти" */
+#loginButton {
+  font-weight: bold; /* Сделаем текст жирным */
+  margin-left: 60px; /* Добавим отступ слева к кнопке "Войти" */
+}
+.icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.divider {
+  width: 100%; /* Ширина полосы */
+  height: 30px; /* Высота полосы */
+  background-color: #b88353; /* Цвет полосы */
+  margin: 20px auto; /* Центрирование и отступы */
+  border-radius: 5px; /* Скругление углов */
+}
+
+
+
+
+
+.modal {
+  display: none; /* Скрываем модальное окно по умолчанию */
+  position: fixed; /* Закрепляем модальное окно */
+  z-index: 1000; /* Слой для модального окна выше всего */
+  left: 0;
+  top: 0;
+  width: 100%; /* Ширина окна */
+  height: 100%; /* Высота окна */
+  overflow: auto; /* Включаем скроллинг, если необходимо */
+  background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+}
+
+.modal-content {
+  background-color: #fefefe; /* Фон модального окна */
+  margin: 10% auto; /* Отступ от верхней части экрана */
+  padding: 20px;
+  border: 1px solid #888; /* Граница */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Тень */
+  border-radius: 10px; /* Скругление углов */
+  width: 90%; /* Ширина окна */
+  max-width: 400px; /* Максимальная ширина */
+}
+
+.form-group {
+  margin-bottom: 15px; /* Отступы между полями */
+}
+
+label {
+  display: block; /* Блоковый элемент для лучшего выравнивания */
+  margin-bottom: 5px; /* Отступ снизу для меток */
+  font-weight: bold; /* Жирный текст для меток */
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%; /* Полная ширина для полей ввода */
+  padding: 10px; /* Отступы внутри поля */
+  border: 1px solid #ccc; /* Серый бордер */
+  border-radius: 5px; /* Скругление углов полей */
+  transition: border-color 0.3s; /* Плавный переход цвета бордера */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: #D3975F; /* Цвет бордера при фокусе */
+  outline: none; /* Убираем стандартный outline */
+}
+
+button {
+  width: 100%; /* Ширина кнопки на полную ширину */
+  background-color: #D3975F; /* Цвет кнопки */
+  color: white; /* Цвет текста */
+  border: none; /* Убираем обводку */
+  padding: 10px; /* Отступы */
+  border-radius: 5px; /* Скругление углов */
+  cursor: pointer; /* Курсор */
+  font-size: 16px; /* Размер шрифта */
+}
+
+button:hover {
+  background-color: #ba8910; /* Цвет при наведении */
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px; /* Отступ снизу для заголовка форм */
+}
+
+p {
+  text-align: center;
+}
+
+a {
+  color: #D3975F; /* Цвет ссылки */
+  text-decoration: none; /* Убираем подчеркивание */
+}
+
+a:hover {
+  text-decoration: underline; /* Подчеркивание при наведении */
+}
+
+
+/* Стили для фона модального окна */
+.modal-overlay {
+  display: none; /* Скрыто по умолчанию */
+  position: fixed;
+  z-index: 9; /* Под модальным окном */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+}
+
+/* Стили для модального окна */
+#foodModal {
+  display: none; /* Скрыто по умолчанию */
+  position: fixed;
+  z-index: 10; /* Поверх фона */
+  left: 50%; /* Центрирование по горизонтали */
+  top: 57%; /* Центрирование по вертикали */
+  transform: translate(-50%, -50%); /* Центрирование */
+  width: 80%; /* Ширина окна */
+  max-width: 600px; /* Максимальная ширина */
+  padding: 20px;
+  background-color: white; /* Цвет фона */
+  border-radius: 20px; /* Скругленные углы */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* Тень для эффекта всплытия */
+  overflow-y: auto; /* Скроллинг по вертикали, если контент выходит за пределы */
+  max-height: 70vh; /* Ограничить максимальную высоту окна */
+}
+
+/* Стили для изображения в модальном окне */
+.modal-content img {
+  width: 100%; /* Ширина изображения равна ширине модального окна */
+  height: auto; /* Высота изображения сохраняет соотношение сторон */
+  border-radius: 30px; /* Немного скруглены углы изображения */
+}
+
+
+
