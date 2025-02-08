@@ -530,3 +530,40 @@ a {
   background-color: #c0392b; /* Цвет при наведении */
 }
 
+.cart {
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-items {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.total-price {
+  margin-top: auto;
+  padding: 20px 0;
+  border-top: 2px solid #eee;
+}
+
+#checkoutButton {
+  width: 100%;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-item-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+}
+
+.cart-item-price {
+  font-weight: bold;
+  color: #e9760b;
+}
