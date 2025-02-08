@@ -184,18 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-const cart = {};
-
-function addToCart(item) {
-    // Проверка, существует ли уже элемент в корзине
-    if (cart[item.id]) {
-        cart[item.id].quantity += item.quantity; // Увеличиваем количество
-    } else {
-        cart[item.id] = { ...item, quantity: item.quantity }; // Добавляем новый элемент
-    }
-    updateCartUI();
-}
-
 function updateCartUI() {
     const cartItemsContainer = document.querySelector('.cart-items');
     const totalPriceElement = document.getElementById('totalPrice');
@@ -218,25 +206,81 @@ function updateCartUI() {
     document.getElementById('cartEmptyMessage').style.display = total > 0 ? 'none' : 'block'; // Прятать сообщение о пустой корзине
 }
 
-const menuItems = [
-  { id: 'burger1', name: 'Mexican Burger', price: 350 },
-  { id: 'burger2', name: 'Double Burger', price: 350 },
-  { id: 'burger3', name: 'California Burger', price: 350 },
-  { id: 'burger4', name: 'Mini Burger', price: 350 },
-  { id: 'burger5', name: 'Classic Burger', price: 350 },
-  { id: 'burger6', name: 'Chicken Burger', price: 350 },
-  // Добавьте сюда остальные блюда
-];
 
-document.getElementById('addToCart').addEventListener('click', function() {
-  const quantity = parseInt(document.getElementById('foodQuantity').value); // Получаем количество из инпута
-  const menuItem = menuItems.find(item => item.id === 'burger1'); // Пример для одного блюда
-  if (menuItem) {
-      addToCart({
-          id: menuItem.id, // Используем реальный ID блюда
-          name: menuItem.name,
-          price: menuItem.price,
-          quantity: quantity
-      });
-  }
+
+// Добавьте data-атрибуты в HTML для карточек меню
+document.querySelectorAll('.menu-card').forEach((card, index) => {
+  card.setAttribute('data-id', `item${index + 1}`);
 });
+
+let currentItem = null; // Хранит текущее выбранное блюдо
+
+document.querySelectorAll('.menu-card').forEach(card => {
+    card.addEventListener('click', function () {
+        currentItem = {
+            id: this.getAttribute('data-id'),
+            name: this.querySelector('h4').innerText,
+            price: parseInt(this.querySelector('.price').innerText.replace("Цена: ", "")),
+            description: this.querySelector('p').textContent,
+            image: this.querySelector('img').src
+        };
+
+        document.getElementById('modalName').innerText = currentItem.name;
+        document.getElementById('modalImage').src = currentItem.image;
+        document.getElementById('modalPrice').innerText = currentItem.price + ' ₽';
+        document.getElementById('foodCalories').innerText = 'Калории: 500'; 
+        document.getElementById('modalDescription').innerText = currentItem.description;
+
+        openModal(modal); // Открытие модального окна с пищей
+    });
+});
+
+// Обработчик нажатия на кнопку "Добавить в корзину"
+document.getElementById('addToCart').addEventListener('click', function () {
+    const quantity = parseInt(document.getElementById('foodQuantity').value); // Получаем количество из ввода
+    if (currentItem) {
+        addToCart({
+            id: currentItem.id,
+            name: currentItem.name,
+            price: currentItem.price,
+            quantity: quantity
+        });
+    }
+});
+
+// Функция для добавления предмета в корзину
+const cart = {}; // Создаем объект для хранения элементов корзины
+
+function addToCart(item) {
+    if (cart[item.id]) {
+        cart[item.id].quantity += item.quantity; // Увеличиваем количество, если элемент уже в корзине
+    } else {
+        cart[item.id] = { ...item }; // Добавляем новый элемент с его данными
+    }
+    updateCartUI(); // Обновляем интерфейс корзины после добавления элемента
+}
+
+// Функция для обновления пользовательского интерфейса корзины
+function updateCartUI() {
+    const cartItemsContainer = document.querySelector('.cart-items');
+    const totalPriceElement = document.getElementById('totalPrice');
+    cartItemsContainer.innerHTML = ''; // Очищаем содержимое корзины
+
+    let total = 0; // Инициализируем общую стоимость
+    for (const itemId in cart) {
+        const item = cart[itemId];
+        const itemTotal = item.price * item.quantity; // Рассчитываем общую стоимость для каждого элемента
+        total += itemTotal; // Обновляем общую стоимость
+
+        // Создаем элемент для корзины и добавляем его в контейнер
+        const itemElement = document.createElement('div');
+        itemElement.className = 'cart-item';
+        itemElement.innerHTML = `
+            <strong>${item.name}</strong> x${item.quantity} - ${itemTotal} ₽
+        `;
+        cartItemsContainer.appendChild(itemElement);
+    }
+
+    totalPriceElement.innerText = `Всего: ${total} ₽`; // Обновляем текст общей стоимости
+    document.getElementById('cartEmptyMessage').style.display = total > 0 ? 'none' : 'block'; // Показываем или скрываем сообщение о пустой корзине
+}
