@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Навигация по секциямs
+  // Навигация по секциям
   document.querySelectorAll('.nav-button').forEach(button => {
       button.addEventListener('click', function(event) {
           event.preventDefault();
