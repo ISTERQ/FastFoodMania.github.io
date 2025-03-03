@@ -1,3 +1,18 @@
+@media (max-width: 768px) {
+  .promo-section {
+      flex-direction: column; /* Вертикальное расположение на мобильных */
+      align-items: center; /* Центрирование карточек */
+  }
+
+  .menu-item {
+      padding: 10px; /* Меньше отступов для мобильных */
+  }
+
+  .menu-card {
+      width: 100%; /* Ширина карточек на мобильных */
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -7,7 +22,7 @@ body {
   font-family: 'MyShrift', Caveat, sans-serif; /* Применяем кастомный шрифт */
   margin: 0;
   padding: 0;
-  background-color: #FFD700; /* Серый фон */
+  background-color: #704a18c2; /* Серый фон */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,8 +103,8 @@ body {
 }
 
 .menu-item {
-  background-color: #0a0a0ac5; /* Цвет фона карточки */
-  border: 1px solid #fce303; /* Цвет рамки */
+  background-color: #413a3ac5; /* Цвет фона карточки */
+  border: 1px solid #e7d321; /* Цвет рамки */
   border-radius: 30px; /* Скругление углов */
   margin: 15px; /* Отступы между карточками */
   padding: 10px; /* Внутренние отступы */
@@ -130,8 +145,10 @@ h1,h2, h3, h4, h5, h6 {
   width: 300px; /* Ширина карточки */
   margin: 20px; /* Отступы вокруг карточки */
   overflow: hidden; /* Скрыть выходящий контент */
-  font-family: Caveat, sans-serif; /* Шрифт для текста */
-  text-align: center; /* Центровка текста */
+  display: flex; /* Используем flex для выравнивания */
+  flex-direction: column; /* Вертикальная ориентация */
+  justify-content: space-between; /* Разделение пространства между элементами */
+  height: 500px; /* Фиксированная высота для карточки */
 }
 
 .menu-card img {
@@ -143,6 +160,7 @@ h1,h2, h3, h4, h5, h6 {
   margin: 15px 0 10px 0; /* Отступы вокруг заголовка */
   font-size: 1.5em; /* Размер шрифта */
   color: #333; /* Цвет текста */
+  flex-grow: 1; /* Позволяет заголовку занимать доступное пространство */
 }
 
 .menu-card p {
@@ -191,7 +209,12 @@ img {
   justify-content: center;
   gap: 15px; /* Пробел между кнопками */
 }
-
+@media (max-width: 768px) {
+  .nav-button {
+      font-size: 1.5rem; /* Увеличение размера текста для кнопок */
+      padding: 10px 15px; /* Увеличение области нажатия */
+  }
+}
 .nav-button {
   text-decoration: none;
   color: #fff;
@@ -291,35 +314,45 @@ img {
   max-width: 400px; /* Максимальная ширина */
 }
 .quantity-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; /* Используем флекс для горизонтального размещения */
+  align-items: center; /* Центрируем кнопки по вертикали */
+  justify-content: center; /* Центрируем по горизонтали */
+  margin-top: 10px; /* Отступ сверху */
 }
 
 .quantity-button {
-  background-color: #ff7b00;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px;
-  cursor: pointer;
-  font-size: 18px;
-  margin: 0 5px;
-  transition: background-color 0.3s;
+  background-color: #ff7b00; /* Цвет фона кнопок */
+  color: white; /* Цвет текста */
+  border: none; /* Убираем обводку */
+  border-radius: 5px; /* Скругление углов */
+  padding: 5px 10px; /* Увеличиваем отступы для кнопок */
+  font-size: 16px; /* Размер шрифта */
+  width: 40px; /* Фиксированная ширина кнопок */
+  height: 40px; /* Фиксированная высота кнопок */
+  cursor: pointer; /* Указатель при наведении */
+  transition: background-color 0.3s; /* Плавный переход */
 }
 
 .quantity-button:hover {
-  background-color: #c29023;
+  background-color: #c29023; /* Цвет при наведении */
 }
 
 .quantity-input {
-  width: 50px;
-  text-align: center;
-  font-size: 18px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin: 0 5px;
+  width: 50px; /* Фиксированная ширина для поля ввода */
+  text-align: center; /* Центрируем текст внутри поля */
+  font-size: 16px; /* Размер шрифта */
+  border: 1px solid #ccc; /* Цвет бордера */
+  border-radius: 5px; /* Скругление углов */
+  margin: 0 5px; /* Отступы по бокам */
 }
+
+/* Убираем стрелки для полей ввода в Chrome и Safari */
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Убираем стрелки */
+  margin: 0; /* Убираем отступы */
+}
+
 .form-group {
   margin-bottom: 15px; /* Отступы между полями */
 }
@@ -395,16 +428,15 @@ a {
   position: fixed;
   z-index: 10; /* Поверх фона */
   left: 50%; /* Центрирование по горизонтали */
-  top: 57%; /* Центрирование по вертикали */
+  top: 50%; /* Центрирование по вертикали */
   transform: translate(-50%, -50%); /* Центрирование */
-  width: 80%; /* Ширина окна */
-  max-width: 600px; /* Максимальная ширина */
+  width: 600px; /* Установленная ширина */
+  height: 800px; /* Установленная высота */
   padding: 20px;
   background-color: white; /* Цвет фона */
   border-radius: 20px; /* Скругленные углы */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* Тень для эффекта всплытия */
-  overflow-y: auto; /* Скроллинг по вертикали, если контент выходит за пределы */
-  max-height: 70vh; /* Ограничить максимальную высоту окна */
+  overflow: hidden; /* Скрываем переполнение */
 }
 
 /* Стили для изображения в модальном окне */
@@ -517,17 +549,49 @@ a {
 #checkoutButton:hover {
   background-color: #c29023; /* Цвет при наведении */
 }
+
 /* Стили для кнопки корзины */
 .nav-button#cartButton {
   background-color: #b96d09; /* Фон такой же, как у других кнопок */
   border-radius: 20px; /* Округление углов */
-  padding: 10px 15px; /* Отступы */
+  padding: 10px 20px; /* Отступы для сохранения размера кнопки */
   color: white; /* Цвет текста */
   text-decoration: none; /* Убираем подчеркивание */
+  position: relative; /* Устанавливаем относительное позиционирование */
+  overflow: hidden; /* Прячем элементы, выходящие за границы кнопки */
+  height: 40px; /* Фиксированная высота кнопки */
+  width: 170px; /* Фиксированная ширина кнопки (или любую другую, которая вам нужна) */
+  display: flex; /* Используем flex для управления элементами внутри кнопки */
+  align-items: center; /* Центрируем содержимое по вертикали */
+  justify-content: center; /* Центрируем содержимое по горизонтали */
+  transition: background-color s ease; /* Плавный переход цвета фона */
 }
 
 .nav-button#cartButton:hover {
   background-color: #c0392b; /* Цвет при наведении */
+}
+
+#itemCount {
+  display: inline-block; /* Учитываем это свойство для правильного позиционирования */
+  transition: opacity 0.1s ease; /* Плавный переход для исчезновения */
+}
+
+#cartButton:hover #itemCount {
+  opacity: 0; /* Убираем видимость цифры на наведении */
+}
+
+#cartButton:hover::after {
+  content: '➔'; /* Отображается стрелочка при наведении */
+  position: absolute; /* Абсолютно позиционируем стрелку */
+  left: 78%; /* Центрируем стрелку на месте цифры */
+  top: 50%; /* Центрируем по вертикали */
+  transform: translate(-50%, -50%); /* Убираем смещение */
+  font-size: 18px; /* Размер стрелки */
+  color: white; /* Цвет стрелки (чтобы соответствовать тексту кнопки) */
+}
+.cart {
+  display: flex;
+  flex-direction: column;
 }
 
 .cart {
@@ -566,4 +630,34 @@ a {
 .cart-item-price {
   font-weight: bold;
   color: #e9760b;
+}
+
+.close-button {
+  background-color: #ff0000; /* Красный цвет */
+  color: white; /* Цвет текста */
+  border: none; /* Убираем обводку */
+  border-radius: 50%; /* Круглая форма */
+  width: 40px; /* Ширина кнопки */
+  height: 40px; /* Высота кнопки */
+  font-size: 24px; /* Размер шрифта для крестика */
+  cursor: pointer; /* Курсор при наведении */
+  position: absolute; /* Позиционирование */
+  top: 50000px; /* Отступ сверху */
+  right: 10000px; /* Отступ справа */
+  outline: none; /* Убираем обвод */
+}
+
+.quantity-button {
+  background-color: #ff7b00; /* Цвет фона кнопок */
+  color: white; /* Цвет текста */
+  border: none; /* Убираем обводку */
+  border-radius: 5px; /* Скругление углов */
+  padding: 5px 8px; /* Уменьшаем отступы для кнопок */
+  font-size: 16px; /* Меньший размер шрифта */
+  cursor: pointer; /* Курсор при наведении */
+  transition: background-color 0.3s;
+}
+
+.quantity-button:hover {
+  background-color: #c29023; /* Цвет при наведении */
 }
