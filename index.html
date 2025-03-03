@@ -26,8 +26,8 @@
       <img src="download.svg" alt="Download Icon" class="icon" />
       Войти
     </a>
-    <a href="#" id="cartButton" class="nav-button">
-      <img src="basket.svg" alt="Корзина" class="icon" /> <!-- заменили текст на иконку -->
+    <a href="#" id="cartButton" class="nav-button" style="position: relative;">
+      <span id="cartText">Корзина | <span id="itemCount">0</span></span>
   </a>
   </nav>
 </header>
@@ -172,7 +172,6 @@
         <h4>Hawaiian</h4>
         <p>Свежий ананас, копченая ветчина из яблочного дерева и нарезанный лук-шалот делают эту пиццу №1 среди наших самых маленьких посетителей.</p>
         <p class="price">Цена: 350</p>
-        <button class="add-to-cart" data-name="Hawaiian" data-price="350">Добавить в корзину</button>
       </div>
 
       <div class="menu-card" data-id="pizza2">
@@ -180,7 +179,6 @@
         <h4>Sicilian</h4>
         <p>В этой ароматной пицце с острой маринарой, итальянской колбасой, острой ветчиной Капикола, салями и Моцареллой деревенский стиль сочетается с изысканным.</p>
         <p class="price">Цена: 350</p>
-        <button class="add-to-cart" data-name="Sicilian" data-price="350">Добавить в корзину</button>
       </div>
 
       <div class="menu-card" data-id="pizza3">
@@ -368,28 +366,28 @@
       <div class="menu-card" data-id="combo1">
         <img src="img/combo-1-310x260.png" alt="Сытное трио"/>
         <h4>Сытное трио</h4>
-        <p>Погрузитесь в мир гастрономического наслаждения с нашим идеальным комбо, которое включает сочный бургер из свежайших ингредиентов, легкий освежающий салат с хрустящими овощами и классическую Кока-Колу, создавая гармоничное сочетание вкуса и свежести в каждом укусе!</p>
+        <p>Погрузитесь в мир гастрономического наслаждения с нашим идеальным комбо, которое включает сочный бургер из свежайших ингредиентов, легкий освежающий салат с хрустящими овощами и классическую Кока-Колу.</p>
         <p class="price">Цена: 350</p>
       </div>
 
       <div class="menu-card" data-id="combo2">
         <img src="img/combo-2-310x260.png" alt="Лунный Рассвет с Макаронами"/>
-        <h4>Лунный Рассвет с Макаронами</h4>
-        <p>Комбинируя освежающий коктейль Blue Moon с его яркими нотами голубого ликера и цитрусовыми акцентами, насыщенный и яркий Red Dawn с фруктовыми оттенками ягод, и изысканные французские макароны с разнообразными кремами, вы создаете незабываемый опыт наслаждения и радости для вас и ваших гостей.</p>
+        <h4>Тайна Ночи</h4>
+        <p>Коктейль Blue Moon с его яркими нотами голубого ликера, насыщенный и яркий Red Dawn с фруктовыми оттенками ягод, и изысканные французские макароны с разнообразными кремами.</p>
         <p class="price">Цена: 350</p>
       </div>
 
       <div class="menu-card" data-id="combo3">
         <img src="img/combo-3-310x260.png" alt="Гурманское наслаждение"/>
         <h4>Гурманское наслаждение</h4>
-        <p>Предлагаем вам уникальный комбо-набор «Гурманское наслаждение», который включает сочный бургер с нежной котлетой, плавленым сыром и хрустящими огурцами, порцию сладкого мороженого и освежающий спрайт — идеальное решение для разнообразия вкусов и истинного удовольствия!</p>
+        <p>«Гурманское наслаждение»,включает сочный бургер с нежной котлетой, плавленым сыром и хрустящими огурцами, порцию сладкого мороженого и освежающий спрайт для истинного удовольствия!</p>
         <p class="price">Цена: 350</p>
       </div>
 
       <div class="menu-card" data-id="combo4">
         <img src="img/combo-4-310x260.png" alt="Гурманская Тройка"/>
         <h4>Гурманская Тройка</h4>
-        <p>Попробуйте наше новое комбо "Гурманская Тройка", включающее бургер с двойной котлетой, освежающую Кока-Колу и воздушный маффин на десерт!</p>
+        <p>«Гурманская Тройка» в наборе вы найдете сочный бургер с двойной котлетой и свежими овощами, идеально дополняемый освежающей Кока-Колой. Завершите трапезу легким и воздушным маффином на десерт, который подарит сладкое наслаждение!</p>
         <p class="price">Цена: 350</p>
       </div>
 
@@ -403,7 +401,7 @@
       <div class="menu-card" data-id="combo6">
         <img src="img/combo-6-310x260.png" alt="Триумф Пиццы"/>
         <h4>Триумф Пиццы</h4>
-        <p>Комбо "Триумф Пиццы" предлагает вам три великолепные пиццы: классическую Маргариту, пикантную Пепперони и свежую Вегетарианскую, чтобы насладиться разнообразием вкусов и поделиться радостью с близкими!</p>
+        <p>Комбо "Триумф Пиццы" предлагает вам три великолепные пиццы: классическую Маргариту с ароматным базиликом и томатным соусом, пикантную Пепперони с восхитительными слоями колбасы и сыром, а также свежую Вегетарианскую, щедро усыпанную сезонными овощами.</p>
         <p class="price">Цена: 350</p>
       </div>
     </div>
@@ -491,12 +489,12 @@
 
 <div id="cartOverlay" class="cart-overlay"></div>
 <div id="cart" class="cart">
-  <span id="closeCart" class="close">&times;</span>
+  <button id="closeCart" class="close-button">×</button>
   <h2>Корзина</h2>
   <div class="cart-items">
       <p id="cartEmptyMessage">Корзина пуста.</p>
   </div>
-  <div id="totalPrice" class="total-price" style="font-size: 24px; font-weight: bold;">Всего: 0</div>
+  <div id="totalPrice" class="total-price" style="font-size: 30px; font-weight: bold;">Всего: 0</div>
   <button id="checkoutButton" style="font-size: 18px; padding: 10px;">Оформить заказ</button>
 </div>
 
@@ -511,9 +509,9 @@
         <p id="modalDescription"></p>
         <p id="modalPrice"></p>
         <p id="foodCalories">Калории: </p>
-        <div class="quantity-container" style="display: flex; align-items: center; justify-content: center;">
+        <div class="quantity-container">
           <button id="decreaseQuantity" class="quantity-button">-</button>
-          <input type="number" id="foodQuantity" value="1" min="1" class="quantity-input"/>
+          <input type="number" id="foodQuantity" value="1" min="1" class="quantity-input" />
           <button id="increaseQuantity" class="quantity-button">+</button>
         </div>
         <button id="addToCart" style="margin-top: 10px;">Добавить в корзину</button>
