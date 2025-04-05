@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns="http://www.w3.org/1999/html">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastFoodMania</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+
+<header>
+  <div class="logo">
+    <h1>FastFoodMania</h1>
+  </div>
+  <nav class = "nav-buttons">
+    <a href="#burgers" class="nav-button">Бургеры</a>
+    <a href="#pizza" class="nav-button">Пиццы</a>
+    <a href="#toast" class="nav-button">Тосты</a>
+    <a href="#salads" class="nav-button">Салаты</a>
+    <a href="#desserts" class="nav-button">Десерты</a>
+    <a href="#combo" class="nav-button">Комбо</a>
+    <a href="#drinks" class="nav-button">Напитки</a>
+    <a href="#map" class="nav-button">Карта</a>
+    <a href="#" class="nav-button" id="loginButton">
+      <img src="download.svg" alt="Download Icon" class="icon" />
+      Войти
+    </a>
+    <a href="#" id="cartButton" class="nav-button" style="position: relative;">
+      <span id="cartText">Корзина | <span id="itemCount">0</span></span>
+  </a>
+  </nav>
+</header>
+
+<!-- Внутри модального окна-->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <span id="closeLoginModal" class="close">&times;</span>
+
+    <!-- Форма регистрации -->
+    <form id="registrationForm" method="post" action="register.php">
+      <h2>Регистрация</h2>
+      <div class="form-group">
+        <label for="registerUsername">Имя пользователя:</label>
+        <input type="text" id="registerUsername" name="username" required>
+      </div>
+      <div class="form-group">
+        <label for="registerEmail">Email:</label>
+        <input type="email" id="registerEmail" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="registerPassword">Пароль:</label>
+        <input type="password" id="registerPassword" name="password" required>
+      </div>
+      <button type="submit">Зарегистрироваться</button>
+      <p>Уже есть аккаунт? <a href="#" id="showLoginForm">Войдите</a></p>
+    </form>
+
+    <!-- Форма входа -->
+    <form id="loginForm" method="post" action="login.php" style="display: none;">
+      <h2>Вход</h2>
+      <div class="form-group">
+        <label for="loginEmail">Email:</label>
+        <input type="email" id="loginEmail" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Пароль:</label>
+        <input type="password" id="loginPassword" name="password" required>
+      </div>
+      <button type="submit">Войти</button>
+      <p>Нет аккаунта? <a href="#" id="showRegistrationForm">Зарегистрируйтесь</a></p>
+    </form>
+  </div>
+</div>
+
+
+<div class="slideshow-container">
+  <div class="mySlides">
+    <img src="img/input-1.png" alt="фотолого1">
+  </div>
+  <div class="mySlides">
+    <img src="img/input-2.png" alt="фотолого2">
+  </div>
+  <div class="mySlides">
+    <img src="img/input-3.png" alt="фотолого3">
+  </div>
+</div>
+
+
+<div class="promo-section">
+  <div class="promo-card">
+    <img src="img/index-01-566x401.jpg" alt="For Vegans">
+    <div class="card-content">
+      <h4>Для веганов</h4>
+      <br>
+      <p>Бургер + Картошка фри + Напиток</p>
+    </div>
+  </div>
+  <div class="promo-card">
+    <img src="img/index-02-566x401.jpg" alt="Order Online">
+    <div class="card-content">
+      <h4>Заказ онлайн</h4>
+      <p>Доступно каждый день с 9:00 до 23:00</p>
+    </div>
+  </div>
+  <div class="promo-card">
+    <img src="img/index-03-566x401.jpg" alt="Cake Specials">
+    <div class="card-content">
+      <h4>Специальные предложения по тортам</h4>
+      <p>Каждую пятницу всего за $0.99</p>
+    </div>
+  </div>
+</div>
+
+<main class="menu-grid" id="menu">
+  <section class="menu-item" id="burgers">
+    <div>
+      <h1>Бургеры</h1>
+    </div>
+    <div class="menu-items">
+      <div class="menu-card" data-id="burger1">
+        <img src="img/menu-modern-1-310x260.png" alt="Mexican Burger"/>
+        <h4>Mexican Burger</h4>
+        <p>Этот бургер в мексиканском стиле наполнен ароматом порошка чили, кинзы и перца халапеньо.  Подается на булочках с листьями салата.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="burger2">
+        <img src="img/menu-modern-5-310x260.webp" alt="Double Burger"/>
+        <h4>Double Burger</h4>
+        <p>Две фирменные говяжьи котлеты, обжаренные в огне, увенчанные простым слоем расплавленного американского сыра и нарезанными солеными огурцами.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="burger3">
+        <img src="img/menu-modern-6-310x260.webp" alt="California Burger"/>
+        <h4>California Burger</h4>
+        <p>Ростки люцерны венчают эти сочные бургеры. Сочетание обычного индюшиного фарша и индюшиной грудки обеспечивает превосходную текстуру.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="burger4">
+        <img src="img/menu-modern-3-310x260.png" alt="Mini Burger"/>
+        <h4>Mini Burger</h4>
+        <p>Мини-бургеры, известные многим как слайдеры,- это самый горячий тренд в кулинарии, который охватил всю страну: их размер в два раза меньше классического бургера. </p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="burger5">
+        <img src="img/menu-modern-2-310x260.webp" alt="Classic Burger"/>
+        <h4>Classic Burger</h4>
+        <p>Куриная говядина, приготовленная на углях с луком на гриле, острый перец, листья салата, помидоры, двойной американский сырный соус чеддер.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="burger6">
+        <img src="img/menu-modern-4-310x260.png" width="260" height="310" alt="Chicken Burger"/>
+        <h4>Chicken Burger</h4>
+        <p>Наш «Чикен Бургер» состоит из пикантной куриной котлеты-гриль, увенчанной сочными помидорами, свежим салатом и майонезом.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="menu-item" id="pizza">
+    <div>
+      <h1>Пиццы</h1>
+    </div>
+    <div class="menu-items">
+      <div class="menu-card" data-id="pizza1">
+        <img src="img/pizzas-1-310x260.png" alt="Hawaiian"/>
+        <h4>Hawaiian</h4>
+        <p>Свежий ананас, копченая ветчина из яблочного дерева и нарезанный лук-шалот делают эту пиццу №1 среди наших самых маленьких посетителей.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="pizza2">
+        <img src="img/pizzas-2-310x260.png" alt="Sicilian"/>
+        <h4>Sicilian</h4>
+        <p>В этой ароматной пицце с острой маринарой, итальянской колбасой, острой ветчиной Капикола, салями и Моцареллой деревенский стиль сочетается с изысканным.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="pizza3">
+        <img src="img/pizzas-3-310x260.png" alt="Classic Cheese"/>
+        <h4>Classic Cheese</h4>
+        <p>Большая круглая пицца от QuickFood с начинкой из 100% сыров Моцарелла и Мюнстер, горячая из печи и готовая к вашему приходу.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="pizza4">
+        <img src="img/pizzas-4-310x260.png" alt="Margherita"/>
+        <h4>Margherita</h4>
+        <p>Классика, которую любят все. Попробуйте нашу «Маргериту» с итальянскими помидорами, свежей Моцареллой, свежим базиликом и Пармезаном.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="pizza5">
+        <img src="img/pizzas-5-310x260.png" alt="Neapolitan"/>
+        <h4>Neapolitan</h4>
+        <p>Одна из самых популярных наших блюд, эта пицца включает в себя свежие помидоры, сыр, масло и чеснок и подается с многочисленными начинками.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="pizza6">
+        <img src="img/pizzas-6-310x260.png" width="260" height="310" alt="Pepperoni"/>
+        <h4>Pepperoni</h4>
+        <p>Все мирный фаворит всех времен! Ощутите вкус оригинальной Пепперони.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="menu-item" id="toast">
+    <div>
+      <h1>Тосты</h1>
+    </div>
+    <div class="menu-items">
+      <div class="menu-card" data-id="toast1">
+        <img src="img/toast-1-310x260.png" alt="Tomato Toast"/>
+        <h4>Tomato Toast</h4>
+        <p>Наслаждайтесь этим удивительным сочетанием сыра и помидоров с небольшим количеством салата и огурцов на свежеиспеченном хлебе.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="toast2">
+        <img src="img/toast-2-310x260.png" alt="Cheese Toast"/>
+        <h4>Cheese Toast</h4>
+        <p>Этот тост - один из самых популярных в нашем меню, и неудивительно, почему - он такой же вкусный, оригинальный и простой в приготовлении.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="toast3">
+        <img src="img/toast-3-310x260.png" alt="Beef Toast"/>
+        <h4>Beef Toast</h4>
+        <p>Нежный, ароматный и идеально приправленный ростбиф, тонко нарезанный, с копченым сыром Гауда и подается на багете.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="toast4">
+        <img src="img/toast-4-310x260.png" alt="Italian Toast"/>
+        <h4>Italian Toast</h4>
+        <p>Ощутите вкус настоящей итальянской кухни с этим тостом, в состав которого входят сыр Проволоне, свежие помидоры и свежеиспеченный хлеб.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="toast5">
+        <img src="img/toast-5-310x260.png" alt="Mediterranean Toast"/>
+        <h4>Mediterranean Toast</h4>
+        <p>Теплый, поджаристый и сытный, этот тост удовлетворит ваш аппетит благодаря Zippy Hummus, жареному красному перцу и поджаренному бекону.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="toast6">
+        <img src="img/toast-6-310x260.png" alt="Chicken Toast"/>
+        <h4>Chicken Toast</h4>
+        <p>Мы переосмыслили оригинальный сэндвич с курицей, и теперь вы можете насладиться вкусом наших куриных тостов с помидорами черри и салатом.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="menu-item" id="salads">
+    <div>
+      <h1>Салаты</h1>
+    </div>
+    <div class="menu-items">
+      <div class="menu-card" data-id="salads1">
+        <img src="img/salads-1-310x260.png" alt="Buffalo Bleu"/>
+        <h4>Buffalo Bleu</h4>
+        <p>Нарезанный ромэн и айсберг, натуральная курица, оригинальный острый соус «Буффало Нью-Йорк», виноградные помидоры и банановый перец.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="salads2">
+        <img src="img/salads-2-310x260.png" alt="Greek Salad"/>
+        <h4>Greek Salad</h4>
+        <p>Огурцы, виноградные помидоры, красный лук, банановый перец, черные оливки и сыр фета с бальзамической заправкой винегрет.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="salads3">
+        <img src="img/salads-3-310x260.png" alt="Turkey Salad"/>
+        <h4>Turkey Salad</h4>
+        <p>Нарезанный ромэн и айсберг, паста радиатор, обжаренная индейка, хрустящий бекон, помидоры и пахтовая заправка ранч</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="salads4">
+        <img src="img/salads-4-310x260.png" alt="Mediterranean"/>
+        <h4>Mediterranean</h4>
+        <p>Весенний микс, натуральная курица, киноа, маслины, маринованные помидоры, семена подсолнечника, сыр фета и бальзамический винегрет.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="salads5">
+        <img src="img/salads-5-310x260.png" alt="Farmhouse salad"/>
+        <h4>Farmhouse salad</h4>
+        <p>Капуста, весенний микс, запеченная индейка, запеченный баттернат сквош, запеченная брюссельская капуста, глазированные орехи и козий сыр.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="salads6">
+        <img src="img/salads-6-310x260.png" width="260" height="310" alt="Chicken Caprese"/>
+        <h4>Chicken Caprese</h4>
+        <p>ОСердечки ромэн, запеченная курица, авокадо, нарезанные помидоры, свежая моцарелла и бальзамический винегрет прекрасно сочетаются.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="menu-item" id="desserts">
+    <div>
+      <h1>Десерты</h1>
+    </div>
+    <div class="menu-items">
+      <div class="menu-card" data-id="desserts1">
+        <img src="img/deserts-1-310x260.png" alt="Pancakes"/>
+        <h4>Pancakes</h4>
+        <p>Получите все вкусности этого американского блюда за половину времени. Насладитесь незабываемым вкусом наших блинчиков!</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="desserts2"> 
+        <img src="img/deserts-2-310x260.png" alt="Chocolate Fudge Cake"/>
+        <h4>Chocolate Fudge Cake</h4>
+        <p>Этот торт, украшенный кусочками шоколадного брауни и подаваемый с ванильным мороженым, просто необходим, если вы любите вкусные десерты.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="desserts3">
+        <img src="img/deserts-3-310x260.png" alt="French macaroons"/>
+        <h4>French macaroons</h4>
+        <p>Французские макаруны - это тонкое ароматное печенье безе, в которое вложена начинка.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="desserts4">
+        <img src="img/deserts-4-310x260.png" alt="Blueberry muffins"/>
+        <h4>Blueberry muffins</h4>
+        <p>Большие черничные маффины с сахарной корочкой. Черника и сладкое тесто потрясающе вкусны.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="desserts5">
+        <img src="img/deserts-5-310x260.png" alt="Donuts"/>
+        <h4>Donuts</h4>
+        <p>Домашние пончики с начинкой из восхитительного ванильного крем-пудинга и сладкой белой глазурью приведут вас в восторг.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="desserts6">
+        <img src="img/deserts-6-310x260.png" alt="Ice Cream"/>
+        <h4>Ice Cream</h4>
+        <p>Наше классическое ванильное мороженое премиум-класса со сладким кремом - это чистое удовольствие.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="menu-item" id="combo">
+    <div>
+      <h1>Комбо</h1>
+    </div>
+    <div class="menu-items">
+      <div class="menu-card" data-id="combo1">
+        <img src="img/combo-1-310x260.png" alt="Сытное трио"/>
+        <h4>Сытное трио</h4>
+        <p>Погрузитесь в мир гастрономического наслаждения с нашим идеальным комбо, которое включает сочный бургер из свежайших ингредиентов, легкий освежающий салат с хрустящими овощами и классическую Кока-Колу.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="combo2">
+        <img src="img/combo-2-310x260.png" alt="Лунный Рассвет с Макаронами"/>
+        <h4>Тайна Ночи</h4>
+        <p>Коктейль Blue Moon с его яркими нотами голубого ликера, насыщенный и яркий Red Dawn с фруктовыми оттенками ягод, и изысканные французские макароны с разнообразными кремами.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="combo3">
+        <img src="img/combo-3-310x260.png" alt="Гурманское наслаждение"/>
+        <h4>Гурманское наслаждение</h4>
+        <p>«Гурманское наслаждение»,включает сочный бургер с нежной котлетой, плавленым сыром и хрустящими огурцами, порцию сладкого мороженого и освежающий спрайт для истинного удовольствия!</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="combo4">
+        <img src="img/combo-4-310x260.png" alt="Гурманская Тройка"/>
+        <h4>Гурманская Тройка</h4>
+        <p>«Гурманская Тройка» в наборе вы найдете сочный бургер с двойной котлетой и свежими овощами, идеально дополняемый освежающей Кока-Колой. Завершите трапезу легким и воздушным маффином на десерт, который подарит сладкое наслаждение!</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="combo5">
+        <img src="img/combo-5-310x260.png" alt="Ягодный взрыв с куриным акцентом"/>
+        <h4>Ягодный взрыв с куриным акцентом</h4>
+        <p>Попробуйте наше уникальное комбо, включающее хрустящий куриный тост с пикантным соусом, освежающий лимонад и легкий салат из свежих ягод для идеального обеда или перекуса!</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="combo6">
+        <img src="img/combo-6-310x260.png" alt="Триумф Пиццы"/>
+        <h4>Триумф Пиццы</h4>
+        <p>Комбо "Триумф Пиццы" предлагает вам три великолепные пиццы: классическую Маргариту с ароматным базиликом и томатным соусом, пикантную Пепперони с восхитительными слоями колбасы и сыром, а также свежую Вегетарианскую, щедро усыпанную сезонными овощами.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="menu-item" id="drinks">
+    <div>
+      <h1>Напитки</h1>
+    </div>
+    <div class="menu-items">
+      <div class="menu-card" data-id="drinks1">
+        <img src="img/drinks-1-310x260.png" alt="Diet Coke"/>
+        <h4>Diet Coke</h4>
+        <p>Попробуйте морозную и освежающую диетическую колу без калорий, освежающую классику, которая дополнит любое блюдо из нашего меню.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="drinks2">
+        <img src="img/drinks-2-310x260.webp" alt="Blue Moon"/>
+        <h4>Blue Moon</h4>
+        <p>Коктейль Blue Moon - это веселый замороженный мартини, в состав которого входят голубой кюрасао, ванильный сироп, свежий апельсиновый сок и взбитые сливки.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="drinks3">
+        <img src="img/drinks-3-310x260.webp" alt="Sparkling Water"/>
+        <h4>Sparkling Water</h4>
+        <p>Отличный выбор для тех, кто хочет освежиться в жаркую погоду. Широкий выбор вкусов!</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="drinks4">
+        <img src="img/drinks-4-310x260.png" alt="Red Dawn"/>
+        <h4>Red Dawn</h4>
+        <p>The Red Dawn - крепкий и ароматный коктейль, состоящий из Southern Comfort, лимонно-лаймовой содовой и клюквенного сока.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="drinks5">
+        <img src="img/drinks-5-310x260.webp" alt="Pina Colada"/>
+        <h4>Pina Colada</h4>
+        <p>Наша фирменная замороженная Пина Колада с ромом Don Q, ананасовым соком и Coco Lopez, увенчанная поджаренным кокосом.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+
+      <div class="menu-card" data-id="drinks6">
+        <img src="img/drinks-6-310x260.png" width="260" height="310" alt="Classic Lemonade"/>
+        <h4>Classic Lemonade</h4>
+        <p>Освежающий лимонад с нотками мяты и имбиря. Освежающие лимонные напитки - идеальный глоток, когда вы охлаждаетесь.</p>
+        <p class="price">Цена: 350</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="full-width-image">
+  <img src="img/index-gallery-5-480x394.png"  width="2400" height="600" alt="Для лучшего вкуса и аромата блюд" />
+</section>
+
+<section class="features">
+  <h1>Наши преимущества</h1>
+  <div class="features-container">
+      <div class="feature-item">
+          <img src="img/ikonka-4-.png" alt="Быстрая доставка" />
+          <h4>Быстрая доставка</h4>
+          <p>Все, что вы закажете в QuickFood, будет быстро доставлено к вашей двери.</p>
+      </div>
+      <div class="feature-item">
+          <img src="img/ikonka-3-.png" alt="Свежая еда" />
+          <h4>Свежая еда</h4>
+          <p>Мы используем только лучшие ингредиенты, чтобы приготовить для вас вкусные свежие блюда.</p>
+      </div>
+      <div class="feature-item">
+          <img src="img/ikonka-2-.png" alt="Опытные повара" />
+          <h4>Опытные повара</h4>
+          <p>Наш персонал состоит из шеф-поваров и поваров с многолетним опытом работы.</p>
+      </div>
+      <div class="feature-item">
+          <img src="img/ikonka-1-.png" alt="Разнообразие блюд" />
+          <h4>Разнообразие блюд</h4>
+          <p>В нашем меню вы найдете широкий выбор блюд, десертов и напитков.</p>
+      </div>
+  </div>
+</section>
+
+<div id="cartOverlay" class="cart-overlay"></div>
+<div id="cart" class="cart">
+  <button id="closeCart" class="close-button">×</button>
+  <h2>Корзина</h2>
+  <div class="cart-items">
+      <p id="cartEmptyMessage">Корзина пуста.</p>
+  </div>
+  <div id="totalPrice" class="total-price" style="font-size: 30px; font-weight: bold;">Всего: 0</div>
+  <button id="checkoutButton" style="font-size: 18px; padding: 10px;">Оформить заказ</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"></div>
+<div id="foodModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <div class="modal-body">
+      <img id="modalImage" src="" alt="Изображение блюда" />
+      <div class="modal-description">
+        <h4 id="modalName"></h4>
+        <p id="modalDescription"></p>
+        <p id="modalPrice"></p>
+        <p id="foodCalories">Калории: </p>
+        <div class="quantity-container">
+          <button id="decreaseQuantity" class="quantity-button">-</button>
+          <input type="number" id="foodQuantity" value="1" min="1" class="quantity-input" />
+          <button id="increaseQuantity" class="quantity-button">+</button>
+        </div>
+        <button id="addToCart" style="margin-top: 10px;">Добавить в корзину</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="image-gallery">
+  <div class="image-item">
+    <img src="img/index-gallery-1-480x394.jpg" alt="Красивые фотки 1">
+  </div>
+  <div class="image-item">
+    <img src="img/index-gallery-2-480x394.jpg" alt="Красивые фотки 2">
+  </div>
+  <div class="image-item">
+    <img src="img/index-gallery-3-480x394.jpg" alt="Красивые фотки 3">
+  </div>
+  <div class="image-item">
+    <img src="img/index-gallery-4-480x394.jpg" alt="Kрасивые фотки 4">
+  </div>
+</div>
+
+
+<div class="container" id="map">
+  <div class="map">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d771.5401164095676!2d113.96943451834792!3d62.54201852002157!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x5c7ca493a8d94ce7%3A0xab4bcf2a60bb21dc!2z0JPQkNCf0J7QoyDQoNChKNCvKSAi0JzQoNCi0Joi!5e1!3m2!1sru!2sru!4v1733239402039!5m2!1sru!2sru" width="2400" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </div>
+</div>
+
+
+<div class="container" id="about">
+  <div class="about">
+    <h1>О нас</h1>
+    <h2>Мы - команда, которая стремится предоставить вам самые вкусные бургеры и шаурму в городе. Наша цель - сделать каждый ваш визит незабываемым, предлагая качество и сервис на высшем уровне.</h2>
+  </div>
+</div>
+<div class="container" id="contact">
+  <div class="contact">
+    <h1>Контакты</h1>
+    <h2>Адрес: ул.Ленина 1, г.Мирный</h2>
+    <h2>Телефон: +7 (914) 278-61-44</h2>
+    <h2>Электронная почта: info@FastFoodMania.ru</h2>
+  </div>
+</div>
+
+<script src="js/registration.js"></script>
+<script src="js/script.js"></script>
+<script src="js/util.js"></script>
+<script src="js/cart.js"></script> 
+
+</body>
+</html>
