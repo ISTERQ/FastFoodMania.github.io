@@ -72,7 +72,37 @@
     </form>
   </div>
 </div>
+<script>
+  function registerUser(event) {
+    event.preventDefault(); // Остановить стандартное поведение формы
 
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    fetch('register.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, email, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Регистрация успешна!'); // Успешная регистрация
+      } else {
+        alert('Ошибка: ' + data.message); // Ошибка регистрации
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка:', error);
+      alert('Ошибка при регистрации. Пожалуйста, попробуйте еще раз.');
+    });
+
+    return false; // Предотвратить перезагрузку страницы
+  }
+</script>
 
 <div class="slideshow-container">
   <div class="mySlides">
@@ -562,6 +592,7 @@
 <script src="js/script.js"></script>
 <script src="js/util.js"></script>
 <script src="js/cart.js"></script> 
+<script src="js/server.js"></script> 
 
 </body>
 </html>
