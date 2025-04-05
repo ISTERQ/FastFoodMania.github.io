@@ -72,20 +72,25 @@
     </form>
   </div>
 </div>
+
 <script>
   function registerUser(event) {
-    event.preventDefault(); // Остановить стандартное поведение формы
+    event.preventDefault(); // Остановите стандартное поведение формы
 
     const username = document.getElementById('registerUsername').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
 
-    fetch('register.php', {
+    // Формируем данные для отправки
+    const data = { username, email, password };
+    
+    // Отправляем данные на сервер
+    fetch('https://37z9g.h.filess.io/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ username, email, password })
+      body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
@@ -102,6 +107,8 @@
 
     return false; // Предотвратить перезагрузку страницы
   }
+
+  document.getElementById('registrationForm').addEventListener('submit', registerUser);
 </script>
 
 <div class="slideshow-container">
