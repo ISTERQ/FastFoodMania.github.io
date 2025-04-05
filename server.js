@@ -21,6 +21,8 @@ const corsOptions = {
     },
     credentials: true,
 };
+
+// Используем JSON
 app.use(express.json());
 app.use(cors(corsOptions));
 
