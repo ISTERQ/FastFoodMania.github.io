@@ -1,34 +1,36 @@
 <?php
-require 'vendor/autoload.php'; // Ensure Composer's autoload file is included
+header('Content-Type: application/json');
 
-// Подключение к базе данных MongoDB
-$client = new MongoDB\Client("mongodb://localhost:27017"); // Убедитесь, что указали правильный URI
-$collection = $client->fastfoodmania->users; // коллекция 'users' в базе данных 'fastfoodmania'
+require 'vendor/autoload.php'; // Подключите Composer автозагрузчик
 
-// Проверка, был ли отправлен POST-запрос
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    
-    // Создание документа для вставки
-    $document = [
-        'username' => $username,
-        'email' => $email,
-        'password' => $password,
-    ];
-    
-    try {
-        // Вставка документа в коллекцию
-        $result = $collection->insertOne($document);
-        
-        if ($result->getInsertedCount() === 1) {
-            echo "Регистрация успешна!";
-        } else {
-            echo "Ошибка: Не удалось зарегистрировать пользователя.";
-        }
-    } catch (MongoDB\Driver\Exception\Exception $e) {
-        echo "Ошибка при регистрации: ", $e->getMessage();
-    }
+// MongoDB подключение
+$mongoURI = "mongodb://sosaldbmoy_seemsbarup:977ce0757b6cd6d527c6351fd12595a1a7145196@37z9g.h.filess.io:61004/sosaldbmoy_seemsbarup";
+$client = new MongoDB\Client($mongoURI);
+$collection = $client->sosaldbmoy_seemsbarup->users; // Предполагается, что коллекция называется 'users'
+
+$input = json_decode(file_get_contents('php://input'), true);
+
+$username = $input['username'];
+$email = $input['email'];
+$password = password_hash($input['password'], PASSWORD_BCRYPT); // Хеширование пароля
+
+// Проверка на уникальность email
+$user = $collection->findOne(['email' => $email]);
+if ($user) {
+    echo json_encode(['success' => false, 'message' => 'Этот email уже используется.']);
+    exit();
+}
+
+// Вставка нового пользователя
+$result = $collection->insertOne([
+    'username' => $username,
+    'email' => $email,
+    'password' => $password
+]);
+
+if ($result->getInsertedCount() === 1) {
+    echo json_encode(['success' => true]);
+} else {
+    echo json_encode(['success' => false, 'message' => 'Ошибка регистрации.']);
 }
 ?>
