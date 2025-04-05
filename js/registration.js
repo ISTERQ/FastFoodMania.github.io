@@ -1,33 +1,30 @@
-// registration.js
-document.addEventListener("DOMContentLoaded", function () {
-    const loginButton = document.getElementById("loginButton");
-    const closeModal = document.getElementById("closeLoginModal");
-    const modalOverlay = document.getElementById("modalOverlay");
-    const loginModal = document.getElementById("loginModal");
-    const showLoginForm = document.getElementById("showLoginForm");
-    const showRegistrationForm = document.getElementById("showRegistrationForm");
-    const registrationForm = document.getElementById("registrationForm");
-    const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById('registrationForm');
+registerForm.addEventListener('submit', registerUser);
 
-    loginButton.onclick = function () {
-        loginModal.style.display = "block";
-    }
+function registerUser(event) {
+    event.preventDefault(); // Останавливаем стандартное поведение формы
 
-    closeModal.onclick = function () {
-        loginModal.style.display = "none";
-    }
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
 
-    modalOverlay.onclick = function () {
-        loginModal.style.display = "none";
-    }
-
-    showLoginForm.onclick = function () {
-        registrationForm.style.display = "none";
-        loginForm.style.display = "block";
-    }
-
-    showRegistrationForm.onclick = function () {
-        loginForm.style.display = "none";
-        registrationForm.style.display = "block";
-    }
-});
+    fetch('/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, email, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Регистрация успешна!');
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при регистрации. Пожалуйста, попробуйте еще раз.');
+    });
+}
