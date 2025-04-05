@@ -342,3 +342,32 @@ document.getElementById('registrationForm').addEventListener('submit', function(
         alert('Произошла ошибка при регистрации.');
     });
 });
+document.getElementById('registrationForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+    const formData = new FormData(this); // Сбор данных формы
+    const data = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        password: formData.get('password')
+    };
+
+    fetch('https://37z9g.h.filess.io/register', { // Используйте ваш серверный адрес
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json()) // Получаем JSON ответ
+    .then(data => {
+        alert(data.message); // Отображаем сообщение от сервера
+        if (data.success) {
+            closeModal(document.getElementById('loginModal')); // Закрываем модальное окно при успешной регистрации
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при регистрации.');
+    });
+});
