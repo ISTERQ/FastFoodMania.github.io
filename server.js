@@ -1,72 +1,81 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
-
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const cors = require("cors");
+const path = require("path");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const app = express();
-const port = process.env.PORT || 3000;
+const orderRoutes = require("./routes/orderRoutes");
+const { protect } = require('./middleware/authMiddleware');
+const Order = require('./models/Order');
+const User = require('./models/User');
+const Products = require("./models/Products");  
+const fs = require('fs');
+const reviewsFile = 'reviews.json';
 
-// Подключаемся к базе данных MongoDB
-const mongoURI = "mongodb://sosaldbmoy_seemsbarup:977ce0757b6cd6d527c6351fd12595a1a7145196@37z9g.h.filess.io:61004/sosaldbmoy_seemsbarup";
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB подключен'))
-    .catch(err => console.log(err));
+// Настройка CORS
+const allowedOrigins = [
+  'https://isterq.github.io/FastFoodMania.github.io/',
+  'http://localhost:3000'
+];
 
-// Подключаем body-parser для парсинга JSON
-app.use(bodyParser.json());
-
-// Создаем схему пользователя
-const userSchema = new mongoose.Schema({
-    username: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
-});
-
-// Создаем модель пользователя
-const User = mongoose.model('User', userSchema);
-
-// Маршрут для регистрации
-app.post('/register.php', async (req, res) => {
-    const { username, email, password } = req.body;
-    try {
-        // Проверяем, существует ли пользователь с таким email
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).send('Пользователь с таким email уже существует.');
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
         }
+    },
+    credentials: true,
+};
+app.use(express.json());
+app.use(cors(corsOptions));
+app.use(cookieParser());
+app.use('/api', orderRoutes);
 
-        // Хэшируем пароль
-        const hashedPassword = await bcrypt.hash(password, 10);
+// Подключение к MongoDB
+const JWT_SECRET = process.env.JWT_SECRET || "ai3ohPh3Aiy9eeThoh8caaM9voh5Aezaenai0Fae2Pahsh2Iexu7Qu/";
+const mongoURI = "mongodb://sosaldbmoy_seemsbarup:977ce0757b6cd6d527c6351fd12595a1a7145196@37z9g.h.filess.io:61004/sosaldbmoy_seemsbarup";
+const REFRESH_SECRET = process.env.REFRESH_SECRET || "J8$GzP1d&KxT^m4YvNcR";
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  ssl: false,
+})
+  .then(() => console.log("MongoDB connected"))
+  .catch((error) => console.error("MongoDB connection error:", error));
 
-        // Создаем нового пользователя
-        const newUser = new User({ username, email, password: hashedPassword });
-        await newUser.save();
+// Регистрация пользователя
+app.post('/register', async (req, res) => {
+  const { username, password, email } = req.body;
 
-        return res.status(201).send('Регистрация успешна!');
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send('Ошибка сервера.');
+  if (!username || !password || !email) {
+    return res.status(400).json({ message: 'Все поля обязательны для заполнения.' });
+  }
+
+  try {
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Пользователь с таким именем уже существует' });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const newUser = new User({ username, password: hashedPassword, email });
+
+    await newUser.save();
+    return res.status(201).json({ message: 'Пользователь успешно зарегистрирован' });
+    
+  } catch (err) {
+    console.error("Ошибка регистрации:", err);
+    return res.status(500).json({ message: 'Ошибка регистрации пользователя', error: err.message });
+  }
 });
 
-// Запускаем сервер
-app.listen(port, () => {
-    console.log(`Сервер запущен на порту ${port}`);
+// Слушаем на порту
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-async function registerUser() {
-    const username = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    const response = await fetch('mongodb://sosaldbmoy_seemsbarup:977ce0757b6cd6d527c6351fd12595a1a7145196@37z9g.h.filess.io:61004/sosaldbmoy_seemsbarup', { // Замените на ваш URL
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, email, password })
-    });
-
-    const result = await response.text();
-    alert(result);
-}
