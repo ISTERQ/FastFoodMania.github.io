@@ -26,7 +26,7 @@ registerForm.addEventListener("submit", async (e) => {
     const password = document.getElementById("registerPassword").value;
 
     try {
-        const response = await fetch("https://fastfoodmania.ru/register", {
+        const response = await fetch("https://isterq.github.io/FastFoodMania.github.io/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
@@ -82,7 +82,7 @@ loginForm.addEventListener("submit", async (e) => {
 
 // === Выход ===
 function logout() {
-    fetch("https://fastfoodmania.ru/logout", { method: "POST", credentials: "include" })
+    fetch("https://isterq.github.io/FastFoodMania.github.io/logout", { method: "POST", credentials: "include" })
         .then(() => {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("username");
