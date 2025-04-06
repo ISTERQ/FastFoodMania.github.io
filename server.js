@@ -7,14 +7,10 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const app = express();
-const orderRoutes = require("./routes/orderRoutes");
-const { protect } = require('./middleware/authMiddleware');
-const Order = require('./models/Order');
-const User = require('./models/User');
-const Product = require("./models/Products");  
+const User = require('./models/User'); 
 const fs = require('fs');
 const reviewsFile = 'reviews.json';
-const Review = require('./models/Review');
+
 
 
 // Настройка CORS
@@ -42,7 +38,6 @@ app.use(cors(corsOptions));
 // Используем CORS с настройками
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use('/api', orderRoutes);
 // Подключение к MongoDB
 
 const mongoURI = process.env.MONGO_URI || "mongodb://sosaldbmoy_seemsbarup:977ce0757b6cd6d527c6351fd12595a1a7145196@37z9g.h.filess.io:61004/sosaldbmoy_seemsbarup";
