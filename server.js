@@ -256,48 +256,6 @@ app.post('/-token', (req, res) => {
   }
 });
 
-app.get('/account', protect, async (req, res) => {
-    try {
-        if (!req.user || !req.user.id) {
-            return res.status(401).json({ message: "Не авторизован" });
-        }
-
-        const user = await User.findById(req.user.id).select("username name city");
-        if (!user) {
-            return res.status(404).json({ message: "Пользователь не найден" });
-        }
-              // 🚀 Отключаем кеширование
-        res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-        res.setHeader("Pragma", "no-cache");
-        res.setHeader("Expires", "0");
-
-        res.json({ username: user.username, name: user.name, city: user.city });
-    } catch (error) {  // ✅ Добавляем обработку ошибки
-        console.error("Ошибка при загрузке аккаунта:", error);
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
-    }
-});
-app.put('/account', protect, async (req, res) => {
-    const { name, city, username, password } = req.body; // Получаем данные из запроса
-
-    try {
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'Пользователь не найден' });
-        }
-
-        if (name) user.name = name;  // Обновляем имя
-        if (city) user.city = city;  // Обновляем город
-        if (username) user.username = username;  // Обновляем username
-        if (password) user.password = await bcrypt.hash(password, 12);  // Обновляем пароль
-
-        await user.save(); // Сохраняем обновлённые данные
-        res.json({ message: 'Аккаунт обновлён', user });
-    } catch (error) {
-        res.status(500).json({ message: 'Ошибка при обновлении аккаунта', error: error.message });
-    }
-});
 // Обработка корневого маршрута
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
