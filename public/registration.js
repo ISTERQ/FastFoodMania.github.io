@@ -2,25 +2,29 @@ const registerForm = document.getElementById('registrationForm');
 registerForm.addEventListener('submit', registerUser);
 
 function registerUser(event) {
-    event.preventDefault(); // Останавливаем стандартное поведение формы
+    event.preventDefault(); // Остановите стандартное поведение формы
 
     const username = document.getElementById('registerUsername').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
 
-    fetch('/register', {
+    // Формируем данные для отправки
+    const data = { username, email, password };
+
+    // Отправляем данные на сервер
+    fetch('https://fastfoodmania-github-io.onrender.com/api/register', { // Используйте правильный URL вашего сервера
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, email, password })
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Регистрация успешна!');
+            alert('Регистрация успешна!'); // Успешная регистрация
         } else {
-            alert('Ошибка: ' + data.message);
+            alert('Ошибка: ' + data.message); // Ошибка регистрации
         }
     })
     .catch(error => {
@@ -28,3 +32,5 @@ function registerUser(event) {
         alert('Ошибка при регистрации. Пожалуйста, попробуйте еще раз.');
     });
 }
+
+document.getElementById('registrationForm').addEventListener('submit', registerUser);
