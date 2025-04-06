@@ -256,10 +256,6 @@ app.post('/-token', (req, res) => {
   }
 });
 
-// Приватный маршрут
-app.get('/private-route', protect, (req, res) => {
-  res.json({ message: `Добро пожаловать, пользователь ${req.user.id}` });
-});
 app.get('/account', protect, async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
