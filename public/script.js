@@ -1,20 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Навигация по секциям
-  document.querySelectorAll('.nav-button').forEach(button => {
-      button.addEventListener('click', function(event) {
-          event.preventDefault();
-          const targetId = this.getAttribute('href');
-          const targetElement = document.querySelector(targetId);
-          const headerOffset = 80; // меньше для мобильных
-          const elementPosition = targetElement.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+// Навигация по секциям (обновленный код)
+document.querySelectorAll('.nav-button').forEach(button => {
+    button.addEventListener('click', function(event) {
+        event.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        // Динамически получаем высоту заголовка
+        const header = document.querySelector('header');
+        const headerOffset = header.offsetHeight; 
+        
+        // Расчет позиции для центрирования
+        const elementPosition = targetElement.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset 
+            - headerOffset // Учет высоты заголовка
+            - (window.innerHeight / 2.5) // Центрирование по вертикали
+            + (targetElement.offsetHeight / 2); // Учет высоты элемента
 
-          window.scrollTo({
-              top: offsetPosition,
-              behavior: 'smooth'
-          });
-      });
-  });
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+    });
+});
 
   // Модальные окна
   const modal = document.getElementById('foodModal');
