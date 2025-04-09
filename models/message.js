@@ -26,7 +26,7 @@ registerForm.addEventListener("submit", async (e) => {
     const password = document.getElementById("registerPassword").value;
 
     try {
-        const response = await fetch("https://api.render.com/deploy/srv-cvp4gj8dl3ps73fsi8qg?key=4e0YOtp8yfQ/register", {
+        const response = await fetch("https://fastfoodmania-api.onrender.com/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
