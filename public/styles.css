@@ -1,18 +1,3 @@
-@media (max-width: 768px) {
-  .promo-section {
-      flex-direction: column; /* Вертикальное расположение на мобильных */
-      align-items: center; /* Центрирование карточек */
-  }
-
-  .menu-item {
-      padding: 10px; /* Меньше отступов для мобильных */
-  }
-
-  .menu-card {
-      width: 100%; /* Ширина карточек на мобильных */
-  }
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -39,7 +24,9 @@ header {
   z-index: 1000; /* Уровень наложения заголовка */
 }
 
-
+.menu-item {
+  padding: 100px 0; /* Отступы сверху/снизу */
+}
 
 .promo-section {
   display: flex;
