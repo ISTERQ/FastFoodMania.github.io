@@ -26,7 +26,7 @@ registerForm.addEventListener("submit", async (e) => {
     const password = document.getElementById("registerPassword").value;
 
     try {
-        const response = await fetch("https://fastfoodmania-github-io.onrender.com/register", {
+        const response = await fetch("https://api.render.com/deploy/srv-cvp4gj8dl3ps73fsi8qg?key=4e0YOtp8yfQ/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
@@ -46,18 +46,17 @@ registerForm.addEventListener("submit", async (e) => {
 });
 
 // === Вход ===
-const loginForm = document.querySelector("#loginForm form");
-loginForm.addEventListener("submit", async (e) => {
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const username = document.getElementById("loginUsername").value;
+    const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
     try {
-        const response = await fetch("/login", {
+        const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ username: email, password }),
             credentials: "include"
         });
 
@@ -65,8 +64,9 @@ loginForm.addEventListener("submit", async (e) => {
         if (response.ok) {
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("userId", data.userId);
-            localStorage.setItem("username", username);
-            window.location.href = "/index.html";
+            localStorage.setItem("username", email);
+            alert("Успешный вход!");
+            location.reload();
         } else {
             alert(data.message || "Ошибка входа.");
         }
@@ -76,24 +76,18 @@ loginForm.addEventListener("submit", async (e) => {
     }
 });
 
-
-// === Функция обновления accessToken ===
-
-
 // === Выход ===
 function logout() {
-    fetch("https://fastfoodmania-github-io.onrender.com/logout", { method: "POST", credentials: "include" })
-        .then(() => {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("username");
-            localStorage.removeItem("userId");
-            sessionStorage.clear();
-
-            document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-
-            window.location.href = "/login.html";
-        })
-        .catch((error) => console.error("Ошибка выхода:", error));
+    fetch("https://fastfoodmania-api.onrender.com/logout", {
+        method: "POST",
+        credentials: "include"
+    })
+    .then(() => {
+        localStorage.clear();
+        alert("Выход выполнен.");
+        location.reload();
+    })
+    .catch((error) => console.error("Ошибка выхода:", error));
 }
 
 
