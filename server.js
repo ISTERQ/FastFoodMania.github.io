@@ -10,7 +10,7 @@ const app = express();
 const User = require('./models/User'); 
 const fs = require('fs');
 const reviewsFile = 'reviews.json';
-
+const Joi = require("joi");
 
 
 // Настройка CORS
@@ -40,7 +40,15 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 // Подключение к MongoDB
 
-const mongoURI = process.env.MONGO_URI || "mongodb://sosaldbmoy_seemsbarup:977ce0757b6cd6d527c6351fd12595a1a7145196@37z9g.h.filess.io:61004/sosaldbmoy_seemsbarup";
+const mongoURI = process.env.MONGO_URI;
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  ssl: false
+})
+.then(() => console.log("✅ MongoDB connected по URI из .env"))
+.catch((error) => console.error("❌ MongoDB connection error:", error));
+
 
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
@@ -106,7 +114,8 @@ function generateTokens(user, site) {
 app.post('/register', async (req, res) => {
   const schema = Joi.object({
     username: Joi.string().trim().min(3).max(30).required(),
-    password: Joi.string().min(8).required(),
+    password: Joi.string().min(6).required(),
+    email: Joi.string().email().required()
   });
 
   const { error } = schema.validate(req.body);
@@ -114,20 +123,19 @@ app.post('/register', async (req, res) => {
     return res.status(400).json({ message: error.details[0].message });
   }
 
-  const { username, password } = req.body;
+  const { username, password, email } = req.body;
 
   try {
-    console.log("Регистрация пользователя:", username);
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(409).json({ message: 'Пользователь с таким именем уже существует' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const newUser = new User({ username, password: hashedPassword });
+    const newUser = new User({ username, email, password: hashedPassword });
 
     await newUser.save();
-    console.log(`Пользователь "${username}" успешно зарегистрирован.`);
+    console.log(`✅ Пользователь "${username}" зарегистрирован.`);
     return res.status(201).json({ message: 'Пользователь успешно зарегистрирован' });
 
   } catch (err) {
@@ -232,7 +240,7 @@ app.post('/logout', (req, res) => {
         secure: true,
         sameSite: 'None',
         path: "/",
-        domain: "makadamia.onrender.com"
+        domain: "https://fastfoodmania-github-io.onrender.com"
     });
 
     res.json({ message: 'Вы вышли из системы' });
