@@ -11,7 +11,7 @@ const User = require('./models/User');
 const fs = require('fs');
 const reviewsFile = 'reviews.json';
 const Joi = require("joi");
-
+const Order = require('./models/Order');
 
 // Настройка CORS
 const allowedOrigins = [
@@ -293,3 +293,31 @@ app.listen(PORT, () => {
 });
 
 
+app.post('/order', async (req, res) => {
+  try {
+    const { userId, items, total } = req.body;
+
+    const newOrder = new Order({ userId, items, total });
+    await newOrder.save();
+
+    res.status(201).json({ message: "Заказ успешно оформлен" });
+  } catch (err) {
+    console.error("Ошибка при создании заказа:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+app.get('/orders/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка при получении заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+async function loadOrders(userId) {
+  const res = await fetch(`https://fastfoodmania-github-io.onrender.com/orders/${userId}`);
+  const orders = await res.json();
+  // отображаем в модальном окне или отдельной секции
+}
