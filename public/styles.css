@@ -165,16 +165,17 @@ body {
   padding: 0;
 }
 .mySlides {
-  display: none; /* Скрывает неактивные слайды */
-  opacity: 0; /* Начальная непрозрачность */
-  transform: translateY(10px); /* Начальная позиция немного ниже */
-  transition: opacity 1s ease-in-out, transform 1s ease-in-out; /* Плавный переход для непрозрачности и позиции */
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+  transform: translateY(10px);  /* Начальная позиция немного ниже */
 }
 
 .mySlides.active {
-  display: block; /* Показывает активный слайд */
-  opacity: 1; /* Полная непрозрачность */
-  transform: translateY(0); /* Возвращаем начальное положение */
+  opacity: 1;
+  position: relative;
+  transform: translateY(0);  /* Плавно возвращаем в начальную позицию */
 }
 
 img {
