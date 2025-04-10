@@ -73,6 +73,28 @@
   </div>
 </div>
 
+<div id="orderConfirmModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeOrderConfirm">&times;</span>
+    <h3>Вы почти оформили заказ!</h3>
+    <p>Введите номер телефона и адрес доставки.<br>Так же можете посмотреть историю заказов в своем профиле.</p>
+    <form id="finalOrderForm">
+      <input type="text" id="phone" placeholder="Номер телефона" required>
+      <input type="text" id="address" placeholder="Адрес доставки" required>
+      <button type="submit">Подтвердить заказ</button>
+    </form>
+  </div>
+</div>
+<div id="profileModal" class="modal">
+  <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+    <span class="close" id="closeProfileModal">&times;</span>
+    <h2>История заказов</h2>
+    <div id="orderHistoryContainer">Загрузка заказов...</div>
+  </div>
+</div>
+
+
+
 <div class="slideshow-container">
   <div class="mySlides">
     <img src="img/input-1.png" alt="фотолого1">
