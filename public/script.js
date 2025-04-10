@@ -109,6 +109,8 @@ document.querySelectorAll('.nav-button').forEach(button => {
       registrationForm.style.display = 'block';
   });
 
+
+
   // Корзина
   const cartButton = document.getElementById('cartButton');
   const cartOverlay = document.getElementById('cartOverlay');
@@ -308,3 +310,111 @@ document.querySelectorAll('.nav-button').forEach(button => {
       });
   });
 });
+
+// Закрытие корзины вручную
+function closeCartModal() {
+    const cart = document.getElementById('cart');
+    const cartOverlay = document.getElementById('cartOverlay');
+    cart.style.right = '-40%';
+    cartOverlay.style.display = 'none';
+  }
+  
+  // Клик по кнопке "Оформить заказ"
+  document.getElementById('checkoutButton').addEventListener('click', () => {
+    const userId = localStorage.getItem("userId");
+  
+    if (!userId) {
+      // ❗ Если пользователь не авторизован
+      closeCartModal(); // ⬅️ Закрываем корзину
+      document.getElementById('loginModal').style.display = 'block';
+      document.getElementById('modalOverlay').style.display = 'block';
+      return;
+    }
+  
+    // ✅ Пользователь авторизован — показываем форму
+    showOrderConfirmationForm();
+  });
+  
+  // Показ формы подтверждения заказа
+  function showOrderConfirmationForm() {
+    document.getElementById('orderConfirmModal').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+  }
+  
+  // Закрытие формы подтверждения
+  document.getElementById('closeOrderConfirm').addEventListener('click', () => {
+    document.getElementById('orderConfirmModal').style.display = 'none';
+    document.getElementById('modalOverlay').style.display = 'none';
+  });
+  
+  // Обработка финального оформления заказа
+  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = localStorage.getItem("userId");
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+  
+    const items = Object.values(cartData); // используем cartData
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+    try {
+      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items, total, phone, address })
+      });
+  
+      const result = await response.json();
+      if (response.ok) {
+        alert("🎉 Заказ успешно оформлен!");
+        document.getElementById('orderConfirmModal').style.display = 'none';
+        document.getElementById('modalOverlay').style.display = 'none';
+      } else {
+        alert("Ошибка: " + result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Произошла ошибка при оформлении заказа.");
+    }
+});
+async function openProfileModal() {
+    document.getElementById('profileModal').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+  
+    const userId = localStorage.getItem("userId");
+    const container = document.getElementById('orderHistoryContainer');
+    container.innerHTML = 'Загрузка...';
+  
+    try {
+      const res = await fetch(`https://fastfoodmania-api.onrender.com/orders/${userId}`);
+      const orders = await res.json();
+  
+      if (orders.length === 0) {
+        container.innerHTML = '<p>У вас пока нет заказов.</p>';
+        return;
+      }
+  
+      container.innerHTML = orders.map(order => {
+        const date = new Date(order.createdAt).toLocaleString();
+        const itemsList = order.items.map(i => `${i.name} ×${i.quantity}`).join('<br>');
+        return `
+          <div style="border:1px solid #ccc; padding: 10px; margin-bottom: 15px; border-radius: 8px;">
+            <strong>Дата:</strong> ${date}<br>
+            <strong>Адрес:</strong> ${order.address}<br>
+            <strong>Телефон:</strong> ${order.phone}<br>
+            <strong>Заказ:</strong><br>${itemsList}<br>
+            <strong>Сумма:</strong> ${order.total} ₽
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = '<p>Ошибка загрузки заказов.</p>';
+    }
+  }
+  
+  document.getElementById('closeProfileModal').addEventListener('click', () => {
+    document.getElementById('profileModal').style.display = 'none';
+    document.getElementById('modalOverlay').style.display = 'none';
+  });
+    
