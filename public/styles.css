@@ -649,3 +649,48 @@ a {
   background-color: #c29023; /* Цвет при наведении */
 }
 
+/* Модалка подтверждения заказа */
+#orderConfirmModal .modal-content {
+  background-color: #f9f5ee;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
+
+#orderConfirmModal h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+#orderConfirmModal p {
+  font-size: 1rem;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+#finalOrderForm input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+#finalOrderForm button {
+  width: 100%;
+  padding: 12px;
+  background-color: #ff7b00;
+  color: white;
+  border: none;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#finalOrderForm button:hover {
+  background-color: #c29023;
+}
