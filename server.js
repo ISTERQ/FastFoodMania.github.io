@@ -328,3 +328,13 @@ async function loadOrders(userId) {
   const orders = await res.json();
   // отображаем в модальном окне или отдельной секции
 }
+app.get('/orders/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка при получении истории заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
