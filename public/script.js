@@ -109,26 +109,6 @@ document.querySelectorAll('.nav-button').forEach(button => {
       registrationForm.style.display = 'block';
   });
 
-  // Обработка отправки форм
-  [registrationForm, loginForm].forEach(form => {
-      form.addEventListener('submit', function(event) {
-          event.preventDefault();
-          const actionUrl = form.id === 'registrationForm' ? 'register.php' : 'login.php';
-          const formData = new FormData(this);
-          fetch(actionUrl, {
-              method: 'POST',
-              body: formData
-          })
-          .then(response => response.text())
-          .then(data => {
-              alert(data);
-              closeModal(loginModal);
-              form.reset();
-          })
-          .catch(error => console.error('Ошибка:', error));
-      });
-  });
-
   // Корзина
   const cartButton = document.getElementById('cartButton');
   const cartOverlay = document.getElementById('cartOverlay');
