@@ -313,7 +313,7 @@ document.querySelectorAll('.nav-button').forEach(button => {
       observer.observe(item); // Начинаем наблюдение за каждым элементом
   });
 
-  // Добавляем обработчики для touch событий
+  // Добавляем обfработчики для touch событий
   document.querySelectorAll('.menu-card').forEach(card => {
       card.addEventListener('touchstart', function() {
           // Обработка нажатия на карточку меню
