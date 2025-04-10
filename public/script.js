@@ -416,5 +416,19 @@ async function openProfileModal() {
   document.getElementById('closeProfileModal').addEventListener('click', () => {
     document.getElementById('profileModal').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
-  });
-    
+});
+
+function updateLoginButtonToProfile() {
+    const loginButton = document.getElementById("loginButton");
+    if (!loginButton) return;
+  
+    loginButton.textContent = "Профиль";
+    loginButton.removeAttribute("href");
+    loginButton.id = "profileButton"; // меняем id, чтобы сработал слушатель
+    loginButton.addEventListener("click", async () => {
+      document.getElementById("profileSidebar").style.right = "0";
+      document.getElementById("profileOverlay").style.display = "block";
+      await loadOrderHistory();
+    });
+}
+     
