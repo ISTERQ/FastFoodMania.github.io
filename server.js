@@ -146,25 +146,32 @@ app.post('/register', async (req, res) => {
 });
 // Авторизация пользователя
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+  const { username, password } = req.body;
 
-    const user = await User.findOne({ username });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: 'Неверные данные' });
+  try {
+    // Ищем пользователя по email, а не username
+    const user = await User.findOne({ email: username });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
     }
 
-    const { accessToken, refreshToken } = generateTokens(user);
-    res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-    res.cookie("refreshTokenDesktop", refreshToken, { 
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        path: "/",
-        maxAge: 30 * 24 * 60 * 60 * 1000  // Устанавливаем refreshToken на 30 дней
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    res.status(200).json({
+      message: 'Вход выполнен',
+      userId: user._id
     });
 
-    res.json({ accessToken, userId: user._id });
+  } catch (error) {
+    console.error('Ошибка входа:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
+  }
 });
+
 
 
 // Обработка запроса на обновление токена для ПК-версии
