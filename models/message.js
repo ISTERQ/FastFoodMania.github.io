@@ -65,8 +65,10 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("userId", data.userId);
             localStorage.setItem("username", email);
-            alert("Успешный вход!");
-            location.reload();
+            alert("Вход выполнен!");
+
+            document.getElementById('loginModal').style.display = 'none';
+            updateLoginButtonToProfile();
         } else {
             alert(data.message || "Ошибка входа.");
         }
@@ -90,9 +92,23 @@ function logout() {
     .catch((error) => console.error("Ошибка выхода:", error));
 }
 
+// === Функция обновления кнопки Войти → Профиль ===
+function updateLoginButtonToProfile() {
+    const loginButton = document.getElementById("loginButton");
+    if (!loginButton) return;
 
+    loginButton.textContent = "Профиль";
+    loginButton.removeAttribute("href");
+    loginButton.id = "profileButton";
 
-// === Функция для работы с авторизованными запросами ===
+    loginButton.addEventListener("click", async () => {
+        document.getElementById("profileSidebar").style.right = "0";
+        document.getElementById("profileOverlay").style.display = "block";
+        await loadOrderHistory();
+    });
+}
+
+// === Функция для авторизованных fetch-запросов ===
 async function fetchWithAuth(url, options = {}) {
     let token = localStorage.getItem("accessToken");
 
@@ -122,7 +138,7 @@ async function fetchWithAuth(url, options = {}) {
     return response;
 }
 
-// === Парсинг exp из токена ===
+// === Функция для парсинга срока действия токена ===
 function getTokenExp(token) {
     try {
         const payload = JSON.parse(atob(token.split(".")[1]));
@@ -131,3 +147,66 @@ function getTokenExp(token) {
         return null;
     }
 }
+
+// === Обновляем кнопку "Войти" при загрузке, если пользователь уже вошёл ===
+document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("userId")) {
+        updateLoginButtonToProfile();
+    }
+});
+function updateLoginButtonToProfile() {
+    const loginButton = document.getElementById("loginButton");
+    if (!loginButton) return;
+  
+    loginButton.textContent = "Профиль";
+    loginButton.removeAttribute("href");
+    loginButton.id = "profileButton";
+  
+    loginButton.addEventListener("click", async () => {
+      document.getElementById("profileSidebar").classList.add("open");
+      document.getElementById("profileOverlay").style.display = "block";
+      await loadOrderHistory();
+    });
+}
+document.getElementById("closeProfileSidebar").addEventListener("click", () => {
+    document.getElementById("profileSidebar").classList.remove("open");
+    document.getElementById("profileOverlay").style.display = "none";
+  });
+  
+  document.getElementById("profileOverlay").addEventListener("click", () => {
+    document.getElementById("profileSidebar").classList.remove("open");
+    document.getElementById("profileOverlay").style.display = "none";
+});
+async function loadOrderHistory() {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+  
+    try {
+      const response = await fetch(`https://fastfoodmania-api.onrender.com/orders/${userId}`);
+      const orders = await response.json();
+  
+      const container = document.getElementById("orderHistory");
+      container.innerHTML = "";
+  
+      if (orders.length === 0) {
+        container.innerHTML = "<p>История заказов пуста.</p>";
+        return;
+      }
+  
+      orders.forEach(order => {
+        const div = document.createElement("div");
+        div.classList.add("order-item");
+        div.innerHTML = `
+          <p><strong>Дата:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+          <p><strong>Сумма:</strong> ${order.total} ₽</p>
+          <p><strong>Заказ:</strong></p>
+          <ul>${order.items.map(item => `<li>${item.name} x${item.quantity}</li>`).join("")}</ul>
+        `;
+        container.appendChild(div);
+      });
+  
+    } catch (error) {
+      console.error("Ошибка загрузки заказов:", error);
+    }
+}
+     
