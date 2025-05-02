@@ -10,7 +10,7 @@ registerForm.addEventListener('submit', async (event) => {
   const data = { username, email, password };
 
   try {
-    const response = await fetch('https://fastfoodmania-github-io.onrender.com/register', {
+    const response = await fetch('https://fast-food-mania-github-io.vercel.app/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
