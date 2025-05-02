@@ -386,7 +386,7 @@ async function openProfileModal() {
     container.innerHTML = 'Загрузка...';
   
     try {
-      const res = await fetch(`https://fastfoodmania-api.onrender.com/orders/${userId}`);
+      const res = await fetch(`https://fast-food-mania-github-io.vercel.app/orders/${userId}`);
       const orders = await res.json();
   
       if (orders.length === 0) {
