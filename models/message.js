@@ -26,7 +26,7 @@ registerForm.addEventListener("submit", async (e) => {
     const password = document.getElementById("registerPassword").value;
 
     try {
-        const response = await fetch("https://fastfoodmania-api.onrender.com/register", {
+        const response = await fetch("https://fast-food-mania-github-io.vercel.app/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
@@ -53,7 +53,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const password = document.getElementById("loginPassword").value;
 
     try {
-        const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
+        const response = await fetch("https://fast-food-mania-github-io.vercel.app/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username: email, password }),
@@ -80,7 +80,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
 // === Выход ===
 function logout() {
-    fetch("https://fastfoodmania-api.onrender.com/logout", {
+    fetch("https://fast-food-mania-github-io.vercel.app/logout", {
         method: "POST",
         credentials: "include"
     })
@@ -182,7 +182,7 @@ async function loadOrderHistory() {
     if (!userId) return;
   
     try {
-      const response = await fetch(`https://fastfoodmania-api.onrender.com/orders/${userId}`);
+      const response = await fetch(`https://fast-food-mania-github-io.vercel.app/orders/${userId}`);
       const orders = await response.json();
   
       const container = document.getElementById("orderHistory");
