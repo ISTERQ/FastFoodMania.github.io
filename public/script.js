@@ -358,7 +358,7 @@ function closeCartModal() {
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   
     try {
-      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+      const response = await fetch('https://fastfoodmania-isterqs-projects.vercel.app/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, items, total, phone, address })
@@ -386,9 +386,8 @@ async function openProfileModal() {
     container.innerHTML = 'Загрузка...';
   
     try {
-      const res = await fetch(`https://fast-food-mania-github-io.vercel.app/orders/${userId}`);
+      const res = await fetch(`https://fastfoodmania-isterqs-projects.vercel.app/orders/${userId}`);
       const orders = await res.json();
-  
       if (orders.length === 0) {
         container.innerHTML = '<p>У вас пока нет заказов.</p>';
         return;
