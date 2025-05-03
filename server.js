@@ -34,9 +34,13 @@ const corsOptions = {
     credentials: true, // Обязательно для передачи s!
 };
 app.use(express.json());
-app.use(cors(corsOptions));
-// Используем CORS с настройками
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: [
+    'https://fast-food-mania-github-io.vercel.app'
+  ],
+  credentials: true
+}));
+
 app.use(cookieParser());
 // Подключение к MongoDB
 
