@@ -432,3 +432,55 @@ function updateLoginButtonToProfile() {
     });
 }
      
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+  
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+  
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+  
+    if (response.ok) {
+      const user = await response.json();
+  
+      // Сохраняем пользователя в localStorage
+      localStorage.setItem("user", JSON.stringify(user));
+  
+      // Скрыть форму, показать кнопку профиля
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("profile-button").style.display = "inline-block";
+    } else {
+      alert("Ошибка входа");
+    }
+  });
+  
+  // Открытие профиля
+  document.getElementById("profile-button").addEventListener("click", () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) return;
+  
+    document.getElementById("profile-name").textContent = user.name || user.username;
+    document.getElementById("profile-email").textContent = user.email || "";
+  
+    document.getElementById("profile-drawer").classList.add("open");
+  });
+  
+  // Закрытие профиля и выход
+  document.getElementById("logout-button").addEventListener("click", () => {
+    localStorage.removeItem("user");
+    location.reload();
+  });
+  
+  // Автозагрузка состояния, если уже вошёл
+  window.addEventListener("DOMContentLoaded", () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("profile-button").style.display = "inline-block";
+    }
+});
+  
