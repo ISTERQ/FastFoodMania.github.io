@@ -15,7 +15,7 @@ const Order = require('./models/Order');
 
 // Настройка CORS
 const allowedOrigins = [
-  'https://fast-food-mania-github-io.vercel.app', // Первый сайт
+  'https://fastfoodmania-github-io.onrender.com', // Первый сайт
 ];
 
 console.log("Отправка запроса на /refresh");
@@ -23,7 +23,7 @@ console.log("Отправка запроса на /refresh");
 const corsOptions = {
     origin: (origin, callback) => {
         const allowedOrigins = [
-            "https://fast-food-mania-github-io.vercel.app",
+            "https://fastfoodmania-github-io.onrender.com",
         ];
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
@@ -34,13 +34,9 @@ const corsOptions = {
     credentials: true, // Обязательно для передачи s!
 };
 app.use(express.json());
-const cors = require('cors');
-app.use(cors({
-  origin: ['https://fast-food-mania-github-io.vercel.app'],
-  credentials: true
-}));
-
-
+app.use(cors(corsOptions));
+// Используем CORS с настройками
+app.use(cors(corsOptions));
 app.use(cookieParser());
 // Подключение к MongoDB
 
@@ -98,13 +94,13 @@ function generateTokens(user, site) {
     const issuedAt = Math.floor(Date.now() / 1000);
     
     const accessToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fast-food-mania-github-io.vercel.app", iat: issuedAt },
+        { id: user._id, username: user.username, site: "https://fastfoodmania-github-io.onrender.com", iat: issuedAt },
         JWT_SECRET,
         { expiresIn: "30m" }  // ⏳ Access-токен на 30 минут
     );
 
     const refreshToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fast-food-mania-github-io.vercel.app", iat: issuedAt },
+        { id: user._id, username: user.username, site: "https://fastfoodmania-github-io.onrender.com", iat: issuedAt },
         REFRESH_SECRET,
         { expiresIn: "7d" }  // 🔄 Refresh-токен на 7 дней
     );
@@ -252,7 +248,7 @@ app.post('/logout', (req, res) => {
         secure: true,
         sameSite: 'None',
         path: "/",
-        domain: "https://fast-food-mania-github-io.vercel.app"
+        domain: "https://fastfoodmania-github-io.onrender.com"
     });
 
     res.json({ message: 'Вы вышли из системы' });
@@ -328,7 +324,7 @@ app.get('/orders/:userId', async (req, res) => {
   }
 });
 async function loadOrders(userId) {
-  const res = await fetch(`https://fast-food-mania-github-io.vercel.app/orders/${userId}`);
+  const res = await fetch(`https://fastfoodmania-github-io.onrender.com/orders/${userId}`);
   const orders = await res.json();
   // отображаем в модальном окне или отдельной секции
 }
