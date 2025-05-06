@@ -12,6 +12,50 @@ const fs = require('fs');
 const reviewsFile = 'reviews.json';
 const Joi = require("joi");
 const Order = require('./models/Order');
+app.use(express.json());
+const MongoClient = require("mongodb").MongoClient;
+const session = require("express-session");  // Для хранения сессий
+const port = 3000;
+const { MongoClient } = require("mongodb");
+const hostname = "fyghg.h.filess.io";
+const database = "sosaldbmoy_memberdeal";
+const portDB = "61004";
+const username = process.env.DB_USERNAME;  // Получаем данные из .env
+const password = process.env.DB_PASSWORD;
+const url = `mongodb://${username}:${password}@${hostname}:${portDB}/${database}`;
+
+const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
+const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
+
+let db;
+client.connect()
+  .then(() => {
+    db = client.db("sosaldbmoy_memberdeal");
+    console.log("✅ MongoDB подключена");
+  })
+  .catch(err => {
+    console.error("❌ Ошибка подключения к MongoDB:", err);
+  });
+
+  app.post("/api/login", async (req, res) => {
+    const { username, password } = req.body;
+  
+    if (!db) return res.status(500).json({ error: "Нет соединения с БД" });
+  
+    try {
+      const user = await db.collection("users").findOne({ username, password });
+      if (!user) return res.status(401).json({ error: "Неверные данные" });
+  
+      res.json({
+        username: user.username,
+        email: user.email
+      });
+    } catch (err) {
+      console.error("Ошибка логина:", err);
+      res.status(500).json({ error: "Ошибка сервера" });
+    }
+  });
+  
 
 // Настройка CORS
 const allowedOrigins = [
@@ -336,5 +380,87 @@ app.get('/orders/:userId', async (req, res) => {
   } catch (err) {
     console.error("Ошибка при получении истории заказов:", err);
     res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({ secret: "yourSecretKey", resave: false, saveUninitialized: true }));
+
+MongoClient.connect(url, function (err, client) {
+  if (err) {
+    console.log("Ошибка подключения к базе данных", err);
+    return;
+  }
+
+  console.log("Подключение к базе данных успешно!");
+
+  const db = client.db(database);
+  const usersCollection = db.collection("users");  // Допустим, у нас коллекция пользователей
+
+  // Роут для входа
+  app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+      const user = await usersCollection.findOne({ username });
+      if (user && bcrypt.compareSync(password, user.password)) {
+        // Успешный вход, сохраняем данные в сессии
+        req.session.user = user;
+        res.json({ success: true, message: "Вы вошли в систему", profileButton: true });
+      } else {
+        res.json({ success: false, message: "Неверные данные" });
+      }
+    } catch (err) {
+      console.error(err);
+      res.json({ success: false, message: "Ошибка входа" });
+    }
+  });
+
+  // Роут для выхода
+  app.get("/logout", (req, res) => {
+    req.session.destroy();
+    res.redirect("/");
+  });
+
+  // Запуск сервера
+  app.listen(port, () => {
+    console.log(`Сервер запущен на порту ${port}`);
+  });
+});
+
+// Роут для получения профиля пользователя
+app.get('/get-profile', (req, res) => {
+  if (req.session.user) {
+      res.json({ 
+          success: true, 
+          user: {
+              name: req.session.user.name, // Имя пользователя
+              email: req.session.user.email // Email пользователя
+          }
+      });
+  } else {
+      res.json({ success: false, message: 'Пользователь не авторизован' });
+  }
+});
+
+// Роут для получения истории заказов пользователя
+app.get('/get-order-history', (req, res) => {
+  if (req.session.user) {
+      const userId = req.session.user._id; // Получаем ID пользователя из сессии
+
+      // Пример запроса к коллекции заказов в базе данных
+      const ordersCollection = db.collection("orders");
+
+      ordersCollection.find({ userId }).toArray((err, orders) => {
+          if (err) {
+              res.json({ success: false, message: 'Ошибка при получении заказов' });
+          } else {
+              res.json({ success: true, orders });
+          }
+      });
+  } else {
+      res.json({ success: false, message: 'Пользователь не авторизован' });
   }
 });
