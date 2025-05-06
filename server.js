@@ -16,7 +16,6 @@ app.use(express.json());
 const MongoClient = require("mongodb").MongoClient;
 const session = require("express-session");  // Для хранения сессий
 const port = 3000;
-const { MongoClient } = require("mongodb");
 const hostname = "fyghg.h.filess.io";
 const database = "sosaldbmoy_memberdeal";
 const portDB = "61004";
