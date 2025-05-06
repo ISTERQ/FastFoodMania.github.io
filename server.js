@@ -7,7 +7,7 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const app = express();
-const User = require('./models/User'); 
+const User = require('./models/user'); 
 const fs = require('fs');
 const reviewsFile = 'reviews.json';
 const Joi = require("joi");
@@ -23,8 +23,6 @@ const username = process.env.DB_USERNAME;  // Получаем данные из
 const password = process.env.DB_PASSWORD;
 const url = `mongodb://${username}:${password}@${hostname}:${portDB}/${database}`;
 
-const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
-const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
 
 let db;
 client.connect()
