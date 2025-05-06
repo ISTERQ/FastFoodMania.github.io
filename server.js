@@ -321,47 +321,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: "yourSecretKey", resave: false, saveUninitialized: true }));
 
-MongoClient.connect(url, function (err, client) {
-  if (err) {
-    console.log("Ошибка подключения к базе данных", err);
-    return;
-  }
+const mongoose = require("mongoose");
 
-  console.log("Подключение к базе данных успешно!");
-
-  const db = client.db(database);
-  const usersCollection = db.collection("users");  // Допустим, у нас коллекция пользователей
-
-  // Роут для входа
-  app.post("/login", async (req, res) => {
-    const { username, password } = req.body;
-
-    try {
-      const user = await usersCollection.findOne({ username });
-      if (user && bcrypt.compareSync(password, user.password)) {
-        // Успешный вход, сохраняем данные в сессии
-        req.session.user = user;
-        res.json({ success: true, message: "Вы вошли в систему", profileButton: true });
-      } else {
-        res.json({ success: false, message: "Неверные данные" });
-      }
-    } catch (err) {
-      console.error(err);
-      res.json({ success: false, message: "Ошибка входа" });
-    }
-  });
-
-  // Роут для выхода
-  app.get("/logout", (req, res) => {
-    req.session.destroy();
-    res.redirect("/");
-  });
-
-  // Запуск сервера
-  app.listen(port, () => {
-    console.log(`Сервер запущен на порту ${port}`);
-  });
-});
 
 // Роут для получения профиля пользователя
 app.get('/get-profile', (req, res) => {
