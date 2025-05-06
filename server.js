@@ -7,100 +7,36 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const app = express();
-const User = require('./models/User'); 
+const User = require('./models/user'); // Ваши модели данных
 const fs = require('fs');
 const reviewsFile = 'reviews.json';
 const Joi = require("joi");
-const Order = require('./models/Order');
+const Order = require('./models/Order'); // Модели заказов
 app.use(express.json());
-const MongoClient = require("mongodb").MongoClient;
-const session = require("express-session");  // Для хранения сессий
+const session = require("express-session");
+
 const port = 3000;
 const hostname = "fyghg.h.filess.io";
 const database = "sosaldbmoy_memberdeal";
 const portDB = "61004";
 const username = process.env.DB_USERNAME;  // Получаем данные из .env
 const password = process.env.DB_PASSWORD;
-const url = `mongodb://${username}:${password}@${hostname}:${portDB}/${database}`;
 
+const mongoURI = `mongodb://${username}:${password}@${hostname}:${portDB}/${database}`;
 
-let db;
-client.connect()
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true, ssl: false })
   .then(() => {
-    db = client.db("sosaldbmoy_memberdeal");
     console.log("✅ MongoDB подключена");
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("❌ Ошибка подключения к MongoDB:", err);
   });
 
-  app.post("/api/login", async (req, res) => {
-    const { username, password } = req.body;
-  
-    if (!db) return res.status(500).json({ error: "Нет соединения с БД" });
-  
-    try {
-      const user = await db.collection("users").findOne({ username, password });
-      if (!user) return res.status(401).json({ error: "Неверные данные" });
-  
-      res.json({
-        username: user.username,
-        email: user.email
-      });
-    } catch (err) {
-      console.error("Ошибка логина:", err);
-      res.status(500).json({ error: "Ошибка сервера" });
-    }
-  });
-  
+// Ваши другие маршруты и код
+app.listen(port, () => {
+  console.log(`✅ Сервер запущен на порту ${port}`);
+});
 
-// Настройка CORS
-const allowedOrigins = [
-  'https://fastfoodmania-github-io.onrender.com', // Первый сайт
-];
-
-console.log("Отправка запроса на /refresh");
-
-const corsOptions = {
-    origin: (origin, callback) => {
-        const allowedOrigins = [
-            "https://fastfoodmania-github-io.onrender.com",
-        ];
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true, // Обязательно для передачи s!
-};
-app.use(express.json());
-app.use(cors(corsOptions));
-// Используем CORS с настройками
-app.use(cors(corsOptions));
-app.use(cookieParser());
-// Подключение к MongoDB
-
-const mongoURI = process.env.MONGO_URI;
-
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  ssl: false
-})
-.then(() => console.log("✅ MongoDB connected по URI из .env"))
-.catch((error) => console.error("❌ MongoDB connection error:", error));
-
-
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  ssl: false, // Включено SSL
-})
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.error("MongoDB connection error:", error));
-
-// Middleware для обработки JSON
 
 // Функция проверки срока жизни токена
 function isTokenExpired(token) {
@@ -459,5 +395,41 @@ app.get('/get-order-history', (req, res) => {
       });
   } else {
       res.json({ success: false, message: 'Пользователь не авторизован' });
+  }
+});
+// Роут для получения профиля пользователя
+app.get('/profile', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: "Пользователь не авторизован" });
+  }
+
+  try {
+    const user = await User.findById(req.session.user._id);  // Получаем пользователя по ID из сессии
+    if (!user) {
+      return res.status(404).json({ message: "Пользователь не найден" });
+    }
+
+    res.json({ username: user.username, email: user.email });
+  } catch (err) {
+    console.error("Ошибка при получении профиля:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+// Роут для получения профиля пользователя
+app.get('/profile', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: "Пользователь не авторизован" });
+  }
+
+  try {
+    const user = await User.findById(req.session.user._id);  // Получаем пользователя по ID из сессии
+    if (!user) {
+      return res.status(404).json({ message: "Пользователь не найден" });
+    }
+
+    res.json({ username: user.username, email: user.email });
+  } catch (err) {
+    console.error("Ошибка при получении профиля:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
   }
 });
