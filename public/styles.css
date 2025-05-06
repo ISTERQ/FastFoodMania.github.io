@@ -742,3 +742,79 @@ a {
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
+
+
+.drawer {
+  position: fixed;
+  right: -300px;
+  top: 0;
+  width: 300px;
+  height: 100%;
+  background: #fff;
+  transition: right 0.3s ease;
+  z-index: 1000;
+}
+
+.drawer.open {
+  right: 0;
+}
+
+
+/* Стили для выдвижной панели */
+.sidebar {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+  z-index: 1001;
+  color: white;
+}
+
+.sidebar .sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #333;
+  font-size: 20px;
+}
+
+.sidebar .profile-content {
+  padding: 20px;
+}
+
+.sidebar a {
+  padding: 10px;
+  font-size: 18px;
+  text-decoration: none;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidebar a:hover {
+  color: #f1f1f1;
+}
+
+.sidebar .close-btn {
+  font-size: 30px;
+  color: white;
+  cursor: pointer;
+}
+
+/* Кнопка выхода */
+#logoutButton {
+  background-color: red;
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#logoutButton:hover {
+  background-color: darkred;
+}
