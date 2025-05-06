@@ -418,17 +418,171 @@ async function openProfileModal() {
     document.getElementById('modalOverlay').style.display = 'none';
 });
 
-function updateLoginButtonToProfile() {
-    const loginButton = document.getElementById("loginButton");
-    if (!loginButton) return;
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
   
-    loginButton.textContent = "Профиль";
-    loginButton.removeAttribute("href");
-    loginButton.id = "profileButton"; // меняем id, чтобы сработал слушатель
-    loginButton.addEventListener("click", async () => {
-      document.getElementById("profileSidebar").style.right = "0";
-      document.getElementById("profileOverlay").style.display = "block";
-      await loadOrderHistory();
-    });
+    try {
+      const response = await fetch("https://fastfoodmania-github-io.onrender.com/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        alert(data.error || "Ошибка входа");
+        return;
+      }
+  
+      // Успешный вход
+      localStorage.setItem("user", JSON.stringify(data));
+      updateUIAfterLogin(data);
+    } catch (err) {
+      console.error(err);
+      alert("Ошибка запроса");
+    }
+  });
+  
+  function updateUIAfterLogin(user) {
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("profile-button").style.display = "block";
+    document.getElementById("profile-name").textContent = user.username;
+    document.getElementById("profile-email").textContent = user.email;
 }
-     
+  
+// Обработчик формы входа
+document.getElementById("loginForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    const response = await fetch("/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        // Скрыть кнопку входа и показать кнопку профиля
+        document.getElementById("loginButton").style.display = "none";
+        document.getElementById("profileButton").style.display = "block";
+        alert(data.message);
+    } else {
+        alert(data.message);
+    }
+});
+
+// Перенаправление на страницу профиля при нажатии на кнопку "Профиль"
+document.getElementById("profileButton").addEventListener("click", function() {
+    window.location.href = "/profile"; // Перенаправление на страницу профиля
+});
+const express = require("express");
+const session = require("express-session");
+const bcrypt = require("bcryptjs");
+const MongoClient = require("mongodb").MongoClient;
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Настройка сессий
+app.use(session({ secret: "yourSecretKey", resave: false, saveUninitialized: true }));
+
+const url = "mongodb://yourMongoDbURL";
+const dbName = "yourDbName";
+const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
+
+client.connect().then(() => {
+    console.log("Connected to MongoDB");
+    const db = client.db(dbName);
+    const usersCollection = db.collection("users"); // Коллекция пользователей
+
+    // Роут для входа
+    app.post('/login', async (req, res) => {
+        const { email, password } = req.body;
+        const user = await usersCollection.findOne({ email });
+
+        if (user && bcrypt.compareSync(password, user.password)) {
+            req.session.user = user;  // Сохраняем информацию о пользователе в сессии
+            res.json({ success: true, message: 'Вы вошли в систему' });
+        } else {
+            res.json({ success: false, message: 'Неверные данные' });
+        }
+    });
+
+    // Роут для выхода
+    app.get('/logout', (req, res) => {
+        req.session.destroy();  // Удаляем сессию при выходе
+        res.json({ success: true, message: 'Выход из системы' });
+    });
+
+    // Запуск сервера
+    app.listen(3000, () => {
+        console.log("Server is running on port 3000");
+    });
+}).catch(err => console.error(err));
+
+
+// Открытие выдвижной панели профиля
+document.getElementById("profileButton").addEventListener("click", function() {
+    document.getElementById("profileSidebar").style.width = "300px";  // Выдвигаем панель
+    loadUserProfile();  // Загружаем информацию о профиле
+});
+
+// Закрытие выдвижной панели профиля
+document.getElementById("closeProfileSidebar").addEventListener("click", function() {
+    document.getElementById("profileSidebar").style.width = "0";  // Скрываем панель
+});
+
+// Получаем данные профиля с сервера
+async function loadUserProfile() {
+    const response = await fetch('/get-profile');
+    const data = await response.json();
+
+    if (data.success) {
+        // Заполняем информацию о пользователе в профиле
+        document.getElementById('profileName').innerText = data.user.name;
+        document.getElementById('profileEmail').innerText = data.user.email;
+
+        // Загружаем историю заказов (если нужно)
+        loadOrderHistory();
+    } else {
+        alert('Ошибка при загрузке профиля');
+    }
+}
+
+// Функция для загрузки истории заказов
+async function loadOrderHistory() {
+    const response = await fetch('/get-order-history');
+    const data = await response.json();
+
+    if (data.success) {
+        const historyContainer = document.getElementById('orderHistoryContainer');
+        historyContainer.innerHTML = '';
+
+        data.orders.forEach(order => {
+            const orderElement = document.createElement('div');
+            orderElement.innerText = `Заказ №${order.id}, Дата: ${order.date}`;
+            historyContainer.appendChild(orderElement);
+        });
+    } else {
+        alert('Ошибка при загрузке истории заказов');
+    }
+}
+
+// Кнопка выхода
+document.getElementById("logoutButton").addEventListener("click", async function() {
+    await fetch("/logout");
+    document.getElementById("profileButton").style.display = "none";
+    document.getElementById("loginButton").style.display = "block";
+    window.location.href = "/";  // Перенаправление на главную страницу
+});
+
