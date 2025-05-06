@@ -39,6 +39,10 @@
     <a href="#" id="cartButton" class="nav-button" style="position: relative;">
       <span id="cartText">Корзина | <span id="itemCount">0</span></span>
   </a>
+  <!-- Кнопка профиля, изначально скрыта -->
+  <a href="#" class="nav-button" id="profileButton" style="display:none;">
+  Профиль
+  </a>
   </nav>
 </header>
 
@@ -82,6 +86,42 @@
     </form>
   </div>
 </div>
+
+<button id="loginButton">Вход</button>  <!-- до входа -->
+<button id="profile-button" style="display: none;">Профиль</button> <!-- после входа -->
+
+<div id="profile-drawer" class="drawer">
+  <p id="profile-name"></p>
+  <p id="profile-email"></p>
+  <button id="logout-button">Выйти</button>
+</div>
+
+<form id="login-form">
+  <input id="username" />
+  <input id="password" type="password" />
+  <button type="submit">Войти</button>
+</form>
+
+<div id="profileSidebar" class="sidebar">
+  <div class="sidebar-header">
+      <h2>Профиль</h2>
+      <span class="close-btn" id="closeProfileSidebar">&times;</span>
+  </div>
+  <div class="profile-content">
+      <p><strong>Имя:</strong> <span id="profileName"></span></p>
+      <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+
+      <h3>История заказов</h3>
+      <div id="orderHistoryContainer">
+          Загрузка истории заказов...
+      </div>
+
+      <button id="logoutButton">Выйти</button>
+  </div>
+</div>
+
+<div id="login-section">...</div>
+
 
 <div id="orderConfirmModal" class="modal">
   <div class="modal-content">
