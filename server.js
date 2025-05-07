@@ -15,7 +15,9 @@ const Order = require('./models/Order');
 app.use(express.json());
 
 const { MongoClient } = require("mongodb");
-
+app.use(express.json());
+app.use(cors());
+app.use(cookieParser());
 const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
 const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
 
@@ -96,6 +98,39 @@ mongoose.connect(mongoURI, {
   .catch((error) => console.error("MongoDB connection error:", error));
 
 // Middleware для обработки JSON
+// Маршрут для входа
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // Находим пользователя по имени (или email)
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Пользователь с таким именем не найден' });
+    }
+
+    // Проверка пароля
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    // Ответ с данными пользователя
+    res.status(200).json({
+      username: user.username,
+      email: user.email
+    });
+
+  } catch (error) {
+    console.error('Ошибка входа:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
+  }
+});
+
+// Роуты для регистрации и других действий с пользователем
+
+
 
 // Функция проверки срока жизни токена
 function isTokenExpired(token) {
@@ -374,3 +409,5 @@ app.get('/orders/:userId', async (req, res) => {
     res.status(500).json({ message: "Ошибка сервера" });
   }
 });
+
+
