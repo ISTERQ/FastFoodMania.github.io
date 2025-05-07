@@ -215,26 +215,28 @@ app.post('/register', async (req, res) => {
     return res.status(500).json({ message: 'Ошибка регистрации пользователя', error: err.message });
   }
 });
-// Авторизация пользователя
+// Маршрут для входа
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Ищем пользователя по email, а не username
-    const user = await User.findOne({ email: username });
+    // Находим пользователя по имени (или email)
+    const user = await User.findOne({ username });
 
     if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+      return res.status(401).json({ message: 'Пользователь с таким именем не найден' });
     }
 
+    // Проверка пароля
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Неверный пароль' });
     }
 
+    // Ответ с данными пользователя
     res.status(200).json({
-      message: 'Вход выполнен',
-      userId: user._id
+      username: user.username,
+      email: user.email
     });
 
   } catch (error) {
@@ -242,6 +244,7 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Ошибка сервера при входе' });
   }
 });
+
 
 
 
