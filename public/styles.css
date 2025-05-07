@@ -710,8 +710,17 @@ a {
   overflow-y: auto;
 }
 
-.sidebar.open {
+/* Стили для выдвижной панели профиля */
+.sidebar {
+  position: fixed;
+  top: 0;
   right: 0;
+  width: 250px;
+  height: 100%;
+  background-color: #f9f9f9;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  padding: 20px;
 }
 
 .sidebar-header {
@@ -720,101 +729,18 @@ a {
   align-items: center;
 }
 
+.sidebar .close-btn {
+  font-size: 30px;
+  cursor: pointer;
+}
+
 .sidebar-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background-color: rgba(0, 0, 0, 0.5);
   display: none;
   z-index: 998;
-}
-
-.order-history {
-  margin-top: 20px;
-}
-
-.order-item {
-  background: #fff;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-
-.drawer {
-  position: fixed;
-  right: -300px;
-  top: 0;
-  width: 300px;
-  height: 100%;
-  background: #fff;
-  transition: right 0.3s ease;
-  z-index: 1000;
-}
-
-.drawer.open {
-  right: 0;
-}
-
-
-/* Стили для выдвижной панели */
-.sidebar {
-  height: 100%;
-  width: 0;
-  position: fixed;
-  top: 0;
-  right: 0;
-  background-color: #111;
-  overflow-x: hidden;
-  transition: 0.5s;
-  padding-top: 60px;
-  z-index: 1001;
-  color: white;
-}
-
-.sidebar .sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  background-color: #333;
-  font-size: 20px;
-}
-
-.sidebar .profile-content {
-  padding: 20px;
-}
-
-.sidebar a {
-  padding: 10px;
-  font-size: 18px;
-  text-decoration: none;
-  color: #818181;
-  display: block;
-  transition: 0.3s;
-}
-
-.sidebar a:hover {
-  color: #f1f1f1;
-}
-
-.sidebar .close-btn {
-  font-size: 30px;
-  color: white;
-  cursor: pointer;
-}
-
-/* Кнопка выхода */
-#logoutButton {
-  background-color: red;
-  color: white;
-  padding: 10px;
-  border: none;
-  cursor: pointer;
-}
-
-#logoutButton:hover {
-  background-color: darkred;
 }
