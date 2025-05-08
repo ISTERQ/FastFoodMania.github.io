@@ -529,11 +529,44 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 }
   
      
-const updateLoginButtonToProfile = () => {
-    loginButton.style.opacity = 0; // Скрываем кнопку "Войти"
-    setTimeout(() => {
-        loginButton.style.display = 'none'; // Убираем кнопку "Войти" из DOM после анимации
+document.addEventListener('DOMContentLoaded', () => {
+    const loginButton = document.getElementById('loginButton');
+    const profileButton = document.getElementById('profileButton');
+    
+    // Обновление кнопки "Войти" на "Профиль" после входа
+    const updateLoginButtonToProfile = () => {
+        loginButton.style.display = 'none'; // Скрываем кнопку "Войти"
         profileButton.style.display = 'inline-block'; // Показываем кнопку "Профиль"
-        setTimeout(() => profileButton.classList.add('show'), 50); // Плавно показываем кнопку "Профиль"
-    }, 500); // Время до скрытия кнопки "Войти" (пока идет анимация)
-};
+    };
+
+    // Обработка формы входа
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await fetch('https://fastfoodmania-api.onrender.com/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('userEmail', data.email);
+
+                alert("Вход выполнен!");
+                updateLoginButtonToProfile(); // Меняем кнопку на "Профиль"
+            } else {
+                alert(data.message || "Ошибка входа.");
+            }
+        } catch (error) {
+            console.error("Ошибка входа:", error);
+            alert("Ошибка при входе.");
+        }
+    });
+});
