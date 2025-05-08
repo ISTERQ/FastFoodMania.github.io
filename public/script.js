@@ -6,74 +6,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.getElementById('logoutButton');
     const profileName = document.getElementById('profile-name');
     const profileEmail = document.getElementById('profile-email');
-
-    // Открытие профиля
+  
+    // Открытие выдвижной панели профиля
     profileButton.addEventListener('click', () => {
-        profileSidebar.classList.add('open');
-        profileOverlay.classList.add('visible');
+      profileSidebar.style.right = '0';
+      profileOverlay.style.display = 'block';
     });
-
-    // Закрытие профиля
+  
+    // Закрытие выдвижной панели профиля
     closeProfileSidebar.addEventListener('click', () => {
-        profileSidebar.classList.remove('open');
-        profileOverlay.classList.remove('visible');
+      profileSidebar.style.right = '-250px';
+      profileOverlay.style.display = 'none';
     });
-
+  
+    // Логика выхода из системы
+    logoutButton.addEventListener('click', () => {
+      // Очистить localStorage или выполнить другие действия для выхода
+      console.log("Выход из аккаунта");
+  
+      // Временно скрыть панель профиля
+      profileSidebar.style.right = '-250px';
+      profileOverlay.style.display = 'none';
+    });
+  
     // Закрытие профиля при клике на overlay
     profileOverlay.addEventListener('click', () => {
-        profileSidebar.classList.remove('open');
-        profileOverlay.classList.remove('visible');
+      profileSidebar.style.right = '-250px';
+      profileOverlay.style.display = 'none';
     });
+  
+    // Пример кода, который будет работать после успешного входа пользователя
+    fetch('https://fastfoodmania-api.onrender.com/login')
+      .then(response => response.json())
+      .then(data => {
+        profileName.innerText = `Имя: ${data.username}`;
+        profileEmail.innerText = `Email: ${data.email}`;
+      })
+      .catch(err => {
+        console.error('Ошибка получения данных профиля:', err);
+      });
 
-    // Логика выхода из аккаунта
-    logoutButton.addEventListener('click', () => {
-        localStorage.clear();
-        alert("Выход из аккаунта");
-
-        profileSidebar.classList.remove('open');
-        profileOverlay.classList.remove('visible');
-    });
-
-    // Обновление кнопки "Войти" на "Профиль" после успешного входа
-    const updateLoginButtonToProfile = () => {
-        loginButton.style.display = 'none'; // Скрываем кнопку "Войти"
-        profileButton.style.display = 'inline-block'; // Показываем кнопку "Профиль"
-    };
-
-    // Обработка формы входа
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-
-        try {
-            const response = await fetch('https://fastfoodmania-api.onrender.com/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('username', data.username);
-                localStorage.setItem('userEmail', data.email);
-
-                alert("Вход выполнен!");
-                updateLoginButtonToProfile(); // Меняем кнопку на "Профиль"
-                profileName.textContent = "Имя: " + data.username;
-                profileEmail.textContent = "Email: " + data.email;
-            } else {
-                alert(data.message || "Ошибка входа.");
-            }
-        } catch (error) {
-            console.error("Ошибка входа:", error);
-            alert("Ошибка при входе.");
-        }
-    });
-
-
+  
 // Навигация по секциям (обновленный код)
 document.querySelectorAll('.nav-button').forEach(button => {
     button.addEventListener('click', function(event) {
@@ -529,44 +502,3 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 }
   
      
-document.addEventListener('DOMContentLoaded', () => {
-    const loginButton = document.getElementById('loginButton');
-    const profileButton = document.getElementById('profileButton');
-    
-    // Обновление кнопки "Войти" на "Профиль" после входа
-    const updateLoginButtonToProfile = () => {
-        loginButton.style.display = 'none'; // Скрываем кнопку "Войти"
-        profileButton.style.display = 'inline-block'; // Показываем кнопку "Профиль"
-    };
-
-    // Обработка формы входа
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-
-        try {
-            const response = await fetch('https://fastfoodmania-api.onrender.com/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('username', data.username);
-                localStorage.setItem('userEmail', data.email);
-
-                alert("Вход выполнен!");
-                updateLoginButtonToProfile(); // Меняем кнопку на "Профиль"
-            } else {
-                alert(data.message || "Ошибка входа.");
-            }
-        } catch (error) {
-            console.error("Ошибка входа:", error);
-            alert("Ошибка при входе.");
-        }
-    });
-});
