@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const loginButton = document.getElementById('loginButton');
     const profileButton = document.getElementById('profileButton');
     const profileSidebar = document.getElementById('profileSidebar');
     const closeProfileSidebar = document.getElementById('closeProfileSidebar');
@@ -7,81 +6,73 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.getElementById('logoutButton');
     const profileName = document.getElementById('profile-name');
     const profileEmail = document.getElementById('profile-email');
-    const loginForm = document.getElementById('loginForm');
-  
-    // Логика для входа
-    loginButton.addEventListener('click', async (event) => {
-      event.preventDefault();
-  
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-  
-      const data = { username, password };
-  
-      try {
-        const response = await fetch('https://your-backend-api-url.com/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-  
-        const result = await response.json();
-  
-        if (response.ok) {
-          alert("Вход успешен!");
-  
-          // Скрываем форму входа и показываем кнопку "Профиль"
-          loginForm.style.display = 'none';
-          profileButton.style.display = 'inline-block';
-  
-          // Сохраняем данные пользователя в localStorage для дальнейшего использования
-          localStorage.setItem('user', JSON.stringify(result));
-  
-        } else {
-          alert(result.message);
-        }
-      } catch (err) {
-        console.error('Ошибка:', err);
-        alert('Ошибка при входе.');
-      }
-    });
-  
-    // Открытие выдвижной панели профиля
+
+    // Открытие профиля
     profileButton.addEventListener('click', () => {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user) {
-        profileName.innerText = `Имя: ${user.username}`;
-        profileEmail.innerText = `Email: ${user.email}`;
-      }
-  
-      // Показать выдвижную панель профиля
-      profileSidebar.style.right = '0';
-      profileOverlay.style.display = 'block';
+        profileSidebar.classList.add('open');
+        profileOverlay.classList.add('visible');
     });
-  
-    // Закрытие выдвижной панели профиля
+
+    // Закрытие профиля
     closeProfileSidebar.addEventListener('click', () => {
-      profileSidebar.style.right = '-250px';
-      profileOverlay.style.display = 'none';
+        profileSidebar.classList.remove('open');
+        profileOverlay.classList.remove('visible');
     });
-  
-    // Логика выхода из системы
-    logoutButton.addEventListener('click', () => {
-      localStorage.removeItem('user');
-      loginForm.style.display = 'block';
-      profileButton.style.display = 'none';
-      profileSidebar.style.right = '-250px';
-      profileOverlay.style.display = 'none';
-    });
-  
+
     // Закрытие профиля при клике на overlay
     profileOverlay.addEventListener('click', () => {
-      profileSidebar.style.right = '-250px';
-      profileOverlay.style.display = 'none';
+        profileSidebar.classList.remove('open');
+        profileOverlay.classList.remove('visible');
     });
-  });
-  
-  
+
+    // Логика выхода из аккаунта
+    logoutButton.addEventListener('click', () => {
+        localStorage.clear();
+        alert("Выход из аккаунта");
+
+        profileSidebar.classList.remove('open');
+        profileOverlay.classList.remove('visible');
+    });
+
+    // Обновление кнопки "Войти" на "Профиль" после успешного входа
+    const updateLoginButtonToProfile = () => {
+        loginButton.style.display = 'none'; // Скрываем кнопку "Войти"
+        profileButton.style.display = 'inline-block'; // Показываем кнопку "Профиль"
+    };
+
+    // Обработка формы входа
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await fetch('https://your-api.com/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('userEmail', data.email);
+
+                alert("Вход выполнен!");
+                updateLoginButtonToProfile(); // Меняем кнопку на "Профиль"
+                profileName.textContent = "Имя: " + data.username;
+                profileEmail.textContent = "Email: " + data.email;
+            } else {
+                alert(data.message || "Ошибка входа.");
+            }
+        } catch (error) {
+            console.error("Ошибка входа:", error);
+            alert("Ошибка при входе.");
+        }
+    });
+
 
 // Навигация по секциям (обновленный код)
 document.querySelectorAll('.nav-button').forEach(button => {
@@ -393,7 +384,7 @@ document.querySelectorAll('.nav-button').forEach(button => {
           openModal(modal);
       });
   });
-
+});
 
 // Закрытие корзины вручную
 function closeCartModal() {
@@ -460,7 +451,7 @@ function closeCartModal() {
       console.error(err);
       alert("Произошла ошибка при оформлении заказа.");
     }
-
+});
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -536,4 +527,13 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     document.getElementById("profile-name").textContent = user.username;
     document.getElementById("profile-email").textContent = user.email;
 }
-});
+  
+     
+const updateLoginButtonToProfile = () => {
+    loginButton.style.opacity = 0; // Скрываем кнопку "Войти"
+    setTimeout(() => {
+        loginButton.style.display = 'none'; // Убираем кнопку "Войти" из DOM после анимации
+        profileButton.style.display = 'inline-block'; // Показываем кнопку "Профиль"
+        setTimeout(() => profileButton.classList.add('show'), 50); // Плавно показываем кнопку "Профиль"
+    }, 500); // Время до скрытия кнопки "Войти" (пока идет анимация)
+};
