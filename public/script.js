@@ -1,28 +1,78 @@
 document.addEventListener('DOMContentLoaded', () => {
-// Навигация по секциям (обновленный код)
-document.querySelectorAll('.nav-button').forEach(button => {
-    button.addEventListener('click', function(event) {
+    // Навигация по секциям (обновленный код)
+    document.querySelectorAll('.nav-button').forEach(button => {
+      button.addEventListener('click', function(event) {
         event.preventDefault();
         const targetId = this.getAttribute('href');
         const targetElement = document.querySelector(targetId);
-        
-        // Динамически получаем высоту заголовка
+  
+        if (!targetElement) return; // добавим защиту от пустых ссылок
+  
         const header = document.querySelector('header');
-        const headerOffset = header.offsetHeight; 
-        
-        // Расчет позиции для центрирования
+        const headerOffset = header.offsetHeight;
+  
         const elementPosition = targetElement.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset 
-            - headerOffset // Учет высоты заголовка
-            - (window.innerHeight / 2.5) // Центрирование по вертикали
-            + (targetElement.offsetHeight / 2); // Учет высоты элемента
-
+        const offsetPosition = elementPosition + window.pageYOffset
+          - headerOffset
+          - (window.innerHeight / 2.5)
+          + (targetElement.offsetHeight / 2);
+  
         window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
+          top: offsetPosition,
+          behavior: 'smooth'
         });
+      });
     });
-});
+  
+    // Профиль
+    const profileButton = document.getElementById('profileButton');
+    const profileSidebar = document.getElementById('profileSidebar');
+    const profileOverlay = document.getElementById('profileOverlay');
+    const closeProfileSidebar = document.getElementById('closeProfileSidebar');
+  
+    if (profileButton) {
+      profileButton.addEventListener('click', () => {
+        profileSidebar.classList.add('open');
+        profileOverlay.style.display = 'block';
+      });
+    }
+  
+    if (profileOverlay) {
+      profileOverlay.addEventListener('click', () => {
+        profileSidebar.classList.remove('open');
+        profileOverlay.style.display = 'none';
+      });
+    }
+  
+    if (closeProfileSidebar) {
+      closeProfileSidebar.addEventListener('click', () => {
+        profileSidebar.classList.remove('open');
+        profileOverlay.style.display = 'none';
+      });
+    }
+
+    // Выход из аккаунта
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+      logoutButton.addEventListener('click', async () => {
+        try {
+          await fetch('https://fastfoodmania-api.onrender.com/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+
+          localStorage.clear();
+          alert('Вы вышли из аккаунта');
+          location.reload(); // Перезагрузка страницы
+        } catch (err) {
+          console.error('Ошибка при выходе:', err);
+          alert('Не удалось выйти. Попробуйте позже.');
+        }
+      });
+    }
+  });
+
+  
 
   // Модальные окна
   const modal = document.getElementById('foodModal');
@@ -309,7 +359,6 @@ document.querySelectorAll('.nav-button').forEach(button => {
           openModal(modal);
       });
   });
-});
 
 // Закрытие корзины вручную
 function closeCartModal() {
@@ -453,4 +502,75 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     document.getElementById("profile-email").textContent = user.email;
 }
   
-     
+
+
+
+
+
+
+
+async function loadOrderHistory() {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+  
+    const apiUrl = 'https://fastfoodmania-api.onrender.com/api/orders/'; // Новый API адрес (используется в первую очередь)
+  
+    try {
+      // Пробуем запросить данные с нового API
+      const response = await fetch(`${apiUrl}${userId}`);
+      const orders = await response.json();
+  
+      const container = document.getElementById("profileContent");
+      if (!orders.length) {
+        container.innerHTML = "<p>Заказов пока нет.</p>";
+        return;
+      }
+  
+      container.innerHTML = orders.map(order => {
+        const itemsHtml = order.items.map(i =>
+          `<li>${i.name} — ${i.quantity} шт. (${i.price}₽)</li>`
+        ).join("");
+  
+        return `
+          <div class="order-block">
+            <h4>Заказ от ${new Date(order.createdAt).toLocaleString()}</h4>
+            <ul>${itemsHtml}</ul>
+            <p><strong>Итого:</strong> ${order.total}₽</p>
+          </div>
+        `;
+      }).join("");
+    } catch (error) {
+      console.error("Ошибка загрузки заказов с основного API:", error);
+  
+      // Если ошибка с основным API, пробуем старый URL
+      try {
+        const oldApiUrl = 'https://fastfoodmania-github-io.onrender.com/api/orders/';
+        const response = await fetch(`${oldApiUrl}${userId}`);
+        const orders = await response.json();
+  
+        const container = document.getElementById("profileContent");
+        if (!orders.length) {
+          container.innerHTML = "<p>Заказов пока нет.</p>";
+          return;
+        }
+  
+        container.innerHTML = orders.map(order => {
+          const itemsHtml = order.items.map(i =>
+            `<li>${i.name} — ${i.quantity} шт. (${i.price}₽)</li>`
+          ).join("");
+  
+          return `
+            <div class="order-block">
+              <h4>Заказ от ${new Date(order.createdAt).toLocaleString()}</h4>
+              <ul>${itemsHtml}</ul>
+              <p><strong>Итого:</strong> ${order.total}₽</p>
+            </div>
+          `;
+        }).join("");
+      } catch (error) {
+        console.error("Ошибка загрузки заказов с резервного API:", error);
+        document.getElementById("profileContent").innerHTML = "<p>Ошибка при загрузке.</p>";
+      }
+    }
+  }
+  
