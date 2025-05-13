@@ -385,3 +385,17 @@ app.get('/api/orders/:userId', async (req, res) => {
     res.status(500).json({ message: "Ошибка сервера" });
   }
 });
+
+
+// server.js
+app.get('/api/orders', async (req, res) => {
+    const userId = req.userId;  // Получаем userId из JWT
+    if (!userId) return res.status(401).json({ error: 'Пользователь не авторизован' });
+
+    try {
+        const orders = await Order.find({ userId }).populate('items');
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка при получении заказов', message: err.message });
+    }
+});
