@@ -1,78 +1,80 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Навигация по секциям (обновленный код)
     document.querySelectorAll('.nav-button').forEach(button => {
-      button.addEventListener('click', function(event) {
-        event.preventDefault();
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
+    button.addEventListener('click', function(event) {
+      event.preventDefault();
+      const targetId = this.getAttribute('href');
+      const targetElement = document.querySelector(targetId);
   
-        if (!targetElement) return; // добавим защиту от пустых ссылок
+      if (!targetElement) return; // добавим защиту от пустых ссылок
   
-        const header = document.querySelector('header');
-        const headerOffset = header.offsetHeight;
+      const header = document.querySelector('header');
+      const headerOffset = header.offsetHeight;
   
-        const elementPosition = targetElement.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset
-          - headerOffset
-          - (window.innerHeight / 2.5)
-          + (targetElement.offsetHeight / 2);
+      const elementPosition = targetElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset
+        - headerOffset
+        - (window.innerHeight / 2.5)
+        + (targetElement.offsetHeight / 2);
   
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
       });
     });
-  
-    // Профиль
+  });
+});  
+document.addEventListener('DOMContentLoaded', () => {
     const profileButton = document.getElementById('profileButton');
     const profileSidebar = document.getElementById('profileSidebar');
-    const profileOverlay = document.getElementById('profileOverlay');
+    const profileOverlay = document.getElementById('profileOverlay'); // Получаем оверлей из HTML
     const closeProfileSidebar = document.getElementById('closeProfileSidebar');
-  
-    if (profileButton) {
-      profileButton.addEventListener('click', () => {
-        profileSidebar.classList.add('open');
-        profileOverlay.style.display = 'block';
-      });
-    }
-  
-    if (profileOverlay) {
-      profileOverlay.addEventListener('click', () => {
-        profileSidebar.classList.remove('open');
-        profileOverlay.style.display = 'none';
-      });
-    }
-  
+    const logoutButton = document.getElementById('logoutButton'); // Кнопка выхода из аккаунта
+
+    // Открытие профиля
+    profileButton.addEventListener('click', () => {
+        profileSidebar.classList.add('open'); // Показываем панель профиля
+        profileOverlay.style.display = 'block'; // Показываем затемнение
+        document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
+    });
+
+    // Закрытие профиля при клике на затемнение
+    profileOverlay.addEventListener('click', () => {
+        profileSidebar.classList.remove('open'); // Скрываем панель профиля
+        profileOverlay.style.display = 'none'; // Скрываем затемнение
+        document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
+    });
+
+    // Закрытие профиля через кнопку "Закрыть"
     if (closeProfileSidebar) {
-      closeProfileSidebar.addEventListener('click', () => {
-        profileSidebar.classList.remove('open');
-        profileOverlay.style.display = 'none';
-      });
+        closeProfileSidebar.addEventListener('click', () => {
+            profileSidebar.classList.remove('open');
+            profileOverlay.style.display = 'none'; // Скрываем затемнение
+            document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
+        });
     }
 
-    // Выход из аккаунта
-    const logoutButton = document.getElementById('logoutButton');
+    // Обработчик выхода из аккаунта
     if (logoutButton) {
-      logoutButton.addEventListener('click', async () => {
-        try {
-          await fetch('https://fastfoodmania-api.onrender.com/logout', {
-            method: 'POST',
-            credentials: 'include'
-          });
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await fetch('https://fastfoodmania-api.onrender.com/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
 
-          localStorage.clear();
-          alert('Вы вышли из аккаунта');
-          location.reload(); // Перезагрузка страницы
-        } catch (err) {
-          console.error('Ошибка при выходе:', err);
-          alert('Не удалось выйти. Попробуйте позже.');
-        }
-      });
+                localStorage.clear();
+                alert('Вы вышли из аккаунта');
+                location.reload(); // Перезагрузка страницы после выхода
+            } catch (err) {
+                console.error('Ошибка при выходе:', err);
+                alert('Не удалось выйти. Попробуйте позже.');
+            }
+        });
     }
-  });
+});
 
-  
+
 
   // Модальные окна
   const modal = document.getElementById('foodModal');
@@ -574,3 +576,48 @@ async function loadOrderHistory() {
     }
   }
   
+async function loadOrderHistory() {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+        });
+
+        const orders = await response.json();
+        if (response.ok) {
+            displayOrders(orders);
+        } else {
+            alert("Ошибка при загрузке истории заказов");
+        }
+    } catch (error) {
+        console.error('Ошибка при получении истории заказов:', error);
+        alert("Произошла ошибка при загрузке данных.");
+    }
+}
+
+function displayOrders(orders) {
+    const profileContent = document.getElementById('profileContent');
+    if (orders.length === 0) {
+        profileContent.innerHTML = '<p>У вас нет заказов.</p>';
+        return;
+    }
+
+    profileContent.innerHTML = '<h3>История заказов:</h3>';
+    orders.forEach(order => {
+        const orderElement = document.createElement('div');
+        orderElement.classList.add('order');
+        orderElement.innerHTML = `
+            <p><strong>Дата:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+            <p><strong>Сумма:</strong> ${order.total} ₽</p>
+            <ul>
+                ${order.items.map(item => `<li>${item.name} - ${item.quantity} x ${item.price} ₽</li>`).join('')}
+            </ul>
+        `;
+        profileContent.appendChild(orderElement);
+    });
+}
