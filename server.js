@@ -399,3 +399,51 @@ app.get('/api/orders', async (req, res) => {
         res.status(500).json({ error: 'Ошибка при получении заказов', message: err.message });
     }
 });
+
+
+// server.js
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Ищем пользователя по email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+    }
+
+    // Сравниваем пароль с хешированным в базе
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    // Создаём токен
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+
+    res.status(200).json({
+      message: 'Вход выполнен',
+      accessToken,
+      userId: user._id
+    });
+  } catch (error) {
+    console.error('Ошибка при входе:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
+  }
+});
+
+
+// server.js
+app.get('/api/users/:id', async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Ошибка при получении данных пользователя', error: error.message });
+  }
+});
