@@ -606,7 +606,6 @@ function displayOrders(orders) {
         profileContent.innerHTML = '<p>У вас нет заказов.</p>';
         return;
     }
-
     profileContent.innerHTML = '<h3>История заказов:</h3>';
     orders.forEach(order => {
         const orderElement = document.createElement('div');
