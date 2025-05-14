@@ -1,36 +1,30 @@
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault(); // Отменяем стандартное поведение формы
-
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
+// Вход пользователя
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
 
   try {
-    // Отправка данных на сервер для проверки логина и пароля
-    const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email, password }),
-      credentials: "include"
+    const user = await User.findOne({ email: username });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    // Генерация токена
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+
+    res.status(200).json({
+      message: 'Вход выполнен',
+      accessToken,
+      userId: user._id
     });
 
-    const data = await response.json();
-
-    if (response.ok) {
-      // Если вход успешный, сохраняем данные в localStorage
-      localStorage.setItem("accessToken", data.accessToken); // Сохраняем токен
-      localStorage.setItem("userId", data.userId); // Сохраняем ID пользователя
-
-      console.log(localStorage.getItem("accessToken")); // Проверяем токен
-      console.log(localStorage.getItem("userId")); // Проверяем userId
-
-      // Перенаправляем на страницу профиля
-      alert("Вход выполнен!");
-      window.location.href = "/profile"; // Редирект на страницу профиля
-    } else {
-      alert(data.message || "Ошибка входа."); // Сообщение об ошибке
-    }
   } catch (error) {
-    console.error("Ошибка входа:", error);
-    alert("Произошла ошибка. Попробуйте снова.");
+    console.error('Ошибка при входе:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
   }
 });
