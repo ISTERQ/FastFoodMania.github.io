@@ -10,7 +10,7 @@ registerForm.addEventListener('submit', async (event) => {
   const data = { username, email, password };
 
   try {
-    const response = await fetch('https://fastfoodmania-github-io.onrender.com/register', {
+    const response = await fetch('https://fastfoodmania-api.onrender.com/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -19,14 +19,13 @@ registerForm.addEventListener('submit', async (event) => {
     const result = await response.json();
 
     if (response.ok) {
-      alert("Регистрация успешна! Теперь войдите в свой аккаунт.");
+      // Сохраняем токен и userId в localStorage
+      localStorage.setItem("accessToken", result.accessToken); // Сохраняем токен
+      localStorage.setItem("userId", result.userId); // Сохраняем userId
 
-      // Переключение на форму входа
-      document.getElementById('registrationForm').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'block';
-
-      // Подставляем email в форму входа
-      document.getElementById('loginEmail').value = email;
+      // Перенаправляем пользователя на страницу профиля
+      alert("Регистрация успешна! Добро пожаловать!");
+      window.location.href = "/profile"; // Перенаправление на профиль
     } else {
       alert("Ошибка: " + result.message);
     }
