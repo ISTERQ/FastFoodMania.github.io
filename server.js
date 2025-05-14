@@ -147,20 +147,11 @@ function generateTokens(user, site) {
 
 
 
+const jwt = require('jsonwebtoken'); // Подключаем библиотеку для работы с токенами
+
 // Регистрация пользователя
 app.post('/register', async (req, res) => {
-  const schema = Joi.object({
-    username: Joi.string().trim().min(3).max(30).required(),
-    password: Joi.string().min(6).required(),
-    email: Joi.string().email().required()
-  });
-
-  const { error } = schema.validate(req.body);
-  if (error) {
-    return res.status(400).json({ message: error.details[0].message });
-  }
-
-  const { username, password, email } = req.body;
+  const { username, email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ username });
@@ -172,14 +163,28 @@ app.post('/register', async (req, res) => {
     const newUser = new User({ username, email, password: hashedPassword });
 
     await newUser.save();
-    console.log(`✅ Пользователь "${username}" зарегистрирован.`);
-    return res.status(201).json({ message: 'Пользователь успешно зарегистрирован' });
+
+    // Генерация токена
+    const accessToken = jwt.sign(
+      { id: newUser._id, username: newUser.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' } // Токен действителен 30 минут
+    );
+
+    // Отправляем токен в ответ
+    res.status(201).json({
+      message: 'Пользователь успешно зарегистрирован',
+      accessToken, // Отправляем токен
+      userId: newUser._id // Отправляем userId
+    });
 
   } catch (err) {
     console.error("Ошибка регистрации:", err);
-    return res.status(500).json({ message: 'Ошибка регистрации пользователя', error: err.message });
+    res.status(500).json({ message: 'Ошибка регистрации пользователя', error: err.message });
   }
 });
+
+
 // Авторизация пользователя
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -504,5 +509,8 @@ app.get('/api/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
+
+
+
 
 
