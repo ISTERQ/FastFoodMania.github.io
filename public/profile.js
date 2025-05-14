@@ -1,46 +1,41 @@
 document.addEventListener("DOMContentLoaded", () => {
   const accessToken = localStorage.getItem("accessToken");
 
-  // Проверка, есть ли токен в localStorage
+  // Проверка наличия токена, но без перенаправления
   if (!accessToken) {
-    alert("Пожалуйста, войдите в систему.");
-    window.location.href = "/login"; // Перенаправление на страницу входа
+    console.log("Токен не найден, пользователь не авторизован.");
+    // Вместо перенаправления, например, показать форму входа:
+    document.getElementById("loginForm").style.display = "block"; // Покажите форму входа
   } else {
-    loadProfile(); // Если токен есть, загружаем данные профиля
+    loadProfile(); // Если токен есть, загружаем профиль
   }
 });
 
 async function loadProfile() {
   const userId = localStorage.getItem("userId");
 
-  try {
-    // Запрос на сервер для получения данных пользователя
-    const response = await fetch(`/api/users/${userId}`, {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}` // Используем токен для авторизации
-      }
-    });
-
-    // Обработка ответа сервера
-    const data = await response.json();
-    if (response.ok) {
-      // Отображаем данные профиля
-      document.getElementById('profileContent').innerHTML = `
-        <h3>Привет, ${data.username}!</h3>
-        <p>Email: ${data.email}</p>
-        <p>Город: ${data.city}</p>
-        <h4>История заказов:</h4>
-        <ul id="orderHistory"></ul>
-      `;
-      loadOrderHistory(data.orders); // Загружаем историю заказов пользователя
-    } else {
-      alert("Ошибка при загрузке данных профиля.");
+  const response = await fetch(`/api/users/${userId}`, {
+    headers: {
+      "Authorization": `Bearer ${localStorage.getItem("accessToken")}` // Используем токен для авторизации
     }
-  } catch (error) {
-    console.error("Ошибка при загрузке профиля:", error);
-    alert("Произошла ошибка при загрузке данных профиля.");
+  });
+
+  const data = await response.json();
+  if (response.ok) {
+    // Отображаем данные профиля
+    document.getElementById('profileContent').innerHTML = `
+      <h3>Привет, ${data.username}!</h3>
+      <p>Email: ${data.email}</p>
+      <p>Город: ${data.city}</p>
+      <h4>История заказов:</h4>
+      <ul id="orderHistory"></ul>
+    `;
+    loadOrderHistory(data.orders); // Загружаем историю заказов
+  } else {
+    alert("Ошибка при загрузке данных профиля.");
   }
 }
+
 
 
 async function loadOrderHistory(orderIds) {
