@@ -130,13 +130,13 @@ function generateTokens(user, site) {
     const issuedAt = Math.floor(Date.now() / 1000);
     
     const accessToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fastfoodmania-github-io.onrender.com", iat: issuedAt },
+        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
         JWT_SECRET,
         { expiresIn: "30m" }  // ⏳ Access-токен на 30 минут
     );
 
     const refreshToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fastfoodmania-github-io.onrender.com", iat: issuedAt },
+        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
         REFRESH_SECRET,
         { expiresIn: "7d" }  // 🔄 Refresh-токен на 7 дней
     );
@@ -145,9 +145,6 @@ function generateTokens(user, site) {
 }
 
 
-
-
-const jwt = require('jsonwebtoken'); // Подключаем библиотеку для работы с токенами
 
 // Регистрация пользователя
 app.post('/register', async (req, res) => {
