@@ -434,16 +434,73 @@ app.post('/login', async (req, res) => {
 });
 
 
-// server.js
+// В сервере (например, в server.js)
 app.get('/api/users/:id', async (req, res) => {
-  const userId = req.params.id;
+  try {
+    const user = await User.findById(req.params.id).populate('orders');
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error('Ошибка при получении данных пользователя:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+// В сервере (например, в server.js)
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Заказ не найден' });
+    }
+    res.json(order);
+  } catch (err) {
+    console.error('Ошибка при получении данных заказа:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+
+// В сервере (например, в server.js)
+app.post('/api/orders', async (req, res) => {
+  const { userId, items, total } = req.body;
 
   try {
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
+    const newOrder = new Order({
+      userId,   // Связь с пользователем
+      items,    // Товары в заказе
+      total     // Общая стоимость
+    });
 
+    // Сохраняем заказ в базе
+    await newOrder.save();
+
+    // Обновляем пользователя, добавляя заказ в его историю
+    const user = await User.findById(userId);
+    if (user) {
+      user.orders.push(newOrder._id); // Добавляем ID нового заказа в историю пользователя
+      await user.save();
+    }
+
+    res.status(201).json(newOrder); // Возвращаем новый заказ
+  } catch (err) {
+    console.error("Ошибка при добавлении заказа:", err);
+    res.status(500).json({ message: "Ошибка при создании заказа" });
+  }
+});
+
+
+// В сервере (например, в server.js)
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate('orders');
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
     res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: 'Ошибка при получении данных пользователя', error: error.message });
+  } catch (err) {
+    console.error('Ошибка при получении данных пользователя:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
