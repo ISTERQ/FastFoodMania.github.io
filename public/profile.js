@@ -42,6 +42,7 @@ async function loadProfile() {
   }
 }
 
+
 async function loadOrderHistory(orderIds) {
   const orderHistoryContainer = document.getElementById('orderHistory');
 
