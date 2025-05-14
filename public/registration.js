@@ -23,9 +23,12 @@ registerForm.addEventListener('submit', async (event) => {
       localStorage.setItem("accessToken", result.accessToken); // Сохраняем токен
       localStorage.setItem("userId", result.userId); // Сохраняем userId
 
-      // Перенаправляем пользователя на страницу профиля
+      // Скрываем форму регистрации и показываем профиль
+      document.getElementById("registrationForm").style.display = "none";
+      document.getElementById("profileSidebar").style.display = "block"; // Показываем профиль
+      loadProfile(); // Загружаем данные профиля
+
       alert("Регистрация успешна! Добро пожаловать!");
-      window.location.href = "/profile"; // Перенаправление на профиль
     } else {
       alert("Ошибка: " + result.message);
     }
