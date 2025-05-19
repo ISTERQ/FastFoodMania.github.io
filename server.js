@@ -493,14 +493,22 @@ app.post('/api/orders', async (req, res) => {
 });
 
 
-// В сервере (например, в server.js)
 app.get('/api/users/:id', async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate('orders');
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-    res.json(user);
+    const user = await User.findById(req.params.id)
+      .populate({
+        path: 'orders',
+        options: { sort: { createdAt: -1 } // Сортировка по дате
+      });
+    
+    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
+    
+    res.json({
+      username: user.username,
+      email: user.email,
+      orders: user.orders // Добавляем заказы в ответ
+    });
+    
   } catch (err) {
     console.error('Ошибка при получении данных пользователя:', err);
     res.status(500).json({ message: 'Ошибка сервера' });
@@ -511,3 +519,20 @@ app.get('/api/users/:id', async (req, res) => {
 
 
 
+app.post('/api/orders', async (req, res) => {
+  try {
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+
+    // Добавляем заказ к пользователю
+    await User.findByIdAndUpdate(
+      req.body.userId,
+      { $push: { orders: newOrder._id } }
+    );
+
+    res.status(201).json(newOrder);
+  } catch (err) {
+    console.error("Ошибка при добавлении заказа:", err);
+    res.status(500).json({ message: "Ошибка при создании заказа" });
+  }
+});
