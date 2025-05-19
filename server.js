@@ -10,7 +10,6 @@ const app = express();
 const fs = require('fs');
 const reviewsFile = 'reviews.json';
 const Joi = require("joi");
-const Order = require('./models/Order');
 app.use(express.json());
 const User = require("./models/User");
 const Order = require("./models/Order");
