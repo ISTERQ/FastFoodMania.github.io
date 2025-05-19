@@ -13,8 +13,13 @@ const reviewsFile = 'reviews.json';
 const Joi = require("joi");
 const Order = require('./models/Order');
 app.use(express.json());
-
+const User = require("./models/User");
+const Order = require("./models/Order");
 const { MongoClient } = require("mongodb");
+
+// ==== Middleware ====
+app.use(cookieParser());
+app.use(cors({ origin: true, credentials: true }));
 
 const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
 const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
@@ -29,24 +34,7 @@ client.connect()
     console.error("❌ Ошибка подключения к MongoDB:", err);
   });
 
-  app.post("/api/login", async (req, res) => {
-    const { username, password } = req.body;
-  
-    if (!db) return res.status(500).json({ error: "Нет соединения с БД" });
-  
-    try {
-      const user = await db.collection("users").findOne({ username, password });
-      if (!user) return res.status(401).json({ error: "Неверные данные" });
-  
-      res.json({
-        username: user.username,
-        email: user.email
-      });
-    } catch (err) {
-      console.error("Ошибка логина:", err);
-      res.status(500).json({ error: "Ошибка сервера" });
-    }
-  });
+
   
 
 // Настройка CORS
@@ -182,34 +170,6 @@ app.post('/register', async (req, res) => {
 });
 
 
-// Авторизация пользователя
-app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    // Ищем пользователя по email, а не username
-    const user = await User.findOne({ email: username });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Неверный пароль' });
-    }
-
-    res.status(200).json({
-      message: 'Вход выполнен',
-      userId: user._id
-    });
-
-  } catch (error) {
-    console.error('Ошибка входа:', error);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
-  }
-});
-
 
 
 // Обработка запроса на обновление токена для ПК-версии
@@ -331,10 +291,11 @@ app.use((req, res) => {
   res.status(404).json({ message: "Ресурс не найден" });
 });
 
-// Порт, на котором будет работать сервер
-const PORT = process.env.PORT || 3000;
+
+// ==== Запуск сервера ====
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на порту ${PORT}`);
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
 
 
@@ -403,65 +364,7 @@ app.get('/api/orders', async (req, res) => {
 });
 
 
-// server.js
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
 
-  try {
-    // Ищем пользователя по email
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
-    }
-
-    // Сравниваем пароль с хешированным в базе
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Неверный пароль' });
-    }
-
-    // Создаём токен
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
-
-    res.status(200).json({
-      message: 'Вход выполнен',
-      accessToken,
-      userId: user._id
-    });
-  } catch (error) {
-    console.error('Ошибка при входе:', error);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
-  }
-});
-
-
-// В сервере (например, в server.js)
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).populate('orders');
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-    res.json(user);
-  } catch (err) {
-    console.error('Ошибка при получении данных пользователя:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-// В сервере (например, в server.js)
-app.get('/api/orders/:id', async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
-    }
-    res.json(order);
-  } catch (err) {
-    console.error('Ошибка при получении данных заказа:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
 
 
 // В сервере (например, в server.js)
@@ -492,13 +395,11 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
+
 app.get('/api/users/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .populate({
-        path: 'orders',
-        options: { sort: { createdAt: -1 } } // ← Закрываем скобку здесь
-      });
+      .populate({ path: 'orders', options: { sort: { createdAt: -1 } } });
 
     if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
 
@@ -507,13 +408,11 @@ app.get('/api/users/:id', async (req, res) => {
       email: user.email,
       orders: user.orders
     });
-
   } catch (err) {
-    console.error('Ошибка при получении данных пользователя:', err);
+    console.error('Ошибка при получении профиля:', err);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
-
 
 
 app.post('/api/orders', async (req, res) => {
@@ -534,23 +433,57 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// Добавь в server.js
-app.get('/api/users/:id', async (req, res) => {
+// ==== Получение профиля и заказов пользователя ====
+app.get("/api/users/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .populate('orders') // Подгружаем связанные заказы
-      .exec();
+      .populate({ path: "orders", options: { sort: { createdAt: -1 } } });
 
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
+    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+
     res.json({
       username: user.username,
       email: user.email,
       orders: user.orders
     });
   } catch (err) {
-    console.error('Ошибка при получении профиля:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
+    console.error("Ошибка при получении профиля:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
   }
 });
+
+// ==== Создание заказа ====
+app.post("/api/orders", async (req, res) => {
+  const { userId, items, total } = req.body;
+  try {
+    const order = new Order({ userId, items, total });
+    await order.save();
+
+    await User.findByIdAndUpdate(userId, { $push: { orders: order._id } });
+
+    res.status(201).json({ message: "Заказ добавлен" });
+  } catch (err) {
+    console.error("Ошибка при создании заказа:", err);
+    res.status(500).json({ message: "Ошибка при заказе" });
+  }
+});
+
+// ==== Получение заказов пользователя ====
+app.get("/api/orders/:userId", async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка получения заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+// ==== Статические файлы и запуск ====
+app.use(express.static(path.join(__dirname, "public")));
+
+// ==== Обработка 404 ====
+app.use((req, res) => {
+  res.status(404).json({ message: "Ресурс не найден" });
+});
+
