@@ -68,7 +68,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             alert("Вход выполнен!");
 
             document.getElementById('loginModal').style.display = 'none';
-            window.location.href = "/"; // Перенаправление на главную
+            window.location.href = "https://fastfoodmania-github-io.onrender.com/";
         } else {
             alert(data.message || "Ошибка входа.");
         }
