@@ -16,7 +16,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     if (res.ok) {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("userId", data.userId);
-      window.location.href = "/profile.html";
+      window.location.reload(); // чтобы остаться на той же странице
     } else {
       alert(data.message);
     }
