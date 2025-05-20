@@ -284,10 +284,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Что-то пошло не так!', error: err.message });
 });
 
-// Обработка 404 ошибок
-app.use((req, res) => {
-  res.status(404).json({ message: "Ресурс не найден" });
-});
 
 
 // ==== Запуск сервера ====
@@ -480,8 +476,4 @@ app.get("/api/orders/:userId", async (req, res) => {
 // ==== Статические файлы и запуск ====
 app.use(express.static(path.join(__dirname, "public")));
 
-// ==== Обработка 404 ====
-app.use((req, res) => {
-  res.status(404).json({ message: "Ресурс не найден" });
-});
 
