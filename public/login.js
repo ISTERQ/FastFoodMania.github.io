@@ -10,9 +10,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       body: JSON.stringify({ email, password }),
       credentials: "include" // если сервер работает с cookie
     });
-
     const data = await res.json();
-
     if (res.ok) {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("userId", data.userId);
