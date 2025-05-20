@@ -68,7 +68,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             alert("Вход выполнен!");
 
             document.getElementById('loginModal').style.display = 'none';
-            updateLoginButtonToProfile();
+            window.location.href = "/"; // Перенаправление на главную
         } else {
             alert(data.message || "Ошибка входа.");
         }
