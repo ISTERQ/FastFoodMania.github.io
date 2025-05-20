@@ -16,7 +16,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     if (res.ok) {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("userId", data.userId);
-      window.location.reload(); // чтобы остаться на той же странице
+      window.location.href = "https://fastfoodmania-github-io.onrender.com/";
     } else {
       alert(data.message);
     }
