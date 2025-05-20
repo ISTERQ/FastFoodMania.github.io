@@ -209,4 +209,39 @@ async function loadOrderHistory() {
       console.error("Ошибка загрузки заказов:", error);
     }
 }
-     
+
+
+async function loadOrderHistory() {
+  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("accessToken");
+
+  if (!userId || !token) return;
+
+  try {
+    const res = await fetch(`https://fastfoodmania-api.onrender.com/api/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      document.getElementById("profileContent").innerHTML = `
+        <h3>Привет, ${data.username}</h3>
+        <p>Email: ${data.email}</p>
+        <h4>История заказов:</h4>
+        ${data.orders.map(order => `
+          <div>
+            <strong>${new Date(order.createdAt).toLocaleString()}</strong>
+            <ul>${order.items.map(item => `<li>${item.name} × ${item.quantity}</li>`).join('')}</ul>
+            <p>Итого: ${order.total} ₽</p>
+          </div>
+        `).join('')}
+      `;
+    } else {
+      document.getElementById("profileContent").innerText = "Не удалось загрузить данные.";
+    }
+  } catch (err) {
+    console.error("Ошибка при загрузке профиля:", err);
+  }
+}
