@@ -167,7 +167,71 @@ app.post('/register', async (req, res) => {
   }
 });
 
+const JWT_SECRET = process.env.JWT_SECRET;
 
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).populate('orders');
+
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    const accessToken = jwt.sign(
+      { id: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '30m' }
+    );
+
+    res.status(200).json({
+      message: 'Вход выполнен успешно',
+      accessToken,
+      userId: user._id
+    });
+  } catch (err) {
+    console.error('Ошибка входа:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).populate('orders');
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    const accessToken = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' }
+    );
+
+    res.status(200).json({
+      message: 'Вход выполнен успешно',
+      accessToken,
+      userId: user._id
+    });
+  } catch (err) {
+    console.error('Ошибка входа:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
 
 
 // Обработка запроса на обновление токена для ПК-версии
