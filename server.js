@@ -71,10 +71,34 @@ const corsOptions = {
 };
 app.use(express.json());
 app.use(cors(corsOptions));
+
+// маршруты ...
+
+// централизованный обработчик ошибок
+app.use((err, req, res, next) => {
+  // Добавляем CORS заголовки на всякий случай
+  res.header("Access-Control-Allow-Origin", "https://fastfoodmania-github-io.onrender.com");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  console.error(err.stack);
+  res.status(500).json({ message: "Что-то пошло не так", error: err.message });
+});
+
 // Используем CORS с настройками
-app.use(cors(corsOptions));
 app.use(cookieParser());
 // Подключение к MongoDB
+
+app.options('*', cors(corsOptions)); // Ответ на preflight запросы для всех маршрутов
+
+origin: (origin, callback) => {
+  console.log('CORS origin:', origin);
+  if (!origin || allowedOrigins.includes(origin)) {
+    callback(null, true);
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
+}
+
 
 const mongoURI = process.env.MONGO_URI;
 
