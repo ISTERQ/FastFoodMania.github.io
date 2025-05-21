@@ -17,7 +17,11 @@ const { MongoClient } = require("mongodb");
 
 // ==== Middleware ====
 app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: 'https://fastfoodmania-github-io.onrender.com',
+  credentials: true
+}));
+
 
 const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
 const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
