@@ -621,3 +621,4 @@ function displayOrders(orders) {
         profileContent.appendChild(orderElement);
     });
 }
+
