@@ -52,9 +52,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(cors(corsOptions));
 // Используем CORS с настройками
-app.use(cors(corsOptions));
 app.use(cookieParser());
 // Подключение к MongoDB
 
@@ -102,6 +100,12 @@ app.use((req, res, next) => {
     next();
 });
 
+const cors = require("cors"); // убедись, что эта строка есть
+
+app.use(cors({
+  origin: "https://fastfoodmania-github-io.onrender.com",
+  credentials: true
+}));
 
 
 // Указание папки со статическими файлами
