@@ -1,24 +1,28 @@
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
 
   try {
-    const res = await fetch("https://fastfoodmania-api.onrender.com/login", {
+    const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
-      credentials: "include" // если сервер работает с cookie
+      credentials: "include"
     });
-    const data = await res.json();
-    if (res.ok) {
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("userId", data.userId);
-      window.location.href = "https://fastfoodmania-github-io.onrender.com/";
+
+    const data = await response.json();
+    if (response.ok) {
+      localStorage.setItem("accessToken", data.accessToken); // Сохраняем токен
+      localStorage.setItem("userId", data.userId); // Сохраняем userId
+      alert("Вход выполнен!");
+      window.location.href = "/profile"; // Перенаправление на страницу профиля
     } else {
-      alert(data.message);
+      alert(data.message || "Ошибка входа.");
     }
-  } catch (err) {
-    console.error("Ошибка входа:", err);
+  } catch (error) {
+    console.error("Ошибка входа:", error);
+    alert("Произошла ошибка. Попробуйте снова.");
   }
 });
