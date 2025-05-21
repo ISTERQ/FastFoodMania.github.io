@@ -1,37 +1,36 @@
-const registerForm = document.getElementById('registrationForm');
+document.addEventListener('DOMContentLoaded', () => {
+  const registerForm = document.getElementById('registrationForm');
+  if (!registerForm) return;
 
-registerForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
+  registerForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-  const username = document.getElementById('registerUsername').value;
-  const email = document.getElementById('registerEmail').value;
-  const password = document.getElementById('registerPassword').value;
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
 
-  const data = { username, email, password };
+    const data = { username, email, password };
 
-  try {
-    const response = await fetch('https://fastfoodmania-api.onrender.com/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+    try {
+      const response = await fetch('https://fastfoodmania-api.onrender.com/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (response.ok) {
-      alert("Регистрация успешна! Теперь войдите в свой аккаунт.");
-
-      // Переключение на форму входа
-      document.getElementById('registrationForm').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'block';
-
-      // Подставляем email в форму входа
-      document.getElementById('loginEmail').value = email;
-    } else {
-      alert("Ошибка: " + result.message);
+      if (response.ok) {
+        alert("Регистрация успешна! Теперь войдите в свой аккаунт.");
+        document.getElementById('registrationForm').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('loginEmail').value = email;
+      } else {
+        alert("Ошибка: " + result.message);
+      }
+    } catch (err) {
+      console.error('Ошибка:', err);
+      alert('Ошибка при регистрации.');
     }
-  } catch (err) {
-    console.error('Ошибка:', err);
-    alert('Ошибка при регистрации.');
-  }
+  });
 });
