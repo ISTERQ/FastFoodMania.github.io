@@ -4,8 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', function(event) {
       event.preventDefault();
       const targetId = this.getAttribute('href');
-      if (!targetId || targetId === '#') return;
-
       const targetElement = document.querySelector(targetId);
   
       if (!targetElement) return; // добавим защиту от пустых ссылок
