@@ -18,7 +18,7 @@ function showLogin() {
 showLogin(); // По умолчанию
 
 // === Регистрация ===
-const registerForm = document.querySelector("#registerForm form");
+const registerForm = document.querySelector("#registrationForm");
 registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
