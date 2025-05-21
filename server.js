@@ -46,19 +46,11 @@ const allowedOrigins = [
 
 console.log("Отправка запроса на /refresh");
 
-const corsOptions = {
-    origin: (origin, callback) => {
-        const allowedOrigins = [
-            "https://fastfoodmania-github-io.onrender.com",
-        ];
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true, // Обязательно для передачи s!
-};
+app.use(cors({
+  origin: "https://fastfoodmania-github-io.onrender.com",
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(cors(corsOptions));
 // Используем CORS с настройками
