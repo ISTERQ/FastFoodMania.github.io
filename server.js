@@ -31,17 +31,20 @@ client.connect()
 
   
 
-// Настройка CORS
-const allowedOrigins = [
-  'https://fastfoodmania-github-io.onrender.com', // Первый сайт
-];
 
 console.log("Отправка запроса на /refresh");
 
+
 const corsOptions = {
-  origin: true,
-  credentials: true,
+  origin: true,       // ⬅️ или "*" если не используешь cookies
+  credentials: true   // ⬅️ обязательно, если работаешь с логином
 };
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // обработка preflight-запросов
+
+
+app.use(cors(corsOptions));
 
 
 app.use(express.json());
@@ -66,14 +69,7 @@ app.use(cookieParser());
 
 app.options('*', cors(corsOptions)); // Ответ на preflight запросы для всех маршрутов
 
-origin: (origin, callback) => {
-  console.log('CORS origin:', origin);
-  if (!origin || allowedOrigins.includes(origin)) {
-    callback(null, true);
-  } else {
-    callback(new Error('Not allowed by CORS'));
-  }
-}
+
 
 
 const mongoURI = process.env.MONGO_URI;
