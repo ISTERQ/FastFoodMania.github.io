@@ -234,6 +234,22 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Возвращает данные пользователя и его заказы
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate("orders");
+    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+
+    res.json({
+      username: user.username,
+      email: user.email,
+      orders: user.orders
+    });
+  } catch (err) {
+    console.error("Ошибка при загрузке профиля:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
 
 
 // Обработка запроса на обновление токена для ПК-версии
