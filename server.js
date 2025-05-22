@@ -29,24 +29,6 @@ client.connect()
     console.error("❌ Ошибка подключения к MongoDB:", err);
   });
 
-  app.post("/api/login", async (req, res) => {
-    const { username, password } = req.body;
-  
-    if (!db) return res.status(500).json({ error: "Нет соединения с БД" });
-  
-    try {
-      const user = await db.collection("users").findOne({ username, password });
-      if (!user) return res.status(401).json({ error: "Неверные данные" });
-  
-      res.json({
-        username: user.username,
-        email: user.email
-      });
-    } catch (err) {
-      console.error("Ошибка логина:", err);
-      res.status(500).json({ error: "Ошибка сервера" });
-    }
-  });
   
 
 // Настройка CORS
