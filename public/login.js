@@ -1,3 +1,4 @@
+// login.js
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -8,16 +9,16 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username: email, password }), // <--- Заменили "email" на "username"
       credentials: "include"
     });
 
     const data = await response.json();
     if (response.ok) {
-      localStorage.setItem("accessToken", data.accessToken); // Сохраняем токен
-      localStorage.setItem("userId", data.userId); // Сохраняем userId
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("userId", data.userId);
       alert("Вход выполнен!");
-      window.location.href = "/profile"; // Перенаправление на страницу профиля
+      window.location.href = "/profile";
     } else {
       alert(data.message || "Ошибка входа.");
     }
