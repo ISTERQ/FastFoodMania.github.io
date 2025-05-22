@@ -56,15 +56,16 @@ app.use(cors(corsOptions));
 
 // маршруты ...
 
-// централизованный обработчик ошибок
 app.use((err, req, res, next) => {
-  // Добавляем CORS заголовки на всякий случай
   res.header("Access-Control-Allow-Origin", "https://fastfoodmania-github-io.onrender.com");
   res.header("Access-Control-Allow-Credentials", "true");
 
+  console.log("🚨 Логин упал здесь", err.message); // <-- Вот добавленный лог
   console.error(err.stack);
+
   res.status(500).json({ message: "Что-то пошло не так", error: err.message });
 });
+
 
 // Используем CORS с настройками
 app.use(cookieParser());
