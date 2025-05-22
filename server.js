@@ -33,7 +33,7 @@ client.connect()
 
 // Настройка CORS
 const allowedOrigins = [
-  'https://fastfoodmania-api.onrender.com', // Первый сайт
+  'https://fastfoodmania-github-io.onrender.com', // Первый сайт
 ];
 
 console.log("Отправка запроса на /refresh");
