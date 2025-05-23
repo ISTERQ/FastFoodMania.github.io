@@ -1,3 +1,4 @@
+
 async function loadProfile() {
   const email = localStorage.getItem("username");
   const password = localStorage.getItem("password");
