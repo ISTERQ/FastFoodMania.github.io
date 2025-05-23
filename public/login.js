@@ -9,5 +9,8 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   localStorage.setItem("username", email);
 
   alert("Вход выполнен!");
-  window.location.href = "/profile"; // Перенаправление на профиль
+
+  // Закрываем модальное окно входа
+  document.getElementById("loginModal").style.display = "none";
+  document.getElementById("modalOverlay").style.display = "none";
 });
