@@ -2,7 +2,16 @@ async function loadProfile() {
   const email = localStorage.getItem("username");
 
   if (email !== "test@gmail.com") {
-    document.getElementById('profileContent').innerHTML = "<p>Доступ разрешён только для demo пользователя.</p>";
+    document.getElementById('profileContent').innerHTML = `
+      <div class="profile-info">
+        <h3>👋 Привет, гость!</h3>
+        <p>📧 Вы не авторизованы как demo-пользователь.</p>
+      </div>
+      <div class="order-history">
+        <h4>📦 История заказов:</h4>
+        <p>Нет доступных заказов.</p>
+      </div>
+    `;
     return;
   }
 
