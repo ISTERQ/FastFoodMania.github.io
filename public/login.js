@@ -5,7 +5,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
 
-  // Сохраняем данные в localStorage
   localStorage.setItem("accessToken", "fakeToken");
   localStorage.setItem("userId", "fakeUser");
   localStorage.setItem("username", email);
