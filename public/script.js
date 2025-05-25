@@ -25,34 +25,68 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });  
 document.addEventListener('DOMContentLoaded', () => {
-    const profileButton = document.getElementById('profileButton');
-    const profileSidebar = document.getElementById('profileSidebar');
-    const profileOverlay = document.getElementById('profileOverlay'); // Получаем оверлей из HTML
-    const closeProfileSidebar = document.getElementById('closeProfileSidebar');
-    const logoutButton = document.getElementById('logoutButton'); // Кнопка выхода из аккаунта
+  const profileButton = document.getElementById('profileButton');
+  const profileSidebar = document.getElementById('profileSidebar');
+  const profileOverlay = document.getElementById('profileOverlay'); // Оверлей профиля
+  const closeProfileSidebar = document.getElementById('closeProfileSidebar');
+  const logoutButton = document.getElementById('logoutButton'); // Кнопка выхода
+  const cartButton = document.getElementById('cartButton'); // Получаем кнопку корзины
+  const cartOverlay = document.getElementById('cartOverlay'); // Оверлей корзины
+  const cart = document.getElementById('cart'); // Сам блок корзины
 
-    // Открытие профиля
-    profileButton.addEventListener('click', () => {
-        profileSidebar.classList.add('open'); // Показываем панель профиля
-        profileOverlay.style.display = 'block'; // Показываем затемнение
-        document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
+  // Обработчик клика по кнопке "Профиль"
+  if (profileButton) {
+    profileButton.addEventListener('click', function(event) {
+      event.preventDefault(); // отменяем стандартное поведение ссылки
+      profileSidebar.classList.add('open'); // открыть панель профиля
+      profileOverlay.style.display = 'block'; // показать оверлей
+      document.body.style.overflow = 'hidden'; // заблокировать прокрутку страницы
     });
+  }
 
-    // Закрытие профиля при клике на затемнение
+  // Закрытие панели профиля при клике на оверлей
+  if (profileOverlay) {
     profileOverlay.addEventListener('click', () => {
-        profileSidebar.classList.remove('open'); // Скрываем панель профиля
-        profileOverlay.style.display = 'none'; // Скрываем затемнение
-        document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
+      profileSidebar.classList.remove('open');
+      profileOverlay.style.display = 'none';
+      document.body.style.overflow = ''; // восстановить прокрутку
     });
+  }
 
-    // Закрытие профиля через кнопку "Закрыть"
-    if (closeProfileSidebar) {
-        closeProfileSidebar.addEventListener('click', () => {
-            profileSidebar.classList.remove('open');
-            profileOverlay.style.display = 'none'; // Скрываем затемнение
-            document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
-        });
-    }
+  // Закрытие профиля по кнопке "Закрыть"
+  if (closeProfileSidebar) {
+    closeProfileSidebar.addEventListener('click', () => {
+      profileSidebar.classList.remove('open');
+      profileOverlay.style.display = 'none';
+      document.body.style.overflow = '';
+    });
+  }
+
+  // Обработчик кнопки "Корзина"
+  if (cartButton) {
+    cartButton.addEventListener('click', function(event) {
+      event.preventDefault();
+      cart.style.right = '0'; // показать корзину
+      if (cartOverlay) cartOverlay.style.display = 'block'; // показать затемнение
+    });
+  }
+
+  // Обработчик закрытия корзины по оверлею (если есть)
+  if (cartOverlay) {
+    cartOverlay.addEventListener('click', () => {
+      cart.style.right = '-40%'; // скрыть корзину
+      cartOverlay.style.display = 'none'; // скрыть затемнение
+    });
+  }
+
+  // Кнопка выхода из аккаунта (если нужна)
+  if (logoutButton) {
+    logoutButton.addEventListener('click', async () => {
+      // Ваш код выхода из аккаунта
+    });
+  }
+});
+
 
     // Обработчик выхода из аккаунта
     if (logoutButton) {
@@ -72,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+
 
 
 
@@ -705,3 +739,5 @@ document.getElementById('closeOrderDetails').addEventListener('click', () => {
 });
 
 showOrderDetails(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
+
+
