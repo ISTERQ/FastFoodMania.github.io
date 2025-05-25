@@ -725,3 +725,39 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+// Функция показать модалку с деталями заказа
+function showOrderDetailsModal(orderDetailsHtml) {
+  const modal = document.getElementById('orderDetailsModal');
+  const content = document.getElementById('orderDetailsContent');
+  content.innerHTML = orderDetailsHtml; // Вставляем html с блюдами и суммой
+  modal.style.display = 'block';
+}
+
+// Закрытие модалки детали заказа
+document.getElementById('closeOrderDetails').addEventListener('click', () => {
+  document.getElementById('orderDetailsModal').style.display = 'none';
+});
+document.getElementById('checkoutButton').addEventListener('click', () => {
+  if (!isUserLoggedIn()) {
+    openModal(loginModal);
+    alert('Пожалуйста, войдите в аккаунт, чтобы оформить заказ.');
+    return;
+  }
+
+  if (Object.keys(cartData).length === 0) {
+    alert('Корзина пуста. Добавьте блюда для оформления заказа.');
+    return;
+  }
+
+  let orderDetailsHtml = '<ul>';
+  let total = 0;
+
+  for (const itemId in cartData) {
+    const item = cartData[itemId];
+    orderDetailsHtml += `<li>${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽</li>`;
+    total += item.price * item.quantity;
+  }
+  orderDetailsHtml += `</ul><p><strong>Итого: ${total} ₽</strong></p>`;
+
+  showOrderDetailsModal(orderDetailsHtml);
+});
