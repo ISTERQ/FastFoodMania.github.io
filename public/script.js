@@ -398,49 +398,36 @@ function closeCartModal() {
     document.getElementById('modalOverlay').style.display = 'none';
   });
   
-document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const userId = localStorage.getItem("userId");
-  const phone = document.getElementById('phone').value;
-  const address = document.getElementById('address').value;
-
-  const items = Object.values(cartData);
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  try {
-    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, items, total, phone, address })
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert("🎉 Заказ успешно оформлен!");
-      document.getElementById('orderConfirmModal').style.display = 'none';
-      document.getElementById('modalOverlay').style.display = 'none';
-
-      // Очистить корзину
-      for (const id in cartData) {
-        delete cartData[id];
+  // Обработка финального оформления заказа
+  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = localStorage.getItem("userId");
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+  
+    const items = Object.values(cartData); // используем cartData
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+    try {
+      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items, total, phone, address })
+      });
+  
+      const result = await response.json();
+      if (response.ok) {
+        alert("🎉 Заказ успешно оформлен!");
+        document.getElementById('orderConfirmModal').style.display = 'none';
+        document.getElementById('modalOverlay').style.display = 'none';
+      } else {
+        alert("Ошибка: " + result.message);
       }
-      updateCartUI();
-      updateCartText();
-
-      // Обновить историю заказов в профиле
-      if (typeof loadOrderHistory === 'function') {
-        await loadOrderHistory();
-      }
-    } else {
-      alert("Ошибка: " + result.message);
+    } catch (err) {
+      console.error(err);
+      alert("Произошла ошибка при оформлении заказа.");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Произошла ошибка при оформлении заказа.");
-  }
 });
-
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -589,6 +576,29 @@ async function loadOrderHistory() {
     }
   }
   
+async function loadOrderHistory() {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+        });
+
+        const orders = await response.json();
+        if (response.ok) {
+            displayOrders(orders);
+        } else {
+            alert("Ошибка при загрузке истории заказов");
+        }
+    } catch (error) {
+        console.error('Ошибка при получении истории заказов:', error);
+        alert("Произошла ошибка при загрузке данных.");
+    }
+}
 
 function displayOrders(orders) {
     const profileContent = document.getElementById('profileContent');
@@ -611,24 +621,36 @@ function displayOrders(orders) {
         profileContent.appendChild(orderElement);
     });
 }
-
-
-// Проверка авторизации
+// Проверяем, залогинен ли пользователь (фейковая проверка)
 function isUserLoggedIn() {
   return !!localStorage.getItem('userId');
 }
 
-// Открыть модалку подтверждения заказа
-function openOrderConfirmationForm() {
-  document.getElementById('orderConfirmModal').style.display = 'block';
+// Открытие модалки входа
+function openLoginModal() {
+  document.getElementById('loginModal').style.display = 'block';
   document.getElementById('modalOverlay').style.display = 'block';
 }
 
+// Открытие модалки с деталями заказа
+function showOrderDetailsModal(detailsHtml) {
+  const modal = document.getElementById('orderDetailsModal');
+  document.getElementById('orderDetailsContent').innerHTML = detailsHtml;
+  modal.style.display = 'block';
+  document.getElementById('modalOverlay').style.display = 'block';
+}
+
+// Закрытие модалок
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Добавление в корзину
+  // Добавление блюда в корзину
   document.getElementById('addToCart').addEventListener('click', () => {
     if (!isUserLoggedIn()) {
-      openModal(loginModal);
+      openLoginModal();
       alert('Пожалуйста, войдите в аккаунт, чтобы добавить блюда в корзину.');
       return;
     }
@@ -643,113 +665,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Кнопка оформления заказа
+  // Кнопка оформить заказ
   document.getElementById('checkoutButton').addEventListener('click', () => {
     if (!isUserLoggedIn()) {
-      openModal(loginModal);
+      closeModal('cart');
+      openLoginModal();
       alert('Пожалуйста, войдите в аккаунт, чтобы оформить заказ.');
       return;
     }
+
     if (Object.keys(cartData).length === 0) {
       alert('Корзина пуста. Добавьте блюда для оформления заказа.');
       return;
     }
 
-    let orderDetails = 'Ваш заказ:\n\n';
+    // Формируем html с деталями заказа
+    let detailsHtml = '<ul>';
     let total = 0;
-    for (const itemId in cartData) {
-      const item = cartData[itemId];
-      orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
+    for (const id in cartData) {
+      const item = cartData[id];
+      detailsHtml += `<li>${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽</li>`;
       total += item.price * item.quantity;
     }
-    orderDetails += `\nИтого: ${total} ₽`;
-    alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
+    detailsHtml += `</ul><p><strong>Итого: ${total} ₽</strong></p>`;
+    detailsHtml += `<p>Подробности заказа отправлены на вашу почту.</p>`;
 
-    openOrderConfirmationForm();
+    showOrderDetailsModal(detailsHtml);
   });
 
+  // Закрытие модалки деталей заказа
+  document.getElementById('closeOrderDetails').addEventListener('click', () => {
+    closeModal('orderDetailsModal');
+  });
 
-// Функция показать модалку с деталями заказа
-function showOrderDetailsModal(orderDetailsHtml) {
-  const modal = document.getElementById('orderDetailsModal');
-  const content = document.getElementById('orderDetailsContent');
-  content.innerHTML = orderDetailsHtml; // Вставляем html с блюдами и суммой
-  modal.style.display = 'block';
-}
+  // Обработка финального оформления заказа (отправка формы)
+  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-// Закрытие модалки детали заказа
-document.getElementById('closeOrderDetails').addEventListener('click', () => {
-  document.getElementById('orderDetailsModal').style.display = 'none';
-});
-document.getElementById('checkoutButton').addEventListener('click', () => {
-  if (!isUserLoggedIn()) {
-    openModal(loginModal);
-    alert('Пожалуйста, войдите в аккаунт, чтобы оформить заказ.');
-    return;
-  }
+    const userId = localStorage.getItem('userId');
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
 
-  if (Object.keys(cartData).length === 0) {
-    alert('Корзина пуста. Добавьте блюда для оформления заказа.');
-    return;
-  }
+    const items = Object.values(cartData);
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  let orderDetailsHtml = '<ul>';
-  let total = 0;
+    try {
+      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items, total, phone, address })
+      });
 
-  for (const itemId in cartData) {
-    const item = cartData[itemId];
-    orderDetailsHtml += `<li>${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽</li>`;
-    total += item.price * item.quantity;
-  }
-  orderDetailsHtml += `</ul><p><strong>Итого: ${total} ₽</strong></p>`;
+      if (response.ok) {
+        alert('🎉 Заказ успешно оформлен!');
+        closeModal('orderConfirmModal');
 
-  showOrderDetailsModal(orderDetailsHtml);
-});
-// Проверка авторизации (у вас userId в localStorage)
-function isUserLoggedIn() {
-  return !!localStorage.getItem('userId');
-}
+        // Очищаем корзину
+        for (const id in cartData) {
+          delete cartData[id];
+        }
+        updateCartUI();
+        updateCartText();
 
-// Показ модального окна с деталями заказа
-function showOrderDetailsModal(orderDetailsHtml) {
-  const modal = document.getElementById('orderDetailsModal');
-  const content = document.getElementById('orderDetailsContent');
-  content.innerHTML = orderDetailsHtml;
-  modal.style.display = 'block';
-  document.getElementById('modalOverlay').style.display = 'block';
-}
-
-// Закрытие модалки деталей заказа по крестику
-document.getElementById('closeOrderDetails').addEventListener('click', () => {
-  document.getElementById('orderDetailsModal').style.display = 'none';
-  document.getElementById('modalOverlay').style.display = 'none';
-});
-
-// Обработчик клика на кнопку «Оформить заказ»
-document.getElementById('checkoutButton').addEventListener('click', () => {
-  if (!isUserLoggedIn()) {
-    // Если не залогинен — показываем модалку входа
-    closeCartModal(); // Функция из вашего кода — закрывает корзину
-    document.getElementById('loginModal').style.display = 'block';
-    document.getElementById('modalOverlay').style.display = 'block';
-    return;
-  }
-
-  if (Object.keys(cartData).length === 0) {
-    alert('Корзина пуста. Добавьте блюда перед оформлением заказа.');
-    return;
-  }
-
-  // Формируем html с деталями заказа
-  let orderDetailsHtml = '<ul>';
-  let total = 0;
-  for (const itemId in cartData) {
-    const item = cartData[itemId];
-    orderDetailsHtml += `<li>${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽</li>`;
-    total += item.price * item.quantity;
-  }
-  orderDetailsHtml += `</ul><p><strong>Итого: ${total} ₽</strong></p>`;
-
-  showOrderDetailsModal(orderDetailsHtml);
-  
+        // Обновляем профиль (если функция есть)
+        if (typeof loadProfile === 'function') {
+          await loadProfile();
+        }
+      } else {
+        const result = await response.json();
+        alert('Ошибка: ' + result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Произошла ошибка при оформлении заказа.');
+    }
+  });
 });
