@@ -761,3 +761,50 @@ document.getElementById('checkoutButton').addEventListener('click', () => {
 
   showOrderDetailsModal(orderDetailsHtml);
 });
+// Проверка авторизации (у вас userId в localStorage)
+function isUserLoggedIn() {
+  return !!localStorage.getItem('userId');
+}
+
+// Показ модального окна с деталями заказа
+function showOrderDetailsModal(orderDetailsHtml) {
+  const modal = document.getElementById('orderDetailsModal');
+  const content = document.getElementById('orderDetailsContent');
+  content.innerHTML = orderDetailsHtml;
+  modal.style.display = 'block';
+  document.getElementById('modalOverlay').style.display = 'block';
+}
+
+// Закрытие модалки деталей заказа по крестику
+document.getElementById('closeOrderDetails').addEventListener('click', () => {
+  document.getElementById('orderDetailsModal').style.display = 'none';
+  document.getElementById('modalOverlay').style.display = 'none';
+});
+
+// Обработчик клика на кнопку «Оформить заказ»
+document.getElementById('checkoutButton').addEventListener('click', () => {
+  if (!isUserLoggedIn()) {
+    // Если не залогинен — показываем модалку входа
+    closeCartModal(); // Функция из вашего кода — закрывает корзину
+    document.getElementById('loginModal').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+    return;
+  }
+
+  if (Object.keys(cartData).length === 0) {
+    alert('Корзина пуста. Добавьте блюда перед оформлением заказа.');
+    return;
+  }
+
+  // Формируем html с деталями заказа
+  let orderDetailsHtml = '<ul>';
+  let total = 0;
+  for (const itemId in cartData) {
+    const item = cartData[itemId];
+    orderDetailsHtml += `<li>${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽</li>`;
+    total += item.price * item.quantity;
+  }
+  orderDetailsHtml += `</ul><p><strong>Итого: ${total} ₽</strong></p>`;
+
+  showOrderDetailsModal(orderDetailsHtml);
+});
