@@ -622,3 +622,42 @@ function displayOrders(orders) {
     });
 }
 
+
+document.getElementById('checkoutButton').addEventListener('click', () => {
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    // Если пользователь не залогинен — показываем окно входа
+    openModal(loginModal);
+    alert('Пожалуйста, войдите в аккаунт, чтобы оформить заказ.');
+    return; // Прекращаем дальнейшее выполнение
+  }
+
+  // Проверка, есть ли товары в корзине
+  if (Object.keys(cartData).length === 0) {
+    alert('Корзина пуста. Пожалуйста, добавьте блюда для оформления заказа.');
+    return;
+  }
+
+  // Формируем строку с деталями заказа
+  let orderDetails = 'Ваш заказ:\n\n';
+  let total = 0;
+
+  for (const itemId in cartData) {
+    const item = cartData[itemId];
+    orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
+    total += item.price * item.quantity;
+  }
+
+  orderDetails += `\nИтого: ${total} ₽`;
+
+  // Показываем окно с подробностями (можно заменить alert на модалку по желанию)
+  alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
+
+  // После оформления очищаем корзину
+  for (const itemId in cartData) {
+    delete cartData[itemId];
+  }
+  updateCartUI();
+  updateCartText();
+});
