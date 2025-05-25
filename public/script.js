@@ -398,36 +398,59 @@ function closeCartModal() {
     document.getElementById('modalOverlay').style.display = 'none';
   });
   
-  // Обработка финального оформления заказа
-  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userId = localStorage.getItem("userId");
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-  
-    const items = Object.values(cartData); // используем cartData
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
-    try {
-      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, items, total, phone, address })
+document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const userId = localStorage.getItem("userId");
+  const phone = document.getElementById('phone').value;
+  const address = document.getElementById('address').value;
+
+  const items = Object.values(cartData);
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  try {
+    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, items, total, phone, address })
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      // Формируем подробности заказа
+      let orderDetails = 'Ваш заказ:\n\n';
+      items.forEach(item => {
+        orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
       });
-  
-      const result = await response.json();
-      if (response.ok) {
-        alert("🎉 Заказ успешно оформлен!");
-        document.getElementById('orderConfirmModal').style.display = 'none';
-        document.getElementById('modalOverlay').style.display = 'none';
-      } else {
-        alert("Ошибка: " + result.message);
+      orderDetails += `\nИтого: ${total} ₽`;
+
+      // Показать подробности заказа в alert или в вашем модальном окне
+      alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
+
+      // Закрыть окно оформления заказа
+      document.getElementById('orderConfirmModal').style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'none';
+
+      // Очищаем корзину
+      for (const itemId in cartData) {
+        delete cartData[itemId];
       }
-    } catch (err) {
-      console.error(err);
-      alert("Произошла ошибка при оформлении заказа.");
+      updateCartUI();
+      updateCartText();
+
+      // Обновляем профиль (загрузить свежую историю заказов)
+      if (typeof loadProfile === 'function') {
+        await loadProfile();
+      }
+
+    } else {
+      alert("Ошибка: " + result.message);
     }
+  } catch (err) {
+    console.error(err);
+    alert("Произошла ошибка при оформлении заказа.");
+  }
 });
+
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -661,3 +684,24 @@ document.getElementById('checkoutButton').addEventListener('click', () => {
   updateCartUI();
   updateCartText();
 });
+
+
+<div id="orderDetailsModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span id="closeOrderDetails" class="close">&times;</span>
+    <pre id="orderDetailsText"></pre>
+  </div>
+</div>
+
+function showOrderDetails(detailsText) {
+  const modal = document.getElementById('orderDetailsModal');
+  const textContainer = document.getElementById('orderDetailsText');
+  textContainer.textContent = detailsText;
+  modal.style.display = 'block';
+}
+
+document.getElementById('closeOrderDetails').addEventListener('click', () => {
+  document.getElementById('orderDetailsModal').style.display = 'none';
+});
+
+showOrderDetails(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
