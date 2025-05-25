@@ -398,36 +398,49 @@ function closeCartModal() {
     document.getElementById('modalOverlay').style.display = 'none';
   });
   
-  // Обработка финального оформления заказа
-  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userId = localStorage.getItem("userId");
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-  
-    const items = Object.values(cartData); // используем cartData
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
-    try {
-      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, items, total, phone, address })
-      });
-  
-      const result = await response.json();
-      if (response.ok) {
-        alert("🎉 Заказ успешно оформлен!");
-        document.getElementById('orderConfirmModal').style.display = 'none';
-        document.getElementById('modalOverlay').style.display = 'none';
-      } else {
-        alert("Ошибка: " + result.message);
+document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const userId = localStorage.getItem("userId");
+  const phone = document.getElementById('phone').value;
+  const address = document.getElementById('address').value;
+
+  const items = Object.values(cartData);
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  try {
+    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, items, total, phone, address })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("🎉 Заказ успешно оформлен!");
+      document.getElementById('orderConfirmModal').style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'none';
+
+      // Очистить корзину
+      for (const id in cartData) {
+        delete cartData[id];
       }
-    } catch (err) {
-      console.error(err);
-      alert("Произошла ошибка при оформлении заказа.");
+      updateCartUI();
+      updateCartText();
+
+      // Обновить историю заказов в профиле
+      if (typeof loadOrderHistory === 'function') {
+        await loadOrderHistory();
+      }
+    } else {
+      alert("Ошибка: " + result.message);
     }
+  } catch (err) {
+    console.error(err);
+    alert("Произошла ошибка при оформлении заказа.");
+  }
 });
+
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -576,29 +589,6 @@ async function loadOrderHistory() {
     }
   }
   
-async function loadOrderHistory() {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-
-    try {
-        const response = await fetch('/api/orders', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-        });
-
-        const orders = await response.json();
-        if (response.ok) {
-            displayOrders(orders);
-        } else {
-            alert("Ошибка при загрузке истории заказов");
-        }
-    } catch (error) {
-        console.error('Ошибка при получении истории заказов:', error);
-        alert("Произошла ошибка при загрузке данных.");
-    }
-}
 
 function displayOrders(orders) {
     const profileContent = document.getElementById('profileContent');
@@ -678,53 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
     openOrderConfirmationForm();
   });
 
-  // Финальное оформление (отправка формы)
-  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
 
-    const userId = localStorage.getItem('userId');
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-
-    const items = Object.values(cartData);
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    try {
-      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, items, total, phone, address })
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        let orderDetails = 'Ваш заказ:\n\n';
-        items.forEach(item => {
-          orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
-        });
-        orderDetails += `\nИтого: ${total} ₽`;
-        alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
-
-        document.getElementById('orderConfirmModal').style.display = 'none';
-        document.getElementById('modalOverlay').style.display = 'none';
-
-        for (const id in cartData) delete cartData[id];
-        updateCartUI();
-        updateCartText();
-
-        if (typeof loadProfile === 'function') {
-          await loadProfile();
-        }
-      } else {
-        alert('Ошибка: ' + result.message);
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Произошла ошибка при оформлении заказа.');
-    }
-  });
-
-});
 // Функция показать модалку с деталями заказа
 function showOrderDetailsModal(orderDetailsHtml) {
   const modal = document.getElementById('orderDetailsModal');
@@ -807,4 +751,5 @@ document.getElementById('checkoutButton').addEventListener('click', () => {
   orderDetailsHtml += `</ul><p><strong>Итого: ${total} ₽</strong></p>`;
 
   showOrderDetailsModal(orderDetailsHtml);
+  
 });
