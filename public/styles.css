@@ -938,3 +938,87 @@ body.blurred {
   margin: 5px 0;
   color: #666;
 }
+
+
+/* Модальное окно с деталями заказа */
+#orderDetailsModal {
+  display: none; /* Скрыто по умолчанию */
+  position: fixed;
+  z-index: 10000; /* Очень сверху */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  max-width: 90%;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  padding: 25px 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Заголовок */
+#orderDetailsModal h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.6rem;
+  text-align: center;
+  color: #e9760b;
+}
+
+/* Список блюд */
+#orderDetailsContent ul {
+  list-style: none;
+  padding-left: 0;
+  max-height: 250px; /* Ограничение по высоте с прокруткой */
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+#orderDetailsContent li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 1.1rem;
+}
+
+/* Итоговая сумма */
+#orderDetailsContent p strong {
+  font-size: 1.3rem;
+  color: #d05f00;
+}
+
+/* Текст с уведомлением */
+#orderDetailsContent p:last-child {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #444;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Кнопка закрытия (крестик) */
+#closeOrderDetails {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+#closeOrderDetails:hover {
+  color: #e9760b;
+}
+
+/* Затемнение фона */
+#modalOverlay {
+  display: none; /* Скрыт по умолчанию */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 9999;
+}
