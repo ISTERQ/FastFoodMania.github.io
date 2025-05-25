@@ -25,68 +25,34 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });  
 document.addEventListener('DOMContentLoaded', () => {
-  const profileButton = document.getElementById('profileButton');
-  const profileSidebar = document.getElementById('profileSidebar');
-  const profileOverlay = document.getElementById('profileOverlay'); // Оверлей профиля
-  const closeProfileSidebar = document.getElementById('closeProfileSidebar');
-  const logoutButton = document.getElementById('logoutButton'); // Кнопка выхода
-  const cartButton = document.getElementById('cartButton'); // Получаем кнопку корзины
-  const cartOverlay = document.getElementById('cartOverlay'); // Оверлей корзины
-  const cart = document.getElementById('cart'); // Сам блок корзины
+    const profileButton = document.getElementById('profileButton');
+    const profileSidebar = document.getElementById('profileSidebar');
+    const profileOverlay = document.getElementById('profileOverlay'); // Получаем оверлей из HTML
+    const closeProfileSidebar = document.getElementById('closeProfileSidebar');
+    const logoutButton = document.getElementById('logoutButton'); // Кнопка выхода из аккаунта
 
-  // Обработчик клика по кнопке "Профиль"
-  if (profileButton) {
-    profileButton.addEventListener('click', function(event) {
-      event.preventDefault(); // отменяем стандартное поведение ссылки
-      profileSidebar.classList.add('open'); // открыть панель профиля
-      profileOverlay.style.display = 'block'; // показать оверлей
-      document.body.style.overflow = 'hidden'; // заблокировать прокрутку страницы
+    // Открытие профиля
+    profileButton.addEventListener('click', () => {
+        profileSidebar.classList.add('open'); // Показываем панель профиля
+        profileOverlay.style.display = 'block'; // Показываем затемнение
+        document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
     });
-  }
 
-  // Закрытие панели профиля при клике на оверлей
-  if (profileOverlay) {
+    // Закрытие профиля при клике на затемнение
     profileOverlay.addEventListener('click', () => {
-      profileSidebar.classList.remove('open');
-      profileOverlay.style.display = 'none';
-      document.body.style.overflow = ''; // восстановить прокрутку
+        profileSidebar.classList.remove('open'); // Скрываем панель профиля
+        profileOverlay.style.display = 'none'; // Скрываем затемнение
+        document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
     });
-  }
 
-  // Закрытие профиля по кнопке "Закрыть"
-  if (closeProfileSidebar) {
-    closeProfileSidebar.addEventListener('click', () => {
-      profileSidebar.classList.remove('open');
-      profileOverlay.style.display = 'none';
-      document.body.style.overflow = '';
-    });
-  }
-
-  // Обработчик кнопки "Корзина"
-  if (cartButton) {
-    cartButton.addEventListener('click', function(event) {
-      event.preventDefault();
-      cart.style.right = '0'; // показать корзину
-      if (cartOverlay) cartOverlay.style.display = 'block'; // показать затемнение
-    });
-  }
-
-  // Обработчик закрытия корзины по оверлею (если есть)
-  if (cartOverlay) {
-    cartOverlay.addEventListener('click', () => {
-      cart.style.right = '-40%'; // скрыть корзину
-      cartOverlay.style.display = 'none'; // скрыть затемнение
-    });
-  }
-
-  // Кнопка выхода из аккаунта (если нужна)
-  if (logoutButton) {
-    logoutButton.addEventListener('click', async () => {
-      // Ваш код выхода из аккаунта
-    });
-  }
-});
-
+    // Закрытие профиля через кнопку "Закрыть"
+    if (closeProfileSidebar) {
+        closeProfileSidebar.addEventListener('click', () => {
+            profileSidebar.classList.remove('open');
+            profileOverlay.style.display = 'none'; // Скрываем затемнение
+            document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
+        });
+    }
 
     // Обработчик выхода из аккаунта
     if (logoutButton) {
@@ -106,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
+});
 
 
 
@@ -432,59 +398,36 @@ function closeCartModal() {
     document.getElementById('modalOverlay').style.display = 'none';
   });
   
-document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const userId = localStorage.getItem("userId");
-  const phone = document.getElementById('phone').value;
-  const address = document.getElementById('address').value;
-
-  const items = Object.values(cartData);
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  try {
-    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, items, total, phone, address })
-    });
-
-    const result = await response.json();
-    if (response.ok) {
-      // Формируем подробности заказа
-      let orderDetails = 'Ваш заказ:\n\n';
-      items.forEach(item => {
-        orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
+  // Обработка финального оформления заказа
+  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = localStorage.getItem("userId");
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+  
+    const items = Object.values(cartData); // используем cartData
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+    try {
+      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items, total, phone, address })
       });
-      orderDetails += `\nИтого: ${total} ₽`;
-
-      // Показать подробности заказа в alert или в вашем модальном окне
-      alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
-
-      // Закрыть окно оформления заказа
-      document.getElementById('orderConfirmModal').style.display = 'none';
-      document.getElementById('modalOverlay').style.display = 'none';
-
-      // Очищаем корзину
-      for (const itemId in cartData) {
-        delete cartData[itemId];
+  
+      const result = await response.json();
+      if (response.ok) {
+        alert("🎉 Заказ успешно оформлен!");
+        document.getElementById('orderConfirmModal').style.display = 'none';
+        document.getElementById('modalOverlay').style.display = 'none';
+      } else {
+        alert("Ошибка: " + result.message);
       }
-      updateCartUI();
-      updateCartText();
-
-      // Обновляем профиль (загрузить свежую историю заказов)
-      if (typeof loadProfile === 'function') {
-        await loadProfile();
-      }
-
-    } else {
-      alert("Ошибка: " + result.message);
+    } catch (err) {
+      console.error(err);
+      alert("Произошла ошибка при оформлении заказа.");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Произошла ошибка при оформлении заказа.");
-  }
 });
-
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -680,64 +623,105 @@ function displayOrders(orders) {
 }
 
 
-document.getElementById('checkoutButton').addEventListener('click', () => {
-  const userId = localStorage.getItem("userId");
-
-  if (!userId) {
-    // Если пользователь не залогинен — показываем окно входа
-    openModal(loginModal);
-    alert('Пожалуйста, войдите в аккаунт, чтобы оформить заказ.');
-    return; // Прекращаем дальнейшее выполнение
-  }
-
-  // Проверка, есть ли товары в корзине
-  if (Object.keys(cartData).length === 0) {
-    alert('Корзина пуста. Пожалуйста, добавьте блюда для оформления заказа.');
-    return;
-  }
-
-  // Формируем строку с деталями заказа
-  let orderDetails = 'Ваш заказ:\n\n';
-  let total = 0;
-
-  for (const itemId in cartData) {
-    const item = cartData[itemId];
-    orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
-    total += item.price * item.quantity;
-  }
-
-  orderDetails += `\nИтого: ${total} ₽`;
-
-  // Показываем окно с подробностями (можно заменить alert на модалку по желанию)
-  alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
-
-  // После оформления очищаем корзину
-  for (const itemId in cartData) {
-    delete cartData[itemId];
-  }
-  updateCartUI();
-  updateCartText();
-});
-
-
-<div id="orderDetailsModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span id="closeOrderDetails" class="close">&times;</span>
-    <pre id="orderDetailsText"></pre>
-  </div>
-</div>
-
-function showOrderDetails(detailsText) {
-  const modal = document.getElementById('orderDetailsModal');
-  const textContainer = document.getElementById('orderDetailsText');
-  textContainer.textContent = detailsText;
-  modal.style.display = 'block';
+// Проверка авторизации
+function isUserLoggedIn() {
+  return !!localStorage.getItem('userId');
 }
 
-document.getElementById('closeOrderDetails').addEventListener('click', () => {
-  document.getElementById('orderDetailsModal').style.display = 'none';
+// Открыть модалку подтверждения заказа
+function openOrderConfirmationForm() {
+  document.getElementById('orderConfirmModal').style.display = 'block';
+  document.getElementById('modalOverlay').style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Добавление в корзину
+  document.getElementById('addToCart').addEventListener('click', () => {
+    if (!isUserLoggedIn()) {
+      openModal(loginModal);
+      alert('Пожалуйста, войдите в аккаунт, чтобы добавить блюда в корзину.');
+      return;
+    }
+    const quantity = parseInt(document.getElementById('foodQuantity').value);
+    if (currentItem) {
+      addToCart({
+        id: currentItem.id,
+        name: currentItem.name,
+        price: currentItem.price,
+        quantity: quantity
+      });
+    }
+  });
+
+  // Кнопка оформления заказа
+  document.getElementById('checkoutButton').addEventListener('click', () => {
+    if (!isUserLoggedIn()) {
+      openModal(loginModal);
+      alert('Пожалуйста, войдите в аккаунт, чтобы оформить заказ.');
+      return;
+    }
+    if (Object.keys(cartData).length === 0) {
+      alert('Корзина пуста. Добавьте блюда для оформления заказа.');
+      return;
+    }
+
+    let orderDetails = 'Ваш заказ:\n\n';
+    let total = 0;
+    for (const itemId in cartData) {
+      const item = cartData[itemId];
+      orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
+      total += item.price * item.quantity;
+    }
+    orderDetails += `\nИтого: ${total} ₽`;
+    alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
+
+    openOrderConfirmationForm();
+  });
+
+  // Финальное оформление (отправка формы)
+  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const userId = localStorage.getItem('userId');
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+
+    const items = Object.values(cartData);
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    try {
+      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items, total, phone, address })
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        let orderDetails = 'Ваш заказ:\n\n';
+        items.forEach(item => {
+          orderDetails += `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽\n`;
+        });
+        orderDetails += `\nИтого: ${total} ₽`;
+        alert(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
+
+        document.getElementById('orderConfirmModal').style.display = 'none';
+        document.getElementById('modalOverlay').style.display = 'none';
+
+        for (const id in cartData) delete cartData[id];
+        updateCartUI();
+        updateCartText();
+
+        if (typeof loadProfile === 'function') {
+          await loadProfile();
+        }
+      } else {
+        alert('Ошибка: ' + result.message);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Произошла ошибка при оформлении заказа.');
+    }
+  });
+
 });
-
-showOrderDetails(orderDetails + '\n\nПодробности заказа отправлены на вашу почту.');
-
-
