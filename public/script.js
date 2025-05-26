@@ -714,32 +714,20 @@ function displayOrders(orders) {
 
 
 document.getElementById('checkoutButton').addEventListener('click', () => {
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem("userId");
 
   if (!userId) {
-    // Пользователь не вошёл — открыть окно логина
-    closeCartModal();
+    // Если пользователь не авторизован, показываем окно входа
+    closeCartModal(); // функция закрытия корзины, должна быть определена
     document.getElementById('loginModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
     return;
   }
 
-  if (userId === 'fakeUser') {
-    // Сохраняем заказ в локальное хранилище
-    saveOrderToProfile();
-
-    // Показываем окно с уведомлением
-    showOrderSuccessModal();
-
-    // Закрываем корзину
-    closeCartModal();
-
-    return;
-  }
-
-  // Для реальных пользователей — обычное оформление
-  showOrderConfirmationForm();
+  // Показываем форму подтверждения заказа
+  showOrderConfirmationForm(); // функция, открывающая окно подтверждения
 });
+
 
 
 // Новая функция показа подтверждения заказа
