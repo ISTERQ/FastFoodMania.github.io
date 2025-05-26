@@ -890,3 +890,46 @@ function saveOrderToProfile() {
 }
 
 
+// После строки с alert("Подробности заказа отправлены вам на почту!");
+// В обработчике события для checkoutButton
+
+// Обновляем историю заказов в профиле
+saveOrderToProfile(); // Добавляем заказ в историю
+loadProfile(); // Перезагружаем данные профиля
+
+// В конец файла добавить:
+function saveOrderToProfile() {
+  const userId = localStorage.getItem("userId");
+  const items = Object.values(cartData);
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  if (userId === 'fakeUser') {
+    // Для фейковых пользователей
+    let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || []);
+    orders.push({
+      date: new Date().toISOString(),
+      items: items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      total
+    });
+    localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
+  } else {
+    // Для реальных пользователей
+    fetch('https://fastfoodmania-api.onrender.com/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        userId,
+        items: items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total
+      })
+    });
+  }
+}
