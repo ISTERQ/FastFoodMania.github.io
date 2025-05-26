@@ -1,26 +1,32 @@
+function loadProfile() {
+  const email = localStorage.getItem("username") || "гость";
+  const userId = localStorage.getItem('userId');
 
-async function loadProfile() {
-  const email = localStorage.getItem("userEmail");
-  const password = localStorage.getItem("password");
+  let ordersHTML = '<p>Нет заказов</p>';
 
-  const isDemoUser = email === "test@gmail.com" && password === "testtesttest";
-
-  const ordersHTML = isDemoUser ? `
-    <div class="order-item">
-      <p><strong>Дата:</strong> ${new Date().toLocaleString()}</p>
-      <p><strong>Сумма:</strong> 1450 ₽</p>
-      <div class="order-items">
-        <div class="order-item-product">Chicken Burger × 3</div>
-        <div class="order-item-product">Pepperoni Pizza × 1</div>
-        <div class="order-item-product">Coca-Cola × 2</div>
-        <div class="order-item-product">Cheese Toast × 1</div>
-      </div>
-    </div>
-  ` : `<p>Нет заказов</p>`;
+  if (userId === 'fakeUser') {
+    const orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
+    if (orders.length > 0) {
+      ordersHTML = orders.map(order => {
+        const dateStr = new Date(order.date).toLocaleString();
+        const itemsList = order.items.map(i => `<div>${i.name} × ${i.quantity}</div>`).join('');
+        return `
+          <div class="order-item" style="margin-bottom:15px; padding:10px; border:1px solid #ccc; border-radius:10px;">
+            <p><strong>Дата:</strong> ${dateStr}</p>
+            <p><strong>Сумма:</strong> ${order.total} ₽</p>
+            <div class="order-items">${itemsList}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  } else {
+    // Для реальных пользователей, если есть, загрузка заказов с сервера
+    ordersHTML = '<p>Загрузка заказов...</p>';
+  }
 
   document.getElementById('profileContent').innerHTML = `
     <div class="profile-info">
-      <h3>👋 Привет, ${email || "гость"}!</h3>
+      <h3>👋 Привет, ${email}!</h3>
       <p>📧 Email: ${email}</p>
     </div>
     <div class="order-history">
