@@ -595,14 +595,16 @@
 
 
 
-<div id="orderConfirmModal" class="modal">
+<div id="orderConfirmModal" class="modal" style="display:none;">
   <div class="modal-content">
     <span class="close" id="closeOrderConfirm">&times;</span>
-    <h3>Подтверждение заказа</h3>
+    <h3>Подробности заказа отправлены вам на почту!</h3>
     <div id="orderSummary"></div>
-    <button id="fakeConfirmButton">Подтвердить заказ</button>
+    <button id="fakeConfirmButton">Закрыть</button>
   </div>
 </div>
+<div id="modalOverlay" style="display:none; position: fixed; top: 0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999;"></div>
+<button id="checkoutButton">Оформить заказ</button>
 
 
 <script src="script.js"></script>
