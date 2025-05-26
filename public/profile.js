@@ -35,3 +35,35 @@ function loadProfile() {
     </div>
   `;
 }
+
+
+// В начале функции loadProfile()
+const userId = localStorage.getItem('userId');
+
+// Заменить блок с ordersHTML на:
+let ordersHTML = '';
+if (userId === 'fakeUser') {
+  const orders = JSON.parse(localStorage.getItem('fakeUserOrders') || []);
+  ordersHTML = generateOrdersHtml(orders);
+} else {
+  try {
+    const response = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`);
+    const orders = await response.json();
+    ordersHTML = generateOrdersHtml(orders);
+  } catch (err) {
+    ordersHTML = '<p>Ошибка загрузки заказов</p>';
+  }
+}
+
+// Добавить новую функцию в конец файла:
+function generateOrdersHtml(orders) {
+  return orders.length > 0 ? orders.map(order => `
+    <div class="order-item">
+      <p><strong>Дата:</strong> ${new Date(order.date || order.createdAt).toLocaleString()}</p>
+      <p><strong>Сумма:</strong> ${order.total} ₽</p>
+      <div class="order-items">
+        ${order.items.map(i => `<div>${i.name} × ${i.quantity}</div>`).join('')}
+      </div>
+    </div>
+  `).join('') : '<p>Нет заказов</p>';
+}
