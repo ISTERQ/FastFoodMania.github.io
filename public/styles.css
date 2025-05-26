@@ -633,6 +633,8 @@ a {
   top: 50000px; /* Отступ сверху */
   right: 10000px; /* Отступ справа */
   outline: none; /* Убираем обвод */
+  font-size: 32px; /* или другой размер, который хотите */
+  cursor: pointer;
 }
 
 .quantity-button {
@@ -940,4 +942,11 @@ body.blurred {
 .order-item-product {
   margin: 5px 0;
   color: #666;
+}
+
+
+
+.close, .close-button {
+  font-size: 32px; /* или другой размер, который хотите */
+  cursor: pointer;
 }
