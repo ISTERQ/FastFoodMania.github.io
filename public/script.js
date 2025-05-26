@@ -71,6 +71,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alert('Вы вышли из аккаунта');
 
+        // Переключение кнопки "Профиль" обратно в "Войти"
+        const loginButton = document.getElementById('profileButton');
+        if (loginButton) {
+          loginButton.textContent = 'Войти';
+          loginButton.id = 'loginButton';
+
+          // Удаляем все предыдущие обработчики, чтобы избежать дублирования
+          loginButton.replaceWith(loginButton.cloneNode(true));
+          const newLoginButton = document.getElementById('loginButton');
+          newLoginButton.addEventListener('click', () => {
+            document.getElementById('loginModal').style.display = 'block';
+            document.getElementById('modalOverlay').style.display = 'block';
+          });
+        }
+
         // Закрываем профиль и затемнение
         profileSidebar.classList.remove('open');
         profileOverlay.style.display = 'none';
@@ -384,76 +399,72 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
-document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const userId = localStorage.getItem("userId");
-  const phone = document.getElementById('phone').value;
-  const address = document.getElementById('address').value;
-
-  const items = Object.values(cartData);
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  if (userId === 'fakeUser') {
-    // Сохраняем заказ локально для фейкового пользователя
-    saveOrderToLocal(items, total);
-
-    alert("Подробности заказа отправлены вам на почту!");
-
-    // Обновляем профиль (отображаем историю заказов)
-    loadProfile();
-
-    // Очищаем корзину и UI
-    clearCart();
-    updateCartUI();
-
-    // Закрываем окно подтверждения заказа и оверлей
+// Закрытие корзины вручную
+function closeCartModal() {
+    const cart = document.getElementById('cart');
+    const cartOverlay = document.getElementById('cartOverlay');
+    cart.style.right = '-40%';
+    cartOverlay.style.display = 'none';
+  }
+  
+  // Клик по кнопке "Оформить заказ"
+  document.getElementById('checkoutButton').addEventListener('click', () => {
+    const userId = localStorage.getItem("userId");
+  
+    if (!userId) {
+      // ❗ Если пользователь не авторизован
+      closeCartModal(); // ⬅️ Закрываем корзину
+      document.getElementById('loginModal').style.display = 'block';
+      document.getElementById('modalOverlay').style.display = 'block';
+      return;
+    }
+  
+    // ✅ Пользователь авторизован — показываем форму
+    showOrderConfirmationForm();
+  });
+  
+  // Показ формы подтверждения заказа
+  function showOrderConfirmationForm() {
+    document.getElementById('orderConfirmModal').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+  }
+  
+  // Закрытие формы подтверждения
+  document.getElementById('closeOrderConfirm').addEventListener('click', () => {
     document.getElementById('orderConfirmModal').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
-
-    return; // Прекращаем выполнение, не идём на сервер
-  }
-
-  // Для реальных пользователей — отправляем запрос на сервер
-  try {
-    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, items, total, phone, address })
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert("🎉 Заказ успешно оформлен!");
-      document.getElementById('orderConfirmModal').style.display = 'none';
-      document.getElementById('modalOverlay').style.display = 'none';
-      clearCart();
-      updateCartUI();
-      loadProfile();
-    } else {
-      alert("Ошибка: " + result.message);
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Произошла ошибка при оформлении заказа.");
-  }
-});
-
-// Функция для сохранения заказа в localStorage для фейкового пользователя
-function saveOrderToLocal(items, total) {
-  let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
-  orders.push({
-    date: new Date().toISOString(),
-    items: items.map(i => ({
-      name: i.name,
-      quantity: i.quantity,
-      price: i.price
-    })),
-    total: total
   });
-  localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
-}
-
+  
+  // Обработка финального оформления заказа
+  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = localStorage.getItem("userId");
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+  
+    const items = Object.values(cartData); // используем cartData
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+    try {
+      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, items, total, phone, address })
+      });
+  
+      const result = await response.json();
+      if (response.ok) {
+        alert("🎉 Заказ успешно оформлен!");
+        document.getElementById('orderConfirmModal').style.display = 'none';
+        document.getElementById('modalOverlay').style.display = 'none';
+      } else {
+        alert("Ошибка: " + result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Произошла ошибка при оформлении заказа.");
+    }
+});
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -494,23 +505,6 @@ async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
 });
-
-function saveOrderToLocal(items, total) {
-  let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
-
-  orders.push({
-    date: new Date().toISOString(),
-    items: items.map(i => ({
-      name: i.name,
-      quantity: i.quantity,
-      price: i.price
-    })),
-    total: total
-  });
-
-  localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
-}
-
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -714,20 +708,32 @@ function displayOrders(orders) {
 
 
 document.getElementById('checkoutButton').addEventListener('click', () => {
-  const userId = localStorage.getItem("userId");
+  const userId = localStorage.getItem('userId');
 
   if (!userId) {
-    // Если пользователь не авторизован, показываем окно входа
-    closeCartModal(); // функция закрытия корзины, должна быть определена
+    // Пользователь не вошёл — открыть окно логина
+    closeCartModal();
     document.getElementById('loginModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
     return;
   }
 
-  // Показываем форму подтверждения заказа
-  showOrderConfirmationForm(); // функция, открывающая окно подтверждения
-});
+  if (userId === 'fakeUser') {
+    // Сохраняем заказ в локальное хранилище
+    saveOrderToProfile();
 
+    // Показываем окно с уведомлением
+    showOrderSuccessModal();
+
+    // Закрываем корзину
+    closeCartModal();
+
+    return;
+  }
+
+  // Для реальных пользователей — обычное оформление
+  showOrderConfirmationForm();
+});
 
 
 // Новая функция показа подтверждения заказа
@@ -834,33 +840,65 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-document.getElementById('checkoutButton').addEventListener('click', () => {
-  const userId = localStorage.getItem("userId");
+document.addEventListener('DOMContentLoaded', () => {
+  const loginModal = document.getElementById('loginModal');
+  const orderModal = document.getElementById('orderConfirmModal');
+  const overlay = document.getElementById('modalOverlay');
+  const orderSummary = document.getElementById('orderSummary');
+  const confirmBtn = document.getElementById('fakeConfirmButton');
+  const orderBtn = document.getElementById('checkoutButton');
 
-  if (!userId) {
-    // Если пользователь не авторизован, показываем окно входа
-    closeCartModal(); // функция закрытия корзины, должна быть определена
-    document.getElementById('loginModal').style.display = 'block';
-    document.getElementById('modalOverlay').style.display = 'block';
-    return;
+  function closeOrderModal() {
+    orderModal.style.display = 'none';
+    overlay.style.display = 'none';
   }
 
-  // Показываем форму подтверждения заказа
-  showOrderConfirmationForm(); // функция, открывающая окно подтверждения
+  orderBtn.addEventListener('click', () => {
+    const userId = localStorage.getItem('userId');
+
+    if (!userId) {
+      // Не залогинен — открыть окно входа
+      loginModal.style.display = 'block';
+      overlay.style.display = 'block';
+      return;
+    }
+
+    // Пользователь залогинен — формируем заказ
+    if (Object.keys(cartData).length === 0) {
+      alert('Корзина пуста!');
+      return;
+    }
+
+    let html = '';
+    let total = 0;
+    for (const key in cartData) {
+      const item = cartData[key];
+      const qty = item.quantity;
+      const price = item.price;
+      const sum = qty * price;
+      total += sum;
+      html += `<p>${item.name} × ${qty} — ${sum} ₽</p>`;
+    }
+    html += `<p><strong>Итого: ${total} ₽</strong></p>`;
+    html += `<p style="margin-top: 15px; font-style: italic;">Все данные по заказу отправлены на вашу почту.</p>`;
+
+    orderSummary.innerHTML = html;
+
+    orderModal.style.display = 'block';
+    overlay.style.display = 'block';
+  });
+
+  confirmBtn.addEventListener('click', () => {
+    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту.');
+    closeOrderModal();
+  });
+
+  // Закрытие модалки по крестику
+  const closeConfirmBtn = document.getElementById('closeOrderConfirm');
+  closeConfirmBtn.addEventListener('click', () => {
+    closeOrderModal();
+  });
 });
-
-function closeCartModal() {
-  const cart = document.getElementById('cart');
-  const cartOverlay = document.getElementById('cartOverlay');
-  cart.style.right = '-40%';
-  cartOverlay.style.display = 'none';
-}
-
-function showOrderConfirmationForm() {
-  document.getElementById('orderConfirmModal').style.display = 'block';
-  document.getElementById('modalOverlay').style.display = 'block';
-}
-
 
 
 
@@ -890,46 +928,3 @@ function saveOrderToProfile() {
 }
 
 
-// После строки с alert("Подробности заказа отправлены вам на почту!");
-// В обработчике события для checkoutButton
-
-// Обновляем историю заказов в профиле
-saveOrderToProfile(); // Добавляем заказ в историю
-loadProfile(); // Перезагружаем данные профиля
-
-// В конец файла добавить:
-function saveOrderToProfile() {
-  const userId = localStorage.getItem("userId");
-  const items = Object.values(cartData);
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  if (userId === 'fakeUser') {
-    // Для фейковых пользователей
-    let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || []);
-    orders.push({
-      date: new Date().toISOString(),
-      items: items.map(item => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      })),
-      total
-    });
-    localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
-  } else {
-    // Для реальных пользователей
-    fetch('https://fastfoodmania-api.onrender.com/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        userId,
-        items: items.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        total
-      })
-    });
-  }
-}
