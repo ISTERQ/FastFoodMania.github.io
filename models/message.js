@@ -62,6 +62,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
         const data = await response.json();
         if (response.ok) {
+            localStorage.setItem('userEmail', email); 
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("userId", data.userId);
             localStorage.setItem("username", email);
@@ -209,4 +210,5 @@ async function loadOrderHistory() {
       console.error("Ошибка загрузки заказов:", error);
     }
 }
-     
+
+
