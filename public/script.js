@@ -25,55 +25,77 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });  
 document.addEventListener('DOMContentLoaded', () => {
-    const profileButton = document.getElementById('profileButton');
-    const profileSidebar = document.getElementById('profileSidebar');
-    const profileOverlay = document.getElementById('profileOverlay'); // Получаем оверлей из HTML
-    const closeProfileSidebar = document.getElementById('closeProfileSidebar');
-    const logoutButton = document.getElementById('logoutButton'); // Кнопка выхода из аккаунта
+  const profileButton = document.getElementById('profileButton');
+  const profileSidebar = document.getElementById('profileSidebar');
+  const profileOverlay = document.getElementById('profileOverlay');
+  const closeProfileSidebar = document.getElementById('closeProfileSidebar');
+  const logoutButton = document.getElementById('logoutButton');
 
-    // Открытие профиля
-    profileButton.addEventListener('click', () => {
-        profileSidebar.classList.add('open'); // Показываем панель профиля
-        profileOverlay.style.display = 'block'; // Показываем затемнение
-        document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
+  // Открытие панели профиля
+  profileButton.addEventListener('click', () => {
+    profileSidebar.classList.add('open');
+    profileOverlay.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  });
+
+  // Закрытие профиля по клику на оверлей
+  profileOverlay.addEventListener('click', () => {
+    profileSidebar.classList.remove('open');
+    profileOverlay.style.display = 'none';
+    document.body.style.overflow = '';
+  });
+
+  // Закрытие профиля по кнопке "Закрыть"
+  if (closeProfileSidebar) {
+    closeProfileSidebar.addEventListener('click', () => {
+      profileSidebar.classList.remove('open');
+      profileOverlay.style.display = 'none';
+      document.body.style.overflow = '';
     });
+  }
 
-    // Закрытие профиля при клике на затемнение
-    profileOverlay.addEventListener('click', () => {
-        profileSidebar.classList.remove('open'); // Скрываем панель профиля
-        profileOverlay.style.display = 'none'; // Скрываем затемнение
-        document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
+  // Обработчик выхода
+  if (logoutButton) {
+    logoutButton.addEventListener('click', async () => {
+      const userId = localStorage.getItem('userId');
+
+      if (userId === 'fakeUser') {
+        // Локальная очистка для фейкового пользователя
+        localStorage.removeItem('userId');
+        localStorage.removeItem('username');
+        localStorage.removeItem('fakeUserOrders');
+
+        clearCart();    // Ваша функция очистки корзины
+        updateCartUI(); // Ваша функция обновления UI корзины
+        loadProfile();  // Ваша функция загрузки профиля
+
+        alert('Вы вышли из аккаунта');
+
+        // Закрываем профиль и затемнение
+        profileSidebar.classList.remove('open');
+        profileOverlay.style.display = 'none';
+        document.body.style.overflow = '';
+
+      } else {
+        // Для реальных пользователей - запрос на сервер
+        try {
+          const response = await fetch('https://fastfoodmania-api.onrender.com/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+          if (!response.ok) throw new Error(`Ошибка выхода: ${response.status}`);
+
+          localStorage.clear();
+          alert('Вы вышли из аккаунта');
+          location.reload();
+        } catch (err) {
+          console.error('Ошибка при выходе:', err);
+          alert('Не удалось выйти. Попробуйте позже.');
+        }
+      }
     });
-
-    // Закрытие профиля через кнопку "Закрыть"
-    if (closeProfileSidebar) {
-        closeProfileSidebar.addEventListener('click', () => {
-            profileSidebar.classList.remove('open');
-            profileOverlay.style.display = 'none'; // Скрываем затемнение
-            document.body.style.overflow = ''; // Восстанавливаем прокрутку страницы
-        });
-    }
-
-    // Обработчик выхода из аккаунта
-    if (logoutButton) {
-        logoutButton.addEventListener('click', async () => {
-            try {
-                await fetch('https://fastfoodmania-api.onrender.com/logout', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-
-                localStorage.clear();
-                alert('Вы вышли из аккаунта');
-                location.reload(); // Перезагрузка страницы после выхода
-            } catch (err) {
-                console.error('Ошибка при выходе:', err);
-                alert('Не удалось выйти. Попробуйте позже.');
-            }
-        });
-    }
+  }
 });
-
 
 
   // Модальные окна
@@ -362,72 +384,76 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
-// Закрытие корзины вручную
-function closeCartModal() {
-    const cart = document.getElementById('cart');
-    const cartOverlay = document.getElementById('cartOverlay');
-    cart.style.right = '-40%';
-    cartOverlay.style.display = 'none';
-  }
-  
-  // Клик по кнопке "Оформить заказ"
-  document.getElementById('checkoutButton').addEventListener('click', () => {
-    const userId = localStorage.getItem("userId");
-  
-    if (!userId) {
-      // ❗ Если пользователь не авторизован
-      closeCartModal(); // ⬅️ Закрываем корзину
-      document.getElementById('loginModal').style.display = 'block';
-      document.getElementById('modalOverlay').style.display = 'block';
-      return;
-    }
-  
-    // ✅ Пользователь авторизован — показываем форму
-    showOrderConfirmationForm();
-  });
-  
-  // Показ формы подтверждения заказа
-  function showOrderConfirmationForm() {
-    document.getElementById('orderConfirmModal').style.display = 'block';
-    document.getElementById('modalOverlay').style.display = 'block';
-  }
-  
-  // Закрытие формы подтверждения
-  document.getElementById('closeOrderConfirm').addEventListener('click', () => {
+document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const userId = localStorage.getItem("userId");
+  const phone = document.getElementById('phone').value;
+  const address = document.getElementById('address').value;
+
+  const items = Object.values(cartData);
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  if (userId === 'fakeUser') {
+    // Сохраняем заказ локально для фейкового пользователя
+    saveOrderToLocal(items, total);
+
+    alert("Подробности заказа отправлены вам на почту!");
+
+    // Обновляем профиль (отображаем историю заказов)
+    loadProfile();
+
+    // Очищаем корзину и UI
+    clearCart();
+    updateCartUI();
+
+    // Закрываем окно подтверждения заказа и оверлей
     document.getElementById('orderConfirmModal').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
-  });
-  
-  // Обработка финального оформления заказа
-  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userId = localStorage.getItem("userId");
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-  
-    const items = Object.values(cartData); // используем cartData
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
-    try {
-      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, items, total, phone, address })
-      });
-  
-      const result = await response.json();
-      if (response.ok) {
-        alert("🎉 Заказ успешно оформлен!");
-        document.getElementById('orderConfirmModal').style.display = 'none';
-        document.getElementById('modalOverlay').style.display = 'none';
-      } else {
-        alert("Ошибка: " + result.message);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Произошла ошибка при оформлении заказа.");
+
+    return; // Прекращаем выполнение, не идём на сервер
+  }
+
+  // Для реальных пользователей — отправляем запрос на сервер
+  try {
+    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, items, total, phone, address })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("🎉 Заказ успешно оформлен!");
+      document.getElementById('orderConfirmModal').style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'none';
+      clearCart();
+      updateCartUI();
+      loadProfile();
+    } else {
+      alert("Ошибка: " + result.message);
     }
+  } catch (err) {
+    console.error(err);
+    alert("Произошла ошибка при оформлении заказа.");
+  }
 });
+
+// Функция для сохранения заказа в localStorage для фейкового пользователя
+function saveOrderToLocal(items, total) {
+  let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
+  orders.push({
+    date: new Date().toISOString(),
+    items: items.map(i => ({
+      name: i.name,
+      quantity: i.quantity,
+      price: i.price
+    })),
+    total: total
+  });
+  localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
+}
+
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -468,6 +494,23 @@ async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
 });
+
+function saveOrderToLocal(items, total) {
+  let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
+
+  orders.push({
+    date: new Date().toISOString(),
+    items: items.map(i => ({
+      name: i.name,
+      quantity: i.quantity,
+      price: i.price
+    })),
+    total: total
+  });
+
+  localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
+}
+
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -889,3 +932,5 @@ function saveOrderToProfile() {
   // Сохраняем обратно в localStorage
   localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
 }
+
+
