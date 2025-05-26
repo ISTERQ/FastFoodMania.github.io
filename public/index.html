@@ -46,13 +46,6 @@
 </header>
 
 
-<div id="orderDetailsModal">
-  <span id="closeOrderDetails">&times;</span>
-  <h2>Подробности вашего заказа</h2>
-  <div id="orderDetailsContent"></div>
-</div>
-
-<div id="modalOverlay"></div>
 
 
 <!-- Внутри модального окна-->
@@ -601,11 +594,24 @@
 </div>
 
 
+
+<div id="orderConfirmModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeOrderConfirm">&times;</span>
+    <h3>Подтверждение заказа</h3>
+    <div id="orderSummary"></div>
+    <button id="fakeConfirmButton">Подтвердить заказ</button>
+  </div>
+</div>
+
+
 <script src="script.js"></script>
 <script src="util.js"></script>
 <script src="registration.js"></script>
 <script src="login.js"></script>
 <script src="profile.js"></script>
+
+
 
 </body>
 </html>
