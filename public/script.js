@@ -846,65 +846,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
-  const loginModal = document.getElementById('loginModal');
-  const orderModal = document.getElementById('orderConfirmModal');
-  const overlay = document.getElementById('modalOverlay');
-  const orderSummary = document.getElementById('orderSummary');
-  const confirmBtn = document.getElementById('fakeConfirmButton');
-  const orderBtn = document.getElementById('checkoutButton');
+document.getElementById('checkoutButton').addEventListener('click', () => {
+  const userId = localStorage.getItem("userId");
 
-  function closeOrderModal() {
-    orderModal.style.display = 'none';
-    overlay.style.display = 'none';
+  if (!userId) {
+    // Если пользователь не авторизован, показываем окно входа
+    closeCartModal(); // функция закрытия корзины, должна быть определена
+    document.getElementById('loginModal').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+    return;
   }
 
-  orderBtn.addEventListener('click', () => {
-    const userId = localStorage.getItem('userId');
-
-    if (!userId) {
-      // Не залогинен — открыть окно входа
-      loginModal.style.display = 'block';
-      overlay.style.display = 'block';
-      return;
-    }
-
-    // Пользователь залогинен — формируем заказ
-    if (Object.keys(cartData).length === 0) {
-      alert('Корзина пуста!');
-      return;
-    }
-
-    let html = '';
-    let total = 0;
-    for (const key in cartData) {
-      const item = cartData[key];
-      const qty = item.quantity;
-      const price = item.price;
-      const sum = qty * price;
-      total += sum;
-      html += `<p>${item.name} × ${qty} — ${sum} ₽</p>`;
-    }
-    html += `<p><strong>Итого: ${total} ₽</strong></p>`;
-    html += `<p style="margin-top: 15px; font-style: italic;">Все данные по заказу отправлены на вашу почту.</p>`;
-
-    orderSummary.innerHTML = html;
-
-    orderModal.style.display = 'block';
-    overlay.style.display = 'block';
-  });
-
-  confirmBtn.addEventListener('click', () => {
-    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту.');
-    closeOrderModal();
-  });
-
-  // Закрытие модалки по крестику
-  const closeConfirmBtn = document.getElementById('closeOrderConfirm');
-  closeConfirmBtn.addEventListener('click', () => {
-    closeOrderModal();
-  });
+  // Показываем форму подтверждения заказа
+  showOrderConfirmationForm(); // функция, открывающая окно подтверждения
 });
+
+function closeCartModal() {
+  const cart = document.getElementById('cart');
+  const cartOverlay = document.getElementById('cartOverlay');
+  cart.style.right = '-40%';
+  cartOverlay.style.display = 'none';
+}
+
+function showOrderConfirmationForm() {
+  document.getElementById('orderConfirmModal').style.display = 'block';
+  document.getElementById('modalOverlay').style.display = 'block';
+}
+
 
 
 
