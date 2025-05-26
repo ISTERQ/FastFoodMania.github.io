@@ -566,3 +566,40 @@ app.get('/api/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
+
+// Добавить новый маршрут перед app.listen()
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { userId, items, total } = req.body;
+    const newOrder = new Order({
+      userId,
+      items,
+      total,
+      createdAt: new Date()
+    });
+
+    await newOrder.save();
+    
+    // Обновляем пользователя
+    await User.findByIdAndUpdate(userId, {
+      $push: { orders: newOrder._id }
+    });
+
+    res.status(201).json(newOrder);
+  } catch (err) {
+    console.error("Ошибка сохранения заказа:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+// Добавить маршрут для получения заказов
+app.get('/api/orders/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId })
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка получения заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
