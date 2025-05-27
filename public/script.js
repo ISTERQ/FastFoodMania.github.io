@@ -591,7 +591,7 @@ document.getElementById('finalOrderForm').addEventListener('submit', async (e) =
   let userId = localStorage.getItem("userId");
   const isTempUser = !userId;
 
-  // Генерируем временный ID если пользователь не авторизован
+  // Генерируем временный ID, если пользователь не авторизован
   if (isTempUser) {
     userId = `temp_${Math.random().toString(36).substr(2, 9)}`;
     localStorage.setItem('tempUserId', userId);
