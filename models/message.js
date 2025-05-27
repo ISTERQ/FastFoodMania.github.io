@@ -47,37 +47,54 @@ registerForm.addEventListener("submit", async (e) => {
 
 // === Вход ===
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const email = document.getElementById("loginEmail").value;
-    const password = document.getElementById("loginPassword").value;
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
-    try {
-        const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: email, password }),
-            credentials: "include"
+  try {
+    const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: email, password }),
+      credentials: "include"
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("userId", data.userId);
+      localStorage.setItem("username", email);
+
+      // Проверяем наличие временного ID и переносим заказы
+      const tempUserId = localStorage.getItem('tempUserId');
+      if (tempUserId) {
+        const mergeResponse = await fetch(`https://fastfoodmania-api.onrender.com/api/users/${data.userId}/merge/${tempUserId}`, {
+          method: 'POST', // лучше POST для действий, меняющих данные
+          headers: { 'Content-Type': 'application/json' }
         });
-
-        const data = await response.json();
-        if (response.ok) {
-            localStorage.setItem('userEmail', email); 
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("userId", data.userId);
-            localStorage.setItem("username", email);
-            alert("Вход выполнен!");
-
-            document.getElementById('loginModal').style.display = 'none';
-            updateLoginButtonToProfile();
+        if (mergeResponse.ok) {
+          localStorage.removeItem('tempUserId');
         } else {
-            alert(data.message || "Ошибка входа.");
+          console.warn('Не удалось объединить заказы временного пользователя');
         }
-    } catch (error) {
-        console.error("Ошибка входа:", error);
-        alert("Произошла ошибка. Попробуйте снова.");
+      }
+
+      alert("Вход выполнен!");
+      document.getElementById('loginModal').style.display = 'none';
+      updateLoginButtonToProfile();
+    } else {
+      alert(data.message || "Ошибка входа.");
     }
+  } catch (error) {
+    console.error("Ошибка входа:", error);
+    alert("Произошла ошибка. Попробуйте снова.");
+  }
 });
+
+
 
 // === Выход ===
 function logout() {
