@@ -90,3 +90,4 @@ function generateOrdersHtml(orders) {
     </div>
   `).join('') : '<p>Нет заказов</p>';
 }
+
