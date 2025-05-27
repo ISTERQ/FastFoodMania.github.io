@@ -634,4 +634,34 @@ app.post('/refresh', async (req, res) => {
     });
 });
 
+app.post('/api/orders', async (req, res) => {
+  try {
+    console.log("Получен заказ:", req.body); // Логируем входящие данные
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+    console.log("Заказ сохранён в БД:", newOrder); // Логируем результат
+    res.status(201).json(newOrder);
+  } catch (err) {
+    console.error("Ошибка сохранения заказа:", err); // Логируем ошибки
+    res.status(500).json({ error: err.message });
+  }
+});
 
+
+document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  // Получаем userId, генерируем временный при отсутствии
+  const userId = localStorage.getItem("userId") || 
+                 localStorage.getItem("tempUserId") || 
+                 `temp_${Date.now()}`;
+
+  // далее используем userId для отправки заказа
+});
+
+async function someFunction() {
+  const userId = localStorage.getItem("userId") || 
+                 localStorage.getItem("tempUserId") || 
+                 `temp_${Date.now()}`;
+  // далее используем userId
+}
