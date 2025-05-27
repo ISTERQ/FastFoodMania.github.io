@@ -74,9 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Переключение кнопки "Профиль" обратно в "Войти"
         const loginButton = document.getElementById('profileButton');
         if (loginButton) {
-          loginButton.textContent = 'Войти';
-          loginButton.id = 'loginButton';
-
           // Удаляем все предыдущие обработчики, чтобы избежать дублирования
           loginButton.replaceWith(loginButton.cloneNode(true));
           const newLoginButton = document.getElementById('loginButton');
