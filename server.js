@@ -648,20 +648,4 @@ app.post('/api/orders', async (req, res) => {
 });
 
 
-document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
 
-  // Получаем userId, генерируем временный при отсутствии
-  const userId = localStorage.getItem("userId") || 
-                 localStorage.getItem("tempUserId") || 
-                 `temp_${Date.now()}`;
-
-  // далее используем userId для отправки заказа
-});
-
-async function someFunction() {
-  const userId = localStorage.getItem("userId") || 
-                 localStorage.getItem("tempUserId") || 
-                 `temp_${Date.now()}`;
-  // далее используем userId
-}
