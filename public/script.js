@@ -1057,39 +1057,6 @@ window.onclick = function(event) {
   });
 };
 
-// script.js
-document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  // Определяем userId (авторизованный/временный/новый временный)
-  const userId = localStorage.getItem("userId") || 
-                 localStorage.getItem("tempUserId") || 
-                 `temp_${Date.now()}`;
-
-  // Сохраняем временный ID, если пользователь не авторизован
-  if (!localStorage.getItem("userId")) {
-    localStorage.setItem("tempUserId", userId);
-  }
-
-  // ... остальная логика оформления заказа ...
-  const phone = document.getElementById('phone').value;
-  const address = document.getElementById('address').value;
-  const items = Object.values(cartData);
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  try {
-    // Отправка заказа на сервер
-    const response = await fetch('https://your-api.com/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, items, total, phone, address })
-    });
-
-    // ... обработка ответа ...
-  } catch (err) {
-    console.error("Ошибка:", err);
-  }
-});
 
 
 });
