@@ -435,36 +435,56 @@ function closeCartModal() {
     document.getElementById('modalOverlay').style.display = 'none';
   });
   
-  // Обработка финального оформления заказа
-  document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userId = localStorage.getItem("userId");
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-  
-    const items = Object.values(cartData); // используем cartData
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
-    try {
-      const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, items, total, phone, address })
-      });
-  
-      const result = await response.json();
-      if (response.ok) {
-        alert("🎉 Заказ успешно оформлен!");
-        document.getElementById('orderConfirmModal').style.display = 'none';
-        document.getElementById('modalOverlay').style.display = 'none';
-      } else {
-        alert("Ошибка: " + result.message);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Произошла ошибка при оформлении заказа.");
+
+document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  let userId = localStorage.getItem("userId");
+
+  // Если нет userId — генерируем временный и сохраняем
+  if (!userId) {
+    userId = `temp_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('tempUserId', userId);
+  }
+
+  const phone = document.getElementById('phone').value;
+  const address = document.getElementById('address').value;
+
+  const items = Object.values(cartData);
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  try {
+    const response = await fetch('https://fastfoodmania-api.onrender.com/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, items, total, phone, address })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("🎉 Заказ успешно оформлен!");
+      Object.keys(cartData).forEach(key => delete cartData[key]);
+      itemCount = 0;
+      updateCartText();
+      updateCartUI();
+
+      document.getElementById('orderConfirmModal').style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'none';
+    } else {
+      alert("Ошибка: " + (result.message || "Не удалось оформить заказ"));
     }
+  } catch (err) {
+    console.error(err);
+    alert("Произошла ошибка при оформлении заказа.");
+  }
 });
+
+
+// Генерация временного ID пользователя для неавторизованных пользователей
+function generateTempUserId() {
+  return 'temp_' + Math.random().toString(36).substr(2, 9);
+}
 async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -505,6 +525,9 @@ async function openProfileModal() {
     document.getElementById('profileModal').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
 });
+
+
+
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
