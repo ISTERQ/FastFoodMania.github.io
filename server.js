@@ -528,24 +528,6 @@ app.get('/api/users/:id', async (req, res) => {
 
 
 
-app.post('/api/orders', async (req, res) => {
-  try {
-    const newOrder = new Order(req.body);
-    await newOrder.save();
-
-    // Добавляем заказ к пользователю
-    await User.findByIdAndUpdate(
-      req.body.userId,
-      { $push: { orders: newOrder._id } }
-    );
-
-    res.status(201).json(newOrder);
-  } catch (err) {
-    console.error("Ошибка при добавлении заказа:", err);
-    res.status(500).json({ message: "Ошибка при создании заказа" });
-  }
-});
-
 // Добавь в server.js
 app.get('/api/users/:id', async (req, res) => {
   try {
@@ -600,6 +582,81 @@ app.get('/api/orders/:userId', async (req, res) => {
     res.json(orders);
   } catch (err) {
     console.error("Ошибка получения заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+app.post('/api/users/:userId/merge/:tempUserId', async (req, res) => {
+  try {
+    // Переносим заказы временного пользователя
+    const orders = await Order.find({ userId: req.params.tempUserId });
+    
+    await Order.updateMany(
+      { userId: req.params.tempUserId },
+      { $set: { userId: req.params.userId } }
+    );
+
+    await User.findByIdAndUpdate(
+      req.params.userId,
+      { 
+        $push: { mergedOrders: { $each: orders.map(o => o._id) } },
+        $unset: { tempUserId: "" }
+      }
+    );
+
+    res.json({ success: true, mergedOrders: orders.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка объединения заказов' });
+  }
+});
+ 
+
+// Оформление заказа
+app.post('/api/orders', async (req, res) => {
+  try {
+    let userId = req.body.userId;
+    
+    // Генерация временного ID если пользователь не авторизован
+    if (!userId || userId.startsWith('temp_')) {
+      userId = `temp_${crypto.randomBytes(16).toString('hex')}`;
+    }
+
+    const newOrder = new Order({
+      userId,
+      items: req.body.items,
+      total: req.body.total,
+      phone: req.body.phone,
+      address: req.body.address
+    });
+
+    await newOrder.save();
+    
+    // Обновляем пользователя (авторизованного или временного)
+    await User.findOneAndUpdate(
+      { $or: [{ _id: userId }, { tempUserId: userId }] },
+      { $push: { orders: newOrder._id } },
+      { upsert: true, new: true }
+    );
+
+    res.status(201).json({ 
+      success: true,
+      userId // Возвращаем временный ID если был создан
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка сохранения заказа' });
+  }
+});
+
+// Маршрут для получения истории заказов пользователя
+app.get('/api/orders/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId })
+      .sort({ createdAt: -1 }); // Сортировка по дате (новые сначала)
+
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка при получении заказов:", err);
     res.status(500).json({ message: "Ошибка сервера" });
   }
 });
