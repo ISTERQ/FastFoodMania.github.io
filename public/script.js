@@ -24,6 +24,158 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });  
+
+// Код для обработки кнопки оформления заказа
+// Вставьте в конец script.js после описания корзины и логики модальных окон
+document.addEventListener('DOMContentLoaded', function() {
+  // Селекторы элементов модальных окон и кнопок
+  const loginModal = document.getElementById('loginModal');
+  const orderModal = document.getElementById('orderConfirmModal');
+  const overlay = document.getElementById('modalOverlay');
+  const orderSummary = document.getElementById('orderSummary');
+  const confirmBtn = document.getElementById('fakeConfirmButton');
+  // Кнопка оформления (замените селектор на свой, если отличается)
+  const orderBtn = document.getElementById('placeOrderBtn');
+
+  // Проверяем наличие необходимых элементов
+  if (!loginModal || !orderModal || !overlay || !orderSummary || !confirmBtn) {
+    console.warn('Не найдены элементы модального окна или кнопки подтверждения заказа');
+  }
+  if (!orderBtn) {
+    console.warn('Не найдена кнопка оформления заказа (проверьте селектор)');
+    return;
+  }
+
+  // Обработчик клика по кнопке оформления заказа
+  orderBtn.addEventListener('click', function() {
+    const userId = localStorage.getItem('userId'); // проверка авторизации
+    if (!userId) {
+      // Пользователь не вошёл — открыть окно входа
+      loginModal.style.display = 'block';
+      overlay.style.display = 'block';
+      return;
+    }
+    // Пользователь вошёл — подготовка и отображение окна подтверждения
+    let cartData = JSON.parse(localStorage.getItem('cartData')) || []; // данные корзины
+    orderSummary.innerHTML = ''; // очищаем блок обзора заказа
+    let total = 0;
+    // Заполняем обзор заказа данными из корзины
+    cartData.forEach(item => {
+      const name = item.name || item.title || 'Блюдо';
+      const qty = item.quantity || item.count || 1;
+      const price = item.price || item.cost || 0;
+      const sum = qty * price;
+      total += sum;
+      const row = `<p>${name} x ${qty} — ${sum} руб.</p>`;
+      orderSummary.insertAdjacentHTML('beforeend', row);
+    });
+    // Добавляем итоговую сумму
+    const totalRow = `<p><strong>Итого: ${total} руб.</strong></p>`;
+    orderSummary.insertAdjacentHTML('beforeend', totalRow);
+    // Показываем окно подтверждения и оверлей
+    orderModal.style.display = 'block';
+    overlay.style.display = 'block';
+  });
+
+  // Обработчик на кнопку подтверждения заказа в модалке
+  confirmBtn.addEventListener('click', function() {
+    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту');
+    // Закрываем модальное окно и оверлей
+    orderModal.style.display = 'none';
+    overlay.style.display = 'none';
+  });
+});
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const loginModal = document.getElementById('loginModal');
+  const orderModal = document.getElementById('orderConfirmModal');
+  const overlay = document.getElementById('modalOverlay');
+  const orderSummary = document.getElementById('orderSummary');
+  const confirmBtn = document.getElementById('fakeConfirmButton');
+  const orderBtn = document.getElementById('checkoutButton');
+
+  function closeOrderModal() {
+    orderModal.style.display = 'none';
+    overlay.style.display = 'none';
+  }
+
+  orderBtn.addEventListener('click', () => {
+    const userId = localStorage.getItem('userId');
+
+    if (!userId) {
+      // Не залогинен — открыть окно входа
+      loginModal.style.display = 'block';
+      overlay.style.display = 'block';
+      return;
+    }
+
+    // Пользователь залогинен — формируем заказ
+    if (Object.keys(cartData).length === 0) {
+      alert('Корзина пуста!');
+      return;
+    }
+
+    let html = '';
+    let total = 0;
+    for (const key in cartData) {
+      const item = cartData[key];
+      const qty = item.quantity;
+      const price = item.price;
+      const sum = qty * price;
+      total += sum;
+      html += `<p>${item.name} × ${qty} — ${sum} ₽</p>`;
+    }
+    html += `<p><strong>Итого: ${total} ₽</strong></p>`;
+    html += `<p style="margin-top: 15px; font-style: italic;">Все данные по заказу отправлены на вашу почту.</p>`;
+
+    orderSummary.innerHTML = html;
+
+    orderModal.style.display = 'block';
+    overlay.style.display = 'block';
+  });
+
+  confirmBtn.addEventListener('click', () => {
+    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту.');
+    closeOrderModal();
+  });
+
+  // Закрытие модалки по крестику
+  const closeConfirmBtn = document.getElementById('closeOrderConfirm');
+  closeConfirmBtn.addEventListener('click', () => {
+    closeOrderModal();
+  });
+});
+
+
+
+function saveOrderToProfile() {
+  // Получаем текущие заказы из localStorage или пустой массив
+  let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
+
+  // Формируем массив текущих блюд из корзины
+  const items = Object.values(cartData).map(item => ({
+    name: item.name,
+    quantity: item.quantity,
+    price: item.price
+  }));
+
+  // Считаем итоговую сумму
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // Добавляем новый заказ с текущей датой
+  orders.push({
+    date: new Date().toISOString(),
+    items,
+    total
+  });
+
+  // Сохраняем обратно в localStorage
+  localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
   const profileButton = document.getElementById('profileButton');
   const profileSidebar = document.getElementById('profileSidebar');
@@ -433,7 +585,6 @@ function closeCartModal() {
   });
   
 
-// В файле script.js обновляем обработчик оформления заказа
 document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -448,54 +599,50 @@ document.getElementById('finalOrderForm').addEventListener('submit', async (e) =
 
   const phone = document.getElementById('phone').value;
   const address = document.getElementById('address').value;
-  const items = Object.values(cartData);
+
+  // Копируем содержимое корзины ДО очистки
+  const items = Object.values(cartData).map(item => ({
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity
+  }));
+
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   try {
     const response = await fetch('https://fastfoodmania-api.onrender.com/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        userId,
-        items: items.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity
-        })),
-        total,
-        phone,
-        address
-      })
+      body: JSON.stringify({ userId, items, total, phone, address })
     });
 
     const result = await response.json();
 
     if (response.ok) {
-      // Очистка корзины
+      // Для временных пользователей сохраняем заказ в localStorage
+      if (isTempUser) {
+        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+        tempOrders.push({
+          items,
+          total,
+          date: new Date().toISOString()
+        });
+        localStorage.setItem('tempOrders', JSON.stringify(tempOrders));
+        console.log("Временные заказы сохранены:", tempOrders);
+      }
+
+      // Очистка корзины после успешного заказа
       Object.keys(cartData).forEach(key => delete cartData[key]);
       itemCount = 0;
       updateCartText();
       updateCartUI();
 
-      // Обновление профиля
-      if (!isTempUser) {
-        await loadProfile();
-      }
-
       // Закрытие модальных окон
       document.getElementById('orderConfirmModal').style.display = 'none';
       document.getElementById('modalOverlay').style.display = 'none';
 
-      // Уведомление об успехе
-      showOrderSuccessNotification();
-
-      // Для временных пользователей сохраняем заказ в localStorage
-      if (isTempUser) {
-        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
-        tempOrders.push(result);
-        localStorage.setItem('tempOrders', JSON.stringify(tempOrders));
-      }
+      alert("🎉 Заказ успешно оформлен!");
     } else {
       alert("Ошибка: " + (result.message || "Не удалось оформить заказ"));
     }
@@ -504,6 +651,7 @@ document.getElementById('finalOrderForm').addEventListener('submit', async (e) =
     alert("Произошла ошибка при оформлении заказа.");
   }
 });
+
 
 // Добавляем функцию для показа уведомления
 function showOrderSuccessNotification() {
@@ -910,154 +1058,5 @@ window.onclick = function(event) {
 };
 
 
-// Код для обработки кнопки оформления заказа
-// Вставьте в конец script.js после описания корзины и логики модальных окон
-document.addEventListener('DOMContentLoaded', function() {
-  // Селекторы элементов модальных окон и кнопок
-  const loginModal = document.getElementById('loginModal');
-  const orderModal = document.getElementById('orderConfirmModal');
-  const overlay = document.getElementById('modalOverlay');
-  const orderSummary = document.getElementById('orderSummary');
-  const confirmBtn = document.getElementById('fakeConfirmButton');
-  // Кнопка оформления (замените селектор на свой, если отличается)
-  const orderBtn = document.getElementById('placeOrderBtn');
-
-  // Проверяем наличие необходимых элементов
-  if (!loginModal || !orderModal || !overlay || !orderSummary || !confirmBtn) {
-    console.warn('Не найдены элементы модального окна или кнопки подтверждения заказа');
-  }
-  if (!orderBtn) {
-    console.warn('Не найдена кнопка оформления заказа (проверьте селектор)');
-    return;
-  }
-
-  // Обработчик клика по кнопке оформления заказа
-  orderBtn.addEventListener('click', function() {
-    const userId = localStorage.getItem('userId'); // проверка авторизации
-    if (!userId) {
-      // Пользователь не вошёл — открыть окно входа
-      loginModal.style.display = 'block';
-      overlay.style.display = 'block';
-      return;
-    }
-    // Пользователь вошёл — подготовка и отображение окна подтверждения
-    let cartData = JSON.parse(localStorage.getItem('cartData')) || []; // данные корзины
-    orderSummary.innerHTML = ''; // очищаем блок обзора заказа
-    let total = 0;
-    // Заполняем обзор заказа данными из корзины
-    cartData.forEach(item => {
-      const name = item.name || item.title || 'Блюдо';
-      const qty = item.quantity || item.count || 1;
-      const price = item.price || item.cost || 0;
-      const sum = qty * price;
-      total += sum;
-      const row = `<p>${name} x ${qty} — ${sum} руб.</p>`;
-      orderSummary.insertAdjacentHTML('beforeend', row);
-    });
-    // Добавляем итоговую сумму
-    const totalRow = `<p><strong>Итого: ${total} руб.</strong></p>`;
-    orderSummary.insertAdjacentHTML('beforeend', totalRow);
-    // Показываем окно подтверждения и оверлей
-    orderModal.style.display = 'block';
-    overlay.style.display = 'block';
-  });
-
-  // Обработчик на кнопку подтверждения заказа в модалке
-  confirmBtn.addEventListener('click', function() {
-    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту');
-    // Закрываем модальное окно и оверлей
-    orderModal.style.display = 'none';
-    overlay.style.display = 'none';
-  });
-});
-
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  const loginModal = document.getElementById('loginModal');
-  const orderModal = document.getElementById('orderConfirmModal');
-  const overlay = document.getElementById('modalOverlay');
-  const orderSummary = document.getElementById('orderSummary');
-  const confirmBtn = document.getElementById('fakeConfirmButton');
-  const orderBtn = document.getElementById('checkoutButton');
-
-  function closeOrderModal() {
-    orderModal.style.display = 'none';
-    overlay.style.display = 'none';
-  }
-
-  orderBtn.addEventListener('click', () => {
-    const userId = localStorage.getItem('userId');
-
-    if (!userId) {
-      // Не залогинен — открыть окно входа
-      loginModal.style.display = 'block';
-      overlay.style.display = 'block';
-      return;
-    }
-
-    // Пользователь залогинен — формируем заказ
-    if (Object.keys(cartData).length === 0) {
-      alert('Корзина пуста!');
-      return;
-    }
-
-    let html = '';
-    let total = 0;
-    for (const key in cartData) {
-      const item = cartData[key];
-      const qty = item.quantity;
-      const price = item.price;
-      const sum = qty * price;
-      total += sum;
-      html += `<p>${item.name} × ${qty} — ${sum} ₽</p>`;
-    }
-    html += `<p><strong>Итого: ${total} ₽</strong></p>`;
-    html += `<p style="margin-top: 15px; font-style: italic;">Все данные по заказу отправлены на вашу почту.</p>`;
-
-    orderSummary.innerHTML = html;
-
-    orderModal.style.display = 'block';
-    overlay.style.display = 'block';
-  });
-
-  confirmBtn.addEventListener('click', () => {
-    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту.');
-    closeOrderModal();
-  });
-
-  // Закрытие модалки по крестику
-  const closeConfirmBtn = document.getElementById('closeOrderConfirm');
-  closeConfirmBtn.addEventListener('click', () => {
-    closeOrderModal();
-  });
-});
-
-
-
-function saveOrderToProfile() {
-  // Получаем текущие заказы из localStorage или пустой массив
-  let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
-
-  // Формируем массив текущих блюд из корзины
-  const items = Object.values(cartData).map(item => ({
-    name: item.name,
-    quantity: item.quantity,
-    price: item.price
-  }));
-
-  // Считаем итоговую сумму
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  // Добавляем новый заказ с текущей датой
-  orders.push({
-    date: new Date().toISOString(),
-    items,
-    total
-  });
-
-  // Сохраняем обратно в localStorage
-  localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
-}
 
 
