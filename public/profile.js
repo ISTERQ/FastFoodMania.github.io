@@ -91,3 +91,29 @@ function generateOrdersHtml(orders) {
   `).join('') : '<p>Нет заказов</p>';
 }
 
+async function loadProfile() {
+  const userId = localStorage.getItem("userId") || localStorage.getItem("tempUserId");
+  if (!userId) return;
+
+  try {
+    console.log("Загрузка заказов для пользователя:", userId); // Отладка
+    const response = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`);
+    const orders = await response.json();
+    
+    console.log("Получены заказы:", orders); // Проверка данных
+
+    const container = document.getElementById('profileContent');
+    container.innerHTML = orders.map(order => `
+      <div class="order-item">
+        <p>Дата: ${new Date(order.createdAt).toLocaleString()}</p>
+        <p>Сумма: ${order.total} ₽</p>
+        <div class="order-items">
+          ${order.items.map(item => `<div>${item.name} × ${item.quantity}</div>`).join('')}
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('Ошибка загрузки профиля:', error);
+  }
+}
