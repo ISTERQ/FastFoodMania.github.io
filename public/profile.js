@@ -1,40 +1,63 @@
-function loadProfile() {
-  const email = localStorage.getItem("username") || "гость";
-  const userId = localStorage.getItem('userId');
+async function loadProfile() {
+  // Получаем userId (авторизованного или временного)
+  const userId = localStorage.getItem('userId') || localStorage.getItem('tempUserId');
 
-  let ordersHTML = '<p>Нет заказов</p>';
-
-  if (userId === 'fakeUser') {
-    const orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
-    if (orders.length > 0) {
-      ordersHTML = orders.map(order => {
-        const dateStr = new Date(order.date).toLocaleString();
-        const itemsList = order.items.map(i => `<div>${i.name} × ${i.quantity}</div>`).join('');
-        return `
-          <div class="order-item" style="margin-bottom:15px; padding:10px; border:1px solid #ccc; border-radius:10px;">
-            <p><strong>Дата:</strong> ${dateStr}</p>
-            <p><strong>Сумма:</strong> ${order.total} ₽</p>
-            <div class="order-items">${itemsList}</div>
-          </div>
-        `;
-      }).join('');
-    }
-  } else {
-    // Для реальных пользователей, если есть, загрузка заказов с сервера
-    ordersHTML = '<p>Загрузка заказов...</p>';
+  const profileContent = document.getElementById('profileContent');
+  if (!userId) {
+    profileContent.innerHTML = '<p>Пользователь не найден. Пожалуйста, войдите в систему.</p>';
+    return;
   }
 
-  document.getElementById('profileContent').innerHTML = `
-    <div class="profile-info">
-      <h3>👋 Привет, ${email}!</h3>
-      <p>📧 Email: ${email}</p>
-    </div>
-    <div class="order-history">
-      <h4>📦 История заказов:</h4>
-      ${ordersHTML}
-    </div>
+  let ordersHTML = '';
+
+  if (userId === 'fakeUser') {
+    // Загружаем заказы из localStorage для fakeUser
+    const orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
+    ordersHTML = generateOrdersHtml(orders);
+  } else {
+    // Запрос к серверу для обычного пользователя
+    try {
+      const response = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`);
+      if (!response.ok) throw new Error('Ошибка сервера');
+      const orders = await response.json();
+      ordersHTML = generateOrdersHtml(orders);
+    } catch (err) {
+      console.error('Ошибка загрузки заказов:', err);
+      ordersHTML = '<p>Ошибка загрузки заказов.</p>';
+    }
+  }
+
+  profileContent.innerHTML = ordersHTML;
+}
+
+// Вспомогательная функция для генерации HTML заказов
+function generateOrdersHtml(orders) {
+  if (!orders || orders.length === 0) {
+    return '<p>У вас пока нет заказов.</p>';
+  }
+
+  return `
+    <h3>История заказов:</h3>
+    ${orders.map(order => {
+      const date = new Date(order.date || order.createdAt).toLocaleString();
+      const itemsList = order.items.map(item =>
+        `<li>${item.name} × ${item.quantity} (${item.price * item.quantity} ₽)</li>`
+      ).join('');
+
+      return `
+        <div class="order-item">
+          <p><strong>Дата:</strong> ${date}</p>
+          <p><strong>Адрес:</strong> ${order.address || 'Не указан'}</p>
+          <p><strong>Телефон:</strong> ${order.phone || 'Не указан'}</p>
+          <p><strong>Товары:</strong></p>
+          <ul>${itemsList}</ul>
+          <p><strong>Итого:</strong> ${order.total} ₽</p>
+        </div>
+      `;
+    }).join('')}
   `;
 }
+
 
 
 // В начале функции loadProfile()
