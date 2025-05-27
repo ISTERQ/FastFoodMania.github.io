@@ -177,119 +177,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-
-// Авторизация пользователя
-app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    // Ищем пользователя по email, а не username
-    const user = await User.findOne({ email: username });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Неверный пароль' });
-    }
-
-    res.status(200).json({
-      message: 'Вход выполнен',
-      userId: user._id
-    });
-
-  } catch (error) {
-    console.error('Ошибка входа:', error);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
-  }
-});
-
-// Возвращает данные пользователя и его заказы
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).populate("orders");
-    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
-
-    res.json({
-      username: user.username,
-      email: user.email,
-      orders: user.orders
-    });
-  } catch (err) {
-    console.error("Ошибка при загрузке профиля:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-
-// Обработка запроса на обновление токена для ПК-версии
-app.post('/refresh', async (req, res) => {
-    const refreshToken = req.cookies.refreshTokenDesktop;
-
-    if (!refreshToken) {
-        console.error("❌ Refresh-токен отсутствует в cookies");
-        return res.status(401).json({ message: "Не авторизован" });
-    }
-
-    console.log("🔍 Полученный refreshToken:", refreshToken);
-    
-    jwt.verify(refreshToken, REFRESH_SECRET, async (err, decoded) => {
-        if (err) {
-            console.error("❌ Ошибка проверки refresh-токена:", err.message);
-            
-            res.clearCookie("refreshTokenDesktop", {
-                httpOnly: true,
-                secure: true,
-                sameSite: "None",
-                path: "/"
-            });
-
-            return res.status(403).json({ message: "Refresh-токен недействителен или истёк" });
-        }
-
-        if (!decoded.exp || (decoded.exp * 1000 < Date.now())) {
-            console.error("❌ Refresh-токен окончательно истёк!");
-            res.clearCookie("refreshTokenDesktop", { path: "/" });
-            return res.status(403).json({ message: "Refresh-токен истёк" });
-        }
-
-        try {
-            const user = await User.findById(decoded.id);
-            if (!user) {
-                console.error("❌ Пользователь не найден по ID:", decoded.id);
-                return res.status(404).json({ message: "Пользователь не найден" });
-            }
-
-            const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-            res.cookie("refreshTokenDesktop", newRefreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "None",
-                path: "/",
-                maxAge: 30 * 24 * 60 * 60 * 1000  // 30 дней
-            });
-
-            console.log("✅ Refresh-токен обновлён успешно");
-
-            // 🚀 Отключаем кеширование
-            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-            res.setHeader("Pragma", "no-cache");
-            res.setHeader("Expires", "0");
-
-            res.json({ accessToken });
-
-        } catch (error) {
-            console.error("❌ Ошибка при поиске пользователя:", error);
-            return res.status(500).json({ message: "Ошибка сервера" });
-        }
-    });
-});
-
-
 app.post('/logout', (req, res) => {
     console.log("🔄 Выход из аккаунта...");
     
@@ -476,33 +363,7 @@ app.get('/api/orders/:id', async (req, res) => {
 });
 
 
-// В сервере (например, в server.js)
-app.post('/api/orders', async (req, res) => {
-  const { userId, items, total } = req.body;
 
-  try {
-    const newOrder = new Order({
-      userId,   // Связь с пользователем
-      items,    // Товары в заказе
-      total     // Общая стоимость
-    });
-
-    // Сохраняем заказ в базе
-    await newOrder.save();
-
-    // Обновляем пользователя, добавляя заказ в его историю
-    const user = await User.findById(userId);
-    if (user) {
-      user.orders.push(newOrder._id); // Добавляем ID нового заказа в историю пользователя
-      await user.save();
-    }
-
-    res.status(201).json(newOrder); // Возвращаем новый заказ
-  } catch (err) {
-    console.error("Ошибка при добавлении заказа:", err);
-    res.status(500).json({ message: "Ошибка при создании заказа" });
-  }
-});
 
 app.get('/api/users/:id', async (req, res) => {
   try {
@@ -549,30 +410,7 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
-// Добавить новый маршрут перед app.listen()
-app.post('/api/orders', async (req, res) => {
-  try {
-    const { userId, items, total } = req.body;
-    const newOrder = new Order({
-      userId,
-      items,
-      total,
-      createdAt: new Date()
-    });
 
-    await newOrder.save();
-    
-    // Обновляем пользователя
-    await User.findByIdAndUpdate(userId, {
-      $push: { orders: newOrder._id }
-    });
-
-    res.status(201).json(newOrder);
-  } catch (err) {
-    console.error("Ошибка сохранения заказа:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
 
 // Добавить маршрут для получения заказов
 app.get('/api/orders/:userId', async (req, res) => {
@@ -660,3 +498,140 @@ app.get('/api/orders/:userId', async (req, res) => {
     res.status(500).json({ message: "Ошибка сервера" });
   }
 });
+
+app.post('/api/orders', async (req, res) => {
+  try {
+    console.log("Получен заказ:", req.body); // Отладка
+    const { userId, items, total, phone, address } = req.body;
+
+    const newOrder = new Order({
+      userId,
+      items,
+      total,
+      phone,
+      address,
+      createdAt: new Date()
+    });
+
+    await newOrder.save();
+    console.log("Заказ сохранен в БД:", newOrder); // Проверка
+
+    res.status(201).json({ success: true });
+  } catch (error) {
+    console.error("Ошибка сохранения заказа:", error); // Логирование ошибки
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// Авторизация пользователя
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // Ищем пользователя по email, а не username
+    const user = await User.findOne({ email: username });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    res.status(200).json({
+      message: 'Вход выполнен',
+      userId: user._id
+    });
+
+  } catch (error) {
+    console.error('Ошибка входа:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
+  }
+});
+
+// Возвращает данные пользователя и его заказы
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate("orders");
+    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+
+    res.json({
+      username: user.username,
+      email: user.email,
+      orders: user.orders
+    });
+  } catch (err) {
+    console.error("Ошибка при загрузке профиля:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+
+// Обработка запроса на обновление токена для ПК-версии
+app.post('/refresh', async (req, res) => {
+    const refreshToken = req.cookies.refreshTokenDesktop;
+
+    if (!refreshToken) {
+        console.error("❌ Refresh-токен отсутствует в cookies");
+        return res.status(401).json({ message: "Не авторизован" });
+    }
+
+    console.log("🔍 Полученный refreshToken:", refreshToken);
+    
+    jwt.verify(refreshToken, REFRESH_SECRET, async (err, decoded) => {
+        if (err) {
+            console.error("❌ Ошибка проверки refresh-токена:", err.message);
+            
+            res.clearCookie("refreshTokenDesktop", {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None",
+                path: "/"
+            });
+
+            return res.status(403).json({ message: "Refresh-токен недействителен или истёк" });
+        }
+
+        if (!decoded.exp || (decoded.exp * 1000 < Date.now())) {
+            console.error("❌ Refresh-токен окончательно истёк!");
+            res.clearCookie("refreshTokenDesktop", { path: "/" });
+            return res.status(403).json({ message: "Refresh-токен истёк" });
+        }
+
+        try {
+            const user = await User.findById(decoded.id);
+            if (!user) {
+                console.error("❌ Пользователь не найден по ID:", decoded.id);
+                return res.status(404).json({ message: "Пользователь не найден" });
+            }
+
+            const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
+            res.cookie("refreshTokenDesktop", newRefreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None",
+                path: "/",
+                maxAge: 30 * 24 * 60 * 60 * 1000  // 30 дней
+            });
+
+            console.log("✅ Refresh-токен обновлён успешно");
+
+            // 🚀 Отключаем кеширование
+            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            res.setHeader("Pragma", "no-cache");
+            res.setHeader("Expires", "0");
+
+            res.json({ accessToken });
+
+        } catch (error) {
+            console.error("❌ Ошибка при поиске пользователя:", error);
+            return res.status(500).json({ message: "Ошибка сервера" });
+        }
+    });
+});
+
+
