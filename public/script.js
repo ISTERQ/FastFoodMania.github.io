@@ -436,20 +436,21 @@ function closeCartModal() {
   });
   
 
+// В файле script.js обновляем обработчик оформления заказа
 document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   let userId = localStorage.getItem("userId");
+  const isTempUser = !userId;
 
-  // Если нет userId — генерируем временный и сохраняем
-  if (!userId) {
+  // Генерируем временный ID если пользователь не авторизован
+  if (isTempUser) {
     userId = `temp_${Math.random().toString(36).substr(2, 9)}`;
     localStorage.setItem('tempUserId', userId);
   }
 
   const phone = document.getElementById('phone').value;
   const address = document.getElementById('address').value;
-
   const items = Object.values(cartData);
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -457,20 +458,47 @@ document.getElementById('finalOrderForm').addEventListener('submit', async (e) =
     const response = await fetch('https://fastfoodmania-api.onrender.com/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, items, total, phone, address })
+      body: JSON.stringify({ 
+        userId,
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })),
+        total,
+        phone,
+        address
+      })
     });
 
     const result = await response.json();
 
     if (response.ok) {
-      alert("🎉 Заказ успешно оформлен!");
+      // Очистка корзины
       Object.keys(cartData).forEach(key => delete cartData[key]);
       itemCount = 0;
       updateCartText();
       updateCartUI();
 
+      // Обновление профиля
+      if (!isTempUser) {
+        await loadProfile();
+      }
+
+      // Закрытие модальных окон
       document.getElementById('orderConfirmModal').style.display = 'none';
       document.getElementById('modalOverlay').style.display = 'none';
+
+      // Уведомление об успехе
+      showOrderSuccessNotification();
+
+      // Для временных пользователей сохраняем заказ в localStorage
+      if (isTempUser) {
+        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+        tempOrders.push(result);
+        localStorage.setItem('tempOrders', JSON.stringify(tempOrders));
+      }
     } else {
       alert("Ошибка: " + (result.message || "Не удалось оформить заказ"));
     }
@@ -480,7 +508,92 @@ document.getElementById('finalOrderForm').addEventListener('submit', async (e) =
   }
 });
 
+// Добавляем функцию для показа уведомления
+function showOrderSuccessNotification() {
+  const notification = document.createElement('div');
+  notification.className = 'order-notification';
+  notification.innerHTML = `
+    <p>✅ Заказ успешно оформлен!</p>
+    <p>Детали заказа сохранены в вашем профиле</p>
+  `;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
 
+// В файле profile.js обновляем загрузку профиля
+async function loadProfile() {
+  let userId = localStorage.getItem("userId") || localStorage.getItem("tempUserId");
+  if (!userId) return;
+
+  try {
+    // Загружаем заказы с сервера
+    const serverOrders = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`)
+      .then(res => res.json());
+
+    // Загружаем временные заказы из localStorage
+    const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+
+    // Объединяем заказы
+    const allOrders = [...serverOrders, ...tempOrders];
+
+    // Отображаем заказы
+    const container = document.getElementById('profileContent');
+    container.innerHTML = allOrders.map(order => `
+      <div class="order-item">
+        <p>Дата: ${new Date(order.createdAt).toLocaleString()}</p>
+        <p>Сумма: ${order.total} ₽</p>
+        <div class="order-items">
+          ${order.items.map(item => `
+            <div class="order-product">
+              ${item.name} × ${item.quantity}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('Ошибка загрузки профиля:', error);
+  }
+}
+
+// В server.js добавляем обработчик для временных пользователей
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { userId, items, total, phone, address } = req.body;
+
+    // Для временных пользователей сохраняем в отдельную коллекцию
+    if (userId.startsWith('temp_')) {
+      const tempOrder = new TempOrder({
+        userId,
+        items,
+        total,
+        phone,
+        address,
+        createdAt: new Date()
+      });
+      await tempOrder.save();
+    } else {
+      // Для авторизованных пользователей
+      const order = new Order({
+        userId,
+        items,
+        total,
+        phone,
+        address,
+        createdAt: new Date()
+      });
+      await order.save();
+    }
+
+    res.status(201).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка сохранения заказа' });
+  }
+});
 // Генерация временного ID пользователя для неавторизованных пользователей
 function generateTempUserId() {
   return 'temp_' + Math.random().toString(36).substr(2, 9);
