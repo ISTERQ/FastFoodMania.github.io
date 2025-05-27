@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
- 
+});  
 
 // Код для обработки кнопки оформления заказа
 // Вставьте в конец script.js после описания корзины и логики модальных окон
@@ -1059,4 +1059,4 @@ window.onclick = function(event) {
 
 
 
-});
+
