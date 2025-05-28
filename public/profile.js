@@ -1,8 +1,7 @@
 async function loadProfile() {
-  // Получаем userId (авторизованного или временного)
-  const userId = localStorage.getItem('userId') || localStorage.getItem('tempUserId');
-
+  const userId = localStorage.getItem("userId") || localStorage.getItem("tempUserId");
   const profileContent = document.getElementById('profileContent');
+  
   if (!userId) {
     profileContent.innerHTML = '<p>Пользователь не найден. Пожалуйста, войдите в систему.</p>';
     return;
@@ -17,20 +16,27 @@ async function loadProfile() {
   } else {
     // Запрос к серверу для обычного пользователя
     try {
+      console.log("Загрузка заказов для пользователя:", userId);
       const response = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`);
-      if (!response.ok) throw new Error('Ошибка сервера');
+      
+      if (!response.ok) {
+        throw new Error(`Ошибка сервера: ${response.status}`);
+      }
+      
       const orders = await response.json();
+      console.log("Получены заказы:", orders);
       ordersHTML = generateOrdersHtml(orders);
+      
     } catch (err) {
       console.error('Ошибка загрузки заказов:', err);
-      ordersHTML = '<p>Ошибка загрузки заказов.</p>';
+      ordersHTML = '<p>Ошибка загрузки заказов. Попробуйте позже.</p>';
     }
   }
 
   profileContent.innerHTML = ordersHTML;
 }
 
-// Вспомогательная функция для генерации HTML заказов
+// Функция для генерации HTML заказов
 function generateOrdersHtml(orders) {
   if (!orders || orders.length === 0) {
     return '<p>У вас пока нет заказов.</p>';
@@ -45,12 +51,13 @@ function generateOrdersHtml(orders) {
       ).join('');
 
       return `
-        <div class="order-item">
+        <div class="order-item" style="border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 8px; background: #f9f9f9;">
           <p><strong>Дата:</strong> ${date}</p>
-          <p><strong>Адрес:</strong> ${order.address || 'Не указан'}</p>
-          <p><strong>Телефон:</strong> ${order.phone || 'Не указан'}</p>
+          ${order.address ? `<p><strong>Адрес:</strong> ${order.address}</p>` : ''}
+          ${order.phone ? `<p><strong>Телефон:</strong> ${order.phone}</p>` : ''}
+          ${order.customerName ? `<p><strong>Имя:</strong> ${order.customerName}</p>` : ''}
           <p><strong>Товары:</strong></p>
-          <ul>${itemsList}</ul>
+          <ul style="margin-left: 20px;">${itemsList}</ul>
           <p><strong>Итого:</strong> ${order.total} ₽</p>
         </div>
       `;
@@ -58,62 +65,5 @@ function generateOrdersHtml(orders) {
   `;
 }
 
-
-
-// В начале функции loadProfile()
-const userId = localStorage.getItem('userId');
-
-// Заменить блок с ordersHTML на:
-let ordersHTML = '';
-if (userId === 'fakeUser') {
-  const orders = JSON.parse(localStorage.getItem('fakeUserOrders') || []);
-  ordersHTML = generateOrdersHtml(orders);
-} else {
-  try {
-    const response = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`);
-    const orders = await response.json();
-    ordersHTML = generateOrdersHtml(orders);
-  } catch (err) {
-    ordersHTML = '<p>Ошибка загрузки заказов</p>';
-  }
-}
-
-// Добавить новую функцию в конец файла:
-function generateOrdersHtml(orders) {
-  return orders.length > 0 ? orders.map(order => `
-    <div class="order-item">
-      <p><strong>Дата:</strong> ${new Date(order.date || order.createdAt).toLocaleString()}</p>
-      <p><strong>Сумма:</strong> ${order.total} ₽</p>
-      <div class="order-items">
-        ${order.items.map(i => `<div>${i.name} × ${i.quantity}</div>`).join('')}
-      </div>
-    </div>
-  `).join('') : '<p>Нет заказов</p>';
-}
-
-async function loadProfile() {
-  const userId = localStorage.getItem("userId") || localStorage.getItem("tempUserId");
-  if (!userId) return;
-
-  try {
-    console.log("Загрузка заказов для пользователя:", userId); // Отладка
-    const response = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`);
-    const orders = await response.json();
-    
-    console.log("Получены заказы:", orders); // Проверка данных
-
-    const container = document.getElementById('profileContent');
-    container.innerHTML = orders.map(order => `
-      <div class="order-item">
-        <p>Дата: ${new Date(order.createdAt).toLocaleString()}</p>
-        <p>Сумма: ${order.total} ₽</p>
-        <div class="order-items">
-          ${order.items.map(item => `<div>${item.name} × ${item.quantity}</div>`).join('')}
-        </div>
-      </div>
-    `).join('');
-    
-  } catch (error) {
-    console.error('Ошибка загрузки профиля:', error);
-  }
-}
+// Экспортируем функцию для использования в других файлах
+window.loadProfile = loadProfile;
