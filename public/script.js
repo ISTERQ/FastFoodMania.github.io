@@ -150,9 +150,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-function saveOrderToProfile() {
-  // Получаем текущие заказы из localStorage или пустой массив
-  let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
+async function saveOrderToProfile() {
+  const token = localStorage.getItem('authToken');
+  
+  if (!token) {
+    alert('Для оформления заказа необходимо войти в аккаунт');
+    return;
+  }
 
   // Формируем массив текущих блюд из корзины
   const items = Object.values(cartData).map(item => ({
@@ -164,15 +168,50 @@ function saveOrderToProfile() {
   // Считаем итоговую сумму
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Добавляем новый заказ с текущей датой
-  orders.push({
-    date: new Date().toISOString(),
-    items,
-    total
-  });
+  // Получаем данные для заказа
+  const customerName = document.getElementById('customerName')?.value || localStorage.getItem('username') || 'Не указано';
+  const phone = document.getElementById('customerPhone')?.value || 'Не указан';
+  const address = document.getElementById('customerAddress')?.value || 'Не указан';
 
-  // Сохраняем обратно в localStorage
-  localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
+  try {
+    const response = await fetch('https://fastfoodmania-api.onrender.com/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        items,
+        total,
+        customerName,
+        phone,
+        address
+      })
+    });
+
+    if (response.ok) {
+      const savedOrder = await response.json();
+      console.log('Заказ успешно сохранен:', savedOrder);
+      
+      // Также сохраняем локально для обратной совместимости
+      let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
+      orders.push({
+        date: new Date().toISOString(),
+        items,
+        total,
+        customerName,
+        phone,
+        address
+      });
+      localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
+    } else {
+      console.error('Ошибка сохранения заказа:', response.statusText);
+      alert('Не удалось сохранить заказ. Попробуйте позже.');
+    }
+  } catch (error) {
+    console.error('Ошибка при отправке заказа:', error);
+    alert('Ошибка подключения к серверу. Проверьте соединение.');
+  }
 }
 
 
