@@ -42,7 +42,6 @@
 </header>
 
 
-
 <!-- Внутри модального окна-->
 <div id="loginModal" class="modal">
   <div class="modal-content">
@@ -102,7 +101,28 @@
 <div id="profileOverlay" class="profileOverlay"></div>
 
 
-
+<!-- Добавить после корзины -->
+<div id="orderFormModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close" id="closeOrderForm">&times;</span>
+    <h3>Оформление заказа</h3>
+    <form id="orderForm">
+      <div class="form-group">
+        <label for="orderName">Имя:</label>
+        <input type="text" id="orderName" required>
+      </div>
+      <div class="form-group">
+        <label for="orderPhone">Телефон:</label>
+        <input type="tel" id="orderPhone" required>
+      </div>
+      <div class="form-group">
+        <label for="orderAddress">Адрес:</label>
+        <textarea id="orderAddress" required></textarea>
+      </div>
+      <button type="submit">Подтвердить заказ</button>
+    </form>
+  </div>
+</div>
 
 
 <div class="slideshow-container">
@@ -603,8 +623,7 @@
 
 <script src="script.js"></script>
 <script src="util.js"></script>
-<script src="registration.js"></script>
-<script src="login.js"></script>
+<script src="auth.js"></script>
 <script src="profile.js"></script>
 
 
