@@ -1,1101 +1,679 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Навигация по секциям (обновленный код)
-    document.querySelectorAll('.nav-button').forEach(button => {
-    button.addEventListener('click', function(event) {
-      event.preventDefault();
-      const targetId = this.getAttribute('href');
-      const targetElement = document.querySelector(targetId);
-  
-      if (!targetElement) return; // добавим защиту от пустых ссылок
-  
-      const header = document.querySelector('header');
-      const headerOffset = header.offsetHeight;
-  
-      const elementPosition = targetElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset
-        - headerOffset
-        - (window.innerHeight / 2.5)
-        + (targetElement.offsetHeight / 2);
-  
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    });
-  });
-});  
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const cors = require("cors");
+const path = require("path");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const app = express();
+const User = require('./models/User'); 
+const fs = require('fs');
+const reviewsFile = 'reviews.json';
+const Joi = require("joi");
+const Order = require('./models/Order');
+app.use(express.json());
 
-// Код для обработки кнопки оформления заказа
-// Вставьте в конец script.js после описания корзины и логики модальных окон
-document.addEventListener('DOMContentLoaded', function() {
-  // Селекторы элементов модальных окон и кнопок
-  const loginModal = document.getElementById('loginModal');
-  const orderModal = document.getElementById('orderConfirmModal');
-  const overlay = document.getElementById('modalOverlay');
-  const orderSummary = document.getElementById('orderSummary');
-  const confirmBtn = document.getElementById('fakeConfirmButton');
-  // Кнопка оформления (замените селектор на свой, если отличается)
-  const orderBtn = document.getElementById('placeOrderBtn');
+const { MongoClient } = require("mongodb");
+const JWT_SECRET = process.env.JWT_SECRET || JWT_SECRETb3f59c77c06c2d4b6c0d81514f4e4fd7dc17d0f143e8f0bddc4f9306edb969e6;
+const REFRESH_SECRET = process.env.REFRESH_SECRET || 0f8f44c7a456a5db7bb093adecf9da407318c6380b3acebc4ecc2a5c8ff88df4;
+const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
+const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
 
-  // Проверяем наличие необходимых элементов
-  if (!loginModal || !orderModal || !overlay || !orderSummary || !confirmBtn) {
-    console.warn('Не найдены элементы модального окна или кнопки подтверждения заказа');
-  }
-  if (!orderBtn) {
-    console.warn('Не найдена кнопка оформления заказа (проверьте селектор)');
-    return;
-  }
-
-  // Обработчик клика по кнопке оформления заказа
-  orderBtn.addEventListener('click', function() {
-    const userId = localStorage.getItem('userId'); // проверка авторизации
-    if (!userId) {
-      // Пользователь не вошёл — открыть окно входа
-      loginModal.style.display = 'block';
-      overlay.style.display = 'block';
-      return;
-    }
-    // Пользователь вошёл — подготовка и отображение окна подтверждения
-    let cartData = JSON.parse(localStorage.getItem('cartData')) || []; // данные корзины
-    orderSummary.innerHTML = ''; // очищаем блок обзора заказа
-    let total = 0;
-    // Заполняем обзор заказа данными из корзины
-    cartData.forEach(item => {
-      const name = item.name || item.title || 'Блюдо';
-      const qty = item.quantity || item.count || 1;
-      const price = item.price || item.cost || 0;
-      const sum = qty * price;
-      total += sum;
-      const row = `<p>${name} x ${qty} — ${sum} руб.</p>`;
-      orderSummary.insertAdjacentHTML('beforeend', row);
-    });
-    // Добавляем итоговую сумму
-    const totalRow = `<p><strong>Итого: ${total} руб.</strong></p>`;
-    orderSummary.insertAdjacentHTML('beforeend', totalRow);
-    // Показываем окно подтверждения и оверлей
-    orderModal.style.display = 'block';
-    overlay.style.display = 'block';
+let db;
+client.connect()
+  .then(() => {
+    db = client.db("sosaldbmoy_memberdeal");
+    console.log("✅ MongoDB подключена");
+  })
+  .catch(err => {
+    console.error("❌ Ошибка подключения к MongoDB:", err);
   });
 
-  // Обработчик на кнопку подтверждения заказа в модалке
-  confirmBtn.addEventListener('click', function() {
-    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту');
-    // Закрываем модальное окно и оверлей
-    orderModal.style.display = 'none';
-    overlay.style.display = 'none';
-  });
+  
+
+
+console.log("Отправка запроса на /refresh");
+
+
+const corsOptions = {
+  origin: true,       // ⬅️ или "*" если не используешь cookies
+  credentials: true   // ⬅️ обязательно, если работаешь с логином
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // обработка preflight-запросов
+
+
+app.use(cors(corsOptions));
+
+
+app.use(express.json());
+app.use(cors(corsOptions));
+
+// маршруты ...
+
+app.use((err, req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://fastfoodmania-github-io.onrender.com");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  console.log("🚨 Логин упал здесь", err.message); // <-- Вот добавленный лог
+  console.error(err.stack);
+
+  res.status(500).json({ message: "Что-то пошло не так", error: err.message });
 });
 
 
+// Используем CORS с настройками
+app.use(cookieParser());
+// Подключение к MongoDB
 
-document.addEventListener('DOMContentLoaded', () => {
-  const loginModal = document.getElementById('loginModal');
-  const orderModal = document.getElementById('orderConfirmModal');
-  const overlay = document.getElementById('modalOverlay');
-  const orderSummary = document.getElementById('orderSummary');
-  const confirmBtn = document.getElementById('fakeConfirmButton');
-  const orderBtn = document.getElementById('checkoutButton');
+app.options('*', cors(corsOptions)); // Ответ на preflight запросы для всех маршрутов
 
-  function closeOrderModal() {
-    orderModal.style.display = 'none';
-    overlay.style.display = 'none';
-  }
 
-  orderBtn.addEventListener('click', () => {
-    const userId = localStorage.getItem('userId');
 
-    if (!userId) {
-      // Не залогинен — открыть окно входа
-      loginModal.style.display = 'block';
-      overlay.style.display = 'block';
-      return;
+
+const mongoURI = process.env.MONGO_URI;
+
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  ssl: false
+})
+.then(() => console.log("✅ MongoDB connected по URI из .env"))
+.catch((error) => console.error("❌ MongoDB connection error:", error));
+
+
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  ssl: false, // Включено SSL
+})
+  .then(() => console.log("MongoDB connected"))
+  .catch((error) => console.error("MongoDB connection error:", error));
+
+// Middleware для обработки JSON
+
+// Функция проверки срока жизни токена
+function isTokenExpired(token) {
+    try {
+        const payload = JSON.parse(atob(token.split(".")[1])); // Декодируем токен
+        return payload.exp * 1000 < Date.now(); // Если exp в прошлом — токен истёк
+    } catch (e) {
+        return true; // Если ошибка — токен недействителен
     }
-
-    // Пользователь залогинен — формируем заказ
-    if (Object.keys(cartData).length === 0) {
-      alert('Корзина пуста!');
-      return;
-    }
-
-    let html = '';
-    let total = 0;
-    for (const key in cartData) {
-      const item = cartData[key];
-      const qty = item.quantity;
-      const price = item.price;
-      const sum = qty * price;
-      total += sum;
-      html += `<p>${item.name} × ${qty} — ${sum} ₽</p>`;
-    }
-    html += `<p><strong>Итого: ${total} ₽</strong></p>`;
-    html += `<p style="margin-top: 15px; font-style: italic;">Все данные по заказу отправлены на вашу почту.</p>`;
-
-    orderSummary.innerHTML = html;
-
-    orderModal.style.display = 'block';
-    overlay.style.display = 'block';
-  });
-
-  confirmBtn.addEventListener('click', () => {
-    alert('Ваш заказ успешно отправлен! Все детали отправлены вам на почту.');
-    closeOrderModal();
-  });
-
-  // Закрытие модалки по крестику
-  const closeConfirmBtn = document.getElementById('closeOrderConfirm');
-  closeConfirmBtn.addEventListener('click', () => {
-    closeOrderModal();
-  });
-});
-
-
-
-async function saveOrderToProfile() {
-  const token = localStorage.getItem('authToken');
-  
-  if (!token) {
-    alert('Для оформления заказа необходимо войти в аккаунт');
-    return;
-  }
-
-  // Формируем массив текущих блюд из корзины
-  const items = Object.values(cartData).map(item => ({
-    name: item.name,
-    quantity: item.quantity,
-    price: item.price
-  }));
-
-  // Считаем итоговую сумму
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  // Получаем данные для заказа
-  const customerName = document.getElementById('customerName')?.value || localStorage.getItem('username') || 'Не указано';
-  const phone = document.getElementById('customerPhone')?.value || 'Не указан';
-  const address = document.getElementById('customerAddress')?.value || 'Не указан';
-
-  try {
-    const response = await fetch('https://fastfoodmania-api.onrender.com/api/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        items,
-        total,
-        customerName,
-        phone,
-        address
-      })
-    });
-
-    if (response.ok) {
-      const savedOrder = await response.json();
-      console.log('Заказ успешно сохранен:', savedOrder);
-      
-      // Также сохраняем локально для обратной совместимости
-      let orders = JSON.parse(localStorage.getItem('fakeUserOrders') || '[]');
-      orders.push({
-        date: new Date().toISOString(),
-        items,
-        total,
-        customerName,
-        phone,
-        address
-      });
-      localStorage.setItem('fakeUserOrders', JSON.stringify(orders));
-    } else {
-      console.error('Ошибка сохранения заказа:', response.statusText);
-      alert('Не удалось сохранить заказ. Попробуйте позже.');
-    }
-  } catch (error) {
-    console.error('Ошибка при отправке заказа:', error);
-    alert('Ошибка подключения к серверу. Проверьте соединение.');
-  }
 }
 
 
-document.addEventListener('DOMContentLoaded', () => {
-  const profileButton = document.getElementById('profileButton');
-  const profileSidebar = document.getElementById('profileSidebar');
-  const profileOverlay = document.getElementById('profileOverlay');
-  const closeProfileSidebar = document.getElementById('closeProfileSidebar');
-  const logoutButton = document.getElementById('logoutButton');
-
-  // Открытие панели профиля
-  profileButton.addEventListener('click', () => {
-    profileSidebar.classList.add('open');
-    profileOverlay.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-  });
-
-  // Закрытие профиля по клику на оверлей
-  profileOverlay.addEventListener('click', () => {
-    profileSidebar.classList.remove('open');
-    profileOverlay.style.display = 'none';
-    document.body.style.overflow = '';
-  });
-
-  // Закрытие профиля по кнопке "Закрыть"
-  if (closeProfileSidebar) {
-    closeProfileSidebar.addEventListener('click', () => {
-      profileSidebar.classList.remove('open');
-      profileOverlay.style.display = 'none';
-      document.body.style.overflow = '';
-    });
-  }
-
-  // Обработчик выхода
-  if (logoutButton) {
-    logoutButton.addEventListener('click', async () => {
-      const userId = localStorage.getItem('userId');
-
-      if (userId === 'fakeUser') {
-        // Локальная очистка для фейкового пользователя
-        localStorage.removeItem('userId');
-        localStorage.removeItem('username');
-        localStorage.removeItem('fakeUserOrders');
-
-        clearCart();    // Ваша функция очистки корзины
-        updateCartUI(); // Ваша функция обновления UI корзины
-        loadProfile();  // Ваша функция загрузки профиля
-
-        alert('Вы вышли из аккаунта');
-
-        // Переключение кнопки "Профиль" обратно в "Войти"
-        const loginButton = document.getElementById('profileButton');
-        if (loginButton) {
-          // Удаляем все предыдущие обработчики, чтобы избежать дублирования
-          loginButton.replaceWith(loginButton.cloneNode(true));
-          const newLoginButton = document.getElementById('loginButton');
-          newLoginButton.addEventListener('click', () => {
-            document.getElementById('loginModal').style.display = 'block';
-            document.getElementById('modalOverlay').style.display = 'block';
-          });
+// Перенаправление HTTP на HTTPS
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV === "production") {
+        console.log("Проверка протокола:", req.headers["x-forwarded-proto"]);
+        if (req.headers["x-forwarded-proto"] !== "https") {
+            console.log("🔄 Перенаправление на HTTPS...");
+            return res.redirect(`https://${req.headers.host}${req.url}`);
         }
-
-        // Закрываем профиль и затемнение
-        profileSidebar.classList.remove('open');
-        profileOverlay.style.display = 'none';
-        document.body.style.overflow = '';
-
-      } else {
-        // Для реальных пользователей - запрос на сервер
-        try {
-          const response = await fetch('https://fastfoodmania-api.onrender.com/logout', {
-            method: 'POST',
-            credentials: 'include'
-          });
-          if (!response.ok) throw new Error(`Ошибка выхода: ${response.status}`);
-
-          localStorage.clear();
-          alert('Вы вышли из аккаунта');
-          location.reload();
-        } catch (err) {
-          console.error('Ошибка при выходе:', err);
-          alert('Не удалось выйти. Попробуйте позже.');
-        }
-      }
-    });
-  }
+    }
+    next();
 });
 
 
-  // Модальные окна
-  const modal = document.getElementById('foodModal');
-  const modalOverlay = document.getElementById('modalOverlay');
-  const loginModal = document.getElementById('loginModal');
 
-  function openModal(modalToOpen) {
-      if (modalToOpen === modal) {
-          document.getElementById('foodQuantity').value = 1; // Сбрасываем количество блюд на 1
-      }
-      modalToOpen.style.display = 'block';
-      modalOverlay.style.display = 'block';
-  }
-
-  function closeModal(modalToClose) {
-      modalToClose.style.display = 'none';
-      if (modalToClose === modal || modalToClose === loginModal) {
-          modalOverlay.style.display = 'none'; // Скрыть затемнение при закрытии
-      }
-  }
-
-  // Открытие модального окна при клике на карточки меню
-  let currentItem = null; // Хранит текущее выбранное блюдо
-  document.querySelectorAll('.menu-card').forEach((card, index) => {
-      card.setAttribute('data-id', `item${index + 1}`);
-      card.addEventListener('click', function() {
-          currentItem = {
-              id: this.getAttribute('data-id'),
-              name: this.querySelector('h4').innerText,
-              price: parseInt(this.querySelector('.price').innerText.replace("Цена: ", "")),
-              description: this.querySelector('p').textContent,
-              image: this.querySelector('img').src
-          };
-
-          document.getElementById('modalName').innerText = currentItem.name;
-          document.getElementById('modalImage').src = currentItem.image;
-          document.getElementById('modalPrice').innerText = currentItem.price + ' ₽';
-          document.getElementById('foodCalories').innerText = 'Калории: 500'; 
-          document.getElementById('modalDescription').innerText = currentItem.description;
-
-          openModal(modal); // Открытие модального окна с пищей
-      });
-  });
-
-  // Закрытие модального окна по клику на "закрыть" или вне окна
-  document.querySelector('.close').addEventListener('click', function() {
-      closeModal(modal);
-  });
-
-  window.onclick = function(event) {
-      if (event.target === modalOverlay) {
-          closeModal(modal);
-      } else if (event.target === loginModal) {
-          closeModal(loginModal);
-      }
-  };
-
-  // Логин/Регистрация
-  const loginButton = document.getElementById('loginButton');
-  const closeLoginModal = document.getElementById('closeLoginModal');
-  const loginForm = document.getElementById('loginForm');
-  const registrationForm = document.getElementById('registrationForm');
-  const showLoginForm = document.getElementById('showLoginForm');
-  const showRegistrationForm = document.getElementById('showRegistrationForm');
-
-  loginButton.addEventListener('click', function(event) {
-      event.preventDefault();
-      openModal(loginModal); // Открытие модального окна для входа/регистрации
-  });
-
-  closeLoginModal.addEventListener('click', function() {
-      closeModal(loginModal);
-  });
-
-  showLoginForm.addEventListener('click', function(event) {
-      event.preventDefault();
-      registrationForm.style.display = 'none';
-      loginForm.style.display = 'block';
-  });
-
-  showRegistrationForm.addEventListener('click', function(event) {
-      event.preventDefault();
-      loginForm.style.display = 'none';
-      registrationForm.style.display = 'block';
-  });
+// Указание папки со статическими файлами
+app.use(express.static(path.join(__dirname, "public")));
 
 
-
-  // Корзина
-  const cartButton = document.getElementById('cartButton');
-  const cartOverlay = document.getElementById('cartOverlay');
-  const cart = document.getElementById('cart');
-  const closeCart = document.getElementById('closeCart');
-  const cartItemsContainer = document.querySelector('.cart-items');
-  const totalPriceElement = document.getElementById('totalPrice');
-  const itemCountElement = document.getElementById('itemCount');
-  const cartEmptyMessage = document.getElementById('cartEmptyMessage');
-
-  let itemCount = 0; // Исходное количество элементов в корзине
-  const cartData = {}; // Хранит элементы корзины
-
-  cartButton.addEventListener('click', () => {
-      cart.style.right = '0'; // Открываем корзину
-      cartOverlay.style.display = 'block'; // Показываем затемненный фон
-  });
-
-  closeCart.addEventListener('click', () => {
-      cart.style.right = '-40%'; // Закрываем корзину
-      cartOverlay.style.display = 'none'; // Скрываем затемненный фон
-  });
-
-  cartOverlay.addEventListener('click', () => {
-      cart.style.right = '-40%'; // Закрываем корзину
-      cartOverlay.style.display = 'none'; // Скрываем затемненный фон
-  });
-
-  document.getElementById('addToCart').addEventListener('click', function() {
-      const quantity = parseInt(document.getElementById('foodQuantity').value);
-      if (currentItem) {
-          addToCart({
-              id: currentItem.id,
-              name: currentItem.name,
-              price: currentItem.price,
-              quantity: quantity
-          });
-      }
-  });
-
-  function addToCart(item) {
-      if (cartData[item.id]) {
-          cartData[item.id].quantity += item.quantity; // Увеличиваем количество, если элемент уже в корзине
-      } else {
-          cartData[item.id] = { ...item }; // Добавляем новый элемент с его данными
-      }
-      itemCount += item.quantity; // Обновляем общее количество
-      updateCartText(); // Обновляем текст корзины
-      updateCartUI(); // Обновляем интерфейс корзины
-  }
-
-  function updateCartUI() {
-      cartItemsContainer.innerHTML = ''; // Очищаем содержимое корзины
-      let total = 0; // Инициализируем общую стоимость
-
-      for (const itemId in cartData) {
-          const item = cartData[itemId];
-          const itemTotal = item.price * item.quantity; // Рассчитываем общую стоимость для каждого элемента
-          total += itemTotal; // Обновляем общую стоимость
-
-          // Создаем элемент для корзины и добавляем его в контейнер
-          const itemElement = document.createElement('div');
-          itemElement.className = 'cart-item';
-          itemElement.innerHTML = `
-              <div class="cart-item-info">
-                  <strong>${item.name}</strong>
-                  <span class="cart-item-price">- ${itemTotal} ₽</span>
-                  <div class="cart-item-controls">
-                      <button class="quantity-button decrease" data-id="${itemId}">-</button>
-                      <input type="number" value="${item.quantity}" class="quantity-input" data-id="${itemId}" min="1" />
-                      <button class="quantity-button increase" data-id="${itemId}">+</button>
-                  </div>
-              </div>
-              <span class="remove-item" data-id="${itemId}">×</span>
-          `;
-
-          // Добавляем элемент в контейнер
-          cartItemsContainer.appendChild(itemElement);
-      }
-
-      totalPriceElement.innerText = `Всего: ${total} ₽`; // Обновляем текст общей стоимости
-      cartEmptyMessage.style.display = total > 0 ? 'none' : 'block'; // Показываем или скрываем сообщение о пустой корзине
-
-      // Добавляем обработчики событий для новых кнопок "удалить"
-      document.querySelectorAll('.remove-item').forEach(removeBtn => {
-          removeBtn.addEventListener('click', () => {
-              const itemId = removeBtn.dataset.id;
-              removeFromCart(itemId);
-          });
-      });
-
-      // Обработчики для кнопок увеличения и уменьшения количества
-      document.querySelectorAll('.quantity-button').forEach(button => {
-          button.addEventListener('click', () => {
-              const itemId = button.dataset.id;
-              const isIncrease = button.classList.contains('increase');
-              updateItemQuantity(itemId, isIncrease);
-          });
-      });
-
-      // Обработчик события для изменения количества через input
-      document.querySelectorAll('.quantity-input').forEach(input => {
-          input.addEventListener('change', () => {
-              const itemId = input.dataset.id;
-              const newQuantity = parseInt(input.value);
-              if (newQuantity > 0) {
-                  updateItemQuantity(itemId, newQuantity);
-              }
-          });
-      });
-  }
-
-  function updateItemQuantity(itemId, newQuantity) {
-      if (cartData[itemId]) {
-          const quantityChange = (typeof newQuantity === 'boolean') ? (newQuantity ? 1 : -1) : (newQuantity - cartData[itemId].quantity);
-          cartData[itemId].quantity += quantityChange;
-
-          if (cartData[itemId].quantity <= 0) {
-              removeFromCart(itemId);
-          } else {
-              itemCount += quantityChange;
-              updateCartText();
-              updateCartUI();
-          }
-      }
-  }
-
-  function removeFromCart(itemId) {
-      if (cartData[itemId]) {
-          itemCount -= cartData[itemId].quantity; // Уменьшаем общее количество
-          delete cartData[itemId]; // Удаляем элемент из корзины
-          
-          // Обновляем визуальный индикатор количества элементов в корзине
-          updateCartText();
-          updateCartUI();
-      }
-  }
-
-  function updateCartText() {
-      itemCount = 0; // Сброс счетчика перед вычислением
-      for (const itemId in cartData) {
-          if (cartData[itemId]) {
-              itemCount += cartData[itemId].quantity; // Суммируем все количества
-          }
-      }
-      itemCountElement.innerText = itemCount; // Всегда отображаем количество
-  }
-
-  // Увеличение и уменьшение количества товара в модальном окне
-  const decreaseButton = document.getElementById('decreaseQuantity');
-  const increaseButton = document.getElementById('increaseQuantity');
-  const quantityInput = document.getElementById('foodQuantity');
-
-  decreaseButton.addEventListener('click', () => {
-      let currentValue = parseInt(quantityInput.value);
-      if (currentValue > 1) {
-          quantityInput.value = currentValue - 1;
-      }
-  });
-
-  increaseButton.addEventListener('click', () => {
-      let currentValue = parseInt(quantityInput.value);
-      quantityInput.value = currentValue + 1;
-  });
-
-  // Обновление текста корзины при загрузке страницы
-  updateCartText();
-
-  // Анимация появления UI элементов
-  const featureItems = document.querySelectorAll('.feature-item');
-
-  const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-          if (entry.isIntersecting) {
-              entry.target.classList.add('visible');
-              observer.unobserve(entry.target); // Убираем наблюдение после появления
-          }
-      });
-  });
-
-  featureItems.forEach(item => {
-      observer.observe(item); // Начинаем наблюдение за каждым элементом
-  });
-
-  // Добавляем обработчики для touch событий
-  document.querySelectorAll('.menu-card').forEach(card => {
-      card.addEventListener('touchstart', function() {
-          // Обработка нажатия на карточку меню
-          currentItem = {
-              id: this.getAttribute('data-id'),
-              name: this.querySelector('h4').innerText,
-              price: parseInt(this.querySelector('.price').innerText.replace("Цена: ", "")),
-              description: this.querySelector('p').textContent,
-              image: this.querySelector('img').src
-          };
-          openModal(modal);
-      });
-  });
-
-// Закрытие корзины вручную
-function closeCartModal() {
-    const cart = document.getElementById('cart');
-    const cartOverlay = document.getElementById('cartOverlay');
-    cart.style.right = '-40%';
-    cartOverlay.style.display = 'none';
-  }
-  
-  // Клик по кнопке "Оформить заказ"
-  document.getElementById('checkoutButton').addEventListener('click', () => {
-    const userId = localStorage.getItem("userId");
-  
-    if (!userId) {
-      // ❗ Если пользователь не авторизован
-      closeCartModal(); // ⬅️ Закрываем корзину
-      document.getElementById('loginModal').style.display = 'block';
-      document.getElementById('modalOverlay').style.display = 'block';
-      return;
-    }
-  
-    // ✅ Пользователь авторизован — показываем форму
-    showOrderConfirmationForm();
-  });
-  
-  // Показ формы подтверждения заказа
-  function showOrderConfirmationForm() {
-    document.getElementById('orderConfirmModal').style.display = 'block';
-    document.getElementById('modalOverlay').style.display = 'block';
-  }
-  
-  // Закрытие формы подтверждения
-  document.getElementById('closeOrderConfirm').addEventListener('click', () => {
-    document.getElementById('orderConfirmModal').style.display = 'none';
-    document.getElementById('modalOverlay').style.display = 'none';
-  });
-  
-
-document.getElementById('finalOrderForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  let userId = localStorage.getItem("userId");
-  const isTempUser = !userId;
-
-  // Генерируем временный ID, если пользователь не авторизован
-  if (isTempUser) {
-    userId = `temp_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('tempUserId', userId);
-  }
-
-  const phone = document.getElementById('phone').value;
-  const address = document.getElementById('address').value;
-
-  // Копируем содержимое корзины ДО очистки
-  const items = Object.values(cartData).map(item => ({
-    id: item.id,
-    name: item.name,
-    price: item.price,
-    quantity: item.quantity
-  }));
-
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  try {
-    const response = await fetch('https://fastfoodmania-api.onrender.com/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, items, total, phone, address })
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      // Для временных пользователей сохраняем заказ в localStorage
-      if (isTempUser) {
-        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
-        tempOrders.push({
-          items,
-          total,
-          date: new Date().toISOString()
-        });
-        localStorage.setItem('tempOrders', JSON.stringify(tempOrders));
-        console.log("Временные заказы сохранены:", tempOrders);
-      }
-
-      // Очистка корзины после успешного заказа
-      Object.keys(cartData).forEach(key => delete cartData[key]);
-      itemCount = 0;
-      updateCartText();
-      updateCartUI();
-
-      // Закрытие модальных окон
-      document.getElementById('orderConfirmModal').style.display = 'none';
-      document.getElementById('modalOverlay').style.display = 'none';
-
-      alert("🎉 Заказ успешно оформлен!");
-    } else {
-      alert("Ошибка: " + (result.message || "Не удалось оформить заказ"));
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Произошла ошибка при оформлении заказа.");
-  }
-});
-
-
-// Добавляем функцию для показа уведомления
-function showOrderSuccessNotification() {
-  const notification = document.createElement('div');
-  notification.className = 'order-notification';
-  notification.innerHTML = `
-    <p>✅ Заказ успешно оформлен!</p>
-    <p>Детали заказа сохранены в вашем профиле</p>
-  `;
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.remove();
-  }, 3000);
-}
-
-// В файле profile.js обновляем загрузку профиля
-async function loadProfile() {
-  let userId = localStorage.getItem("userId") || localStorage.getItem("tempUserId");
-  if (!userId) return;
-
-  try {
-    // Загружаем заказы с сервера
-    const serverOrders = await fetch(`https://fastfoodmania-api.onrender.com/api/orders/${userId}`)
-      .then(res => res.json());
-
-    // Загружаем временные заказы из localStorage
-    const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
-
-    // Объединяем заказы
-    const allOrders = [...serverOrders, ...tempOrders];
-
-    // Отображаем заказы
-    const container = document.getElementById('profileContent');
-    container.innerHTML = allOrders.map(order => `
-      <div class="order-item">
-        <p>Дата: ${new Date(order.createdAt).toLocaleString()}</p>
-        <p>Сумма: ${order.total} ₽</p>
-        <div class="order-items">
-          ${order.items.map(item => `
-            <div class="order-product">
-              ${item.name} × ${item.quantity}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `).join('');
+function generateTokens(user, site) {
+    const issuedAt = Math.floor(Date.now() / 1000);
     
-  } catch (error) {
-    console.error('Ошибка загрузки профиля:', error);
-  }
+    const accessToken = jwt.sign(
+        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
+        JWT_SECRET,
+        { expiresIn: "30m" }  // ⏳ Access-токен на 30 минут
+    );
+
+    const refreshToken = jwt.sign(
+        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
+        REFRESH_SECRET,
+        { expiresIn: "7d" }  // 🔄 Refresh-токен на 7 дней
+    );
+
+    return { accessToken, refreshToken };
 }
 
-// В server.js добавляем обработчик для временных пользователей
+
+
+// Регистрация пользователя
+app.post('/register', async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Пользователь с таким именем уже существует' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const newUser = new User({ username, email, password: hashedPassword });
+
+    await newUser.save();
+
+    // Генерация токена
+    const accessToken = jwt.sign(
+      { id: newUser._id, username: newUser.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' } // Токен действителен 30 минут
+    );
+
+    // Отправляем токен в ответ
+    res.status(201).json({
+      message: 'Пользователь успешно зарегистрирован',
+      accessToken, // Отправляем токен
+      userId: newUser._id // Отправляем userId
+    });
+
+  } catch (err) {
+    console.error("Ошибка регистрации:", err);
+    res.status(500).json({ message: 'Ошибка регистрации пользователя', error: err.message });
+  }
+});
+
+app.post('/logout', (req, res) => {
+    console.log("🔄 Выход из аккаунта...");
+    
+    res.clearCookie("refreshTokenDesktop", {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None',
+        path: "/",
+        domain: "https://fastfoodmania-github-io.onrender.com"
+    });
+
+    res.json({ message: 'Вы вышли из системы' });
+});
+
+
+// Обновление токена
+app.post('/-token', (req, res) => {
+  const { token: Token } = req.body;
+
+  if (!Token) {
+    return res.status(403).json({ message: 'Токен обновления не предоставлен' });
+  }
+
+  try {
+    const user = jwt.verify(Token, JWT_SECRET);
+    const newAccessToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    res.status(200).json({ token: newAccessToken });
+  } catch (err) {
+    res.status(403).json({ message: 'Недействительный токен обновления' });
+  }
+});
+
+// Обработка корневого маршрута
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Проверка соединения
+app.get("/connect", (req, res) => {
+  res.send("Соединение с сервером успешно!");
+});
+
+// Обработчик ошибок
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Что-то пошло не так!', error: err.message });
+});
+
+// Обработка 404 ошибок
+app.use((req, res) => {
+  res.status(404).json({ message: "Ресурс не найден" });
+});
+
+// Порт, на котором будет работать сервер
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Сервер запущен на порту ${PORT}`);
+});
+
+
+app.post('/order', async (req, res) => {
+  try {
+    const { userId, items, total } = req.body;
+
+    const newOrder = new Order({ userId, items, total });
+    await newOrder.save();
+
+    res.status(201).json({ message: "Заказ успешно оформлен" });
+  } catch (err) {
+    console.error("Ошибка при создании заказа:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+app.get('/orders/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка при получении заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+async function loadOrders(userId) {
+  const res = await fetch(`https://fastfoodmania-github-io.onrender.com/orders/${userId}`);
+  const orders = await res.json();
+  // отображаем в модальном окне или отдельной секции
+}
+app.get('/orders/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка при получении истории заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+
+app.get('/api/orders/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка получения заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+
+// server.js
+app.get('/api/orders', async (req, res) => {
+    const userId = req.userId;  // Получаем userId из JWT
+    if (!userId) return res.status(401).json({ error: 'Пользователь не авторизован' });
+
+    try {
+        const orders = await Order.find({ userId }).populate('items');
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка при получении заказов', message: err.message });
+    }
+});
+
+
+// server.js
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Ищем пользователя по email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+    }
+
+    // Сравниваем пароль с хешированным в базе
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    // Создаём токен
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+
+    res.status(200).json({
+      message: 'Вход выполнен',
+      accessToken,
+      userId: user._id
+    });
+  } catch (error) {
+    console.error('Ошибка при входе:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
+  }
+});
+
+
+// В сервере (например, в server.js)
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate('orders');
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error('Ошибка при получении данных пользователя:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+// В сервере (например, в server.js)
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Заказ не найден' });
+    }
+    res.json(order);
+  } catch (err) {
+    console.error('Ошибка при получении данных заказа:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+
+
+
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .populate({
+        path: 'orders',
+        options: { sort: { createdAt: -1 } } // ← Закрываем скобку здесь
+      });
+
+    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
+
+    res.json({
+      username: user.username,
+      email: user.email,
+      orders: user.orders
+    });
+
+  } catch (err) {
+    console.error('Ошибка при получении данных пользователя:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+
+
+// Добавь в server.js
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .populate('orders') // Подгружаем связанные заказы
+      .exec();
+
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    res.json({
+      username: user.username,
+      email: user.email,
+      orders: user.orders
+    });
+  } catch (err) {
+    console.error('Ошибка при получении профиля:', err);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+
+
+// Добавить маршрут для получения заказов
+app.get('/api/orders/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId })
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка получения заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+app.post('/api/users/:userId/merge/:tempUserId', async (req, res) => {
+  try {
+    // Переносим заказы временного пользователя
+    const orders = await Order.find({ userId: req.params.tempUserId });
+    
+    await Order.updateMany(
+      { userId: req.params.tempUserId },
+      { $set: { userId: req.params.userId } }
+    );
+
+    await User.findByIdAndUpdate(
+      req.params.userId,
+      { 
+        $push: { mergedOrders: { $each: orders.map(o => o._id) } },
+        $unset: { tempUserId: "" }
+      }
+    );
+
+    res.json({ success: true, mergedOrders: orders.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка объединения заказов' });
+  }
+});
+ 
+
+// Оформление заказа
 app.post('/api/orders', async (req, res) => {
   try {
-    const { userId, items, total, phone, address } = req.body;
-
-    // Для временных пользователей сохраняем в отдельную коллекцию
-    if (userId.startsWith('temp_')) {
-      const tempOrder = new TempOrder({
-        userId,
-        items,
-        total,
-        phone,
-        address,
-        createdAt: new Date()
-      });
-      await tempOrder.save();
-    } else {
-      // Для авторизованных пользователей
-      const order = new Order({
-        userId,
-        items,
-        total,
-        phone,
-        address,
-        createdAt: new Date()
-      });
-      await order.save();
+    let userId = req.body.userId;
+    
+    // Генерация временного ID если пользователь не авторизован
+    if (!userId || userId.startsWith('temp_')) {
+      userId = `temp_${crypto.randomBytes(16).toString('hex')}`;
     }
 
-    res.status(201).json({ success: true });
+    const newOrder = new Order({
+      userId,
+      items: req.body.items,
+      total: req.body.total,
+      phone: req.body.phone,
+      address: req.body.address
+    });
+
+    await newOrder.save();
+    
+    // Обновляем пользователя (авторизованного или временного)
+    await User.findOneAndUpdate(
+      { $or: [{ _id: userId }, { tempUserId: userId }] },
+      { $push: { orders: newOrder._id } },
+      { upsert: true, new: true }
+    );
+
+    res.status(201).json({ 
+      success: true,
+      userId // Возвращаем временный ID если был создан
+    });
+    
   } catch (error) {
     res.status(500).json({ error: 'Ошибка сохранения заказа' });
   }
 });
-// Генерация временного ID пользователя для неавторизованных пользователей
-function generateTempUserId() {
-  return 'temp_' + Math.random().toString(36).substr(2, 9);
-}
-async function openProfileModal() {
-    document.getElementById('profileModal').style.display = 'block';
-    document.getElementById('modalOverlay').style.display = 'block';
-  
-    const userId = localStorage.getItem("userId");
-    const container = document.getElementById('orderHistoryContainer');
-    container.innerHTML = 'Загрузка...';
-  
-    try {
-      const res = await fetch(`https://fastfoodmania-api.onrender.com/orders/${userId}`);
-      const orders = await res.json();
-  
-      if (orders.length === 0) {
-        container.innerHTML = '<p>У вас пока нет заказов.</p>';
-        return;
-      }
-  
-      container.innerHTML = orders.map(order => {
-        const date = new Date(order.createdAt).toLocaleString();
-        const itemsList = order.items.map(i => `${i.name} ×${i.quantity}`).join('<br>');
-        return `
-          <div style="border:1px solid #ccc; padding: 10px; margin-bottom: 15px; border-radius: 8px;">
-            <strong>Дата:</strong> ${date}<br>
-            <strong>Адрес:</strong> ${order.address}<br>
-            <strong>Телефон:</strong> ${order.phone}<br>
-            <strong>Заказ:</strong><br>${itemsList}<br>
-            <strong>Сумма:</strong> ${order.total} ₽
-          </div>
-        `;
-      }).join('');
-    } catch (err) {
-      console.error(err);
-      container.innerHTML = '<p>Ошибка загрузки заказов.</p>';
-    }
+
+// Маршрут для получения истории заказов пользователя
+app.get('/api/orders/:userId', async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId })
+      .sort({ createdAt: -1 }); // Сортировка по дате (новые сначала)
+
+    res.json(orders);
+  } catch (err) {
+    console.error("Ошибка при получении заказов:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
   }
-  
-  document.getElementById('closeProfileModal').addEventListener('click', () => {
-    document.getElementById('profileModal').style.display = 'none';
-    document.getElementById('modalOverlay').style.display = 'none';
 });
 
+app.post('/api/orders', async (req, res) => {
+  try {
+    console.log("Получен заказ:", req.body); // Отладка
+    const { userId, items, total, phone, address } = req.body;
 
-
-
-document.getElementById("login-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-  
-    try {
-      const response = await fetch("https://fastfoodmania-github-io.onrender.com/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        alert(data.error || "Ошибка входа");
-        return;
-      }
-  
-      // Успешный вход
-      localStorage.setItem("user", JSON.stringify(data));
-      updateUIAfterLogin(data);
-    } catch (err) {
-      console.error(err);
-      alert("Ошибка запроса");
-    }
-  });
-  
-  function updateUIAfterLogin(user) {
-    document.getElementById("login-section").style.display = "none";
-    document.getElementById("profile-button").style.display = "block";
-    document.getElementById("profile-name").textContent = user.username;
-    document.getElementById("profile-email").textContent = user.email;
-}
-  
-
-// Создаём и добавляем модальное окно уведомления один раз
-const orderSuccessModal = document.createElement('div');
-orderSuccessModal.id = 'orderSuccessModal';
-orderSuccessModal.style = `
-  position: fixed;
-  z-index: 2000;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  padding: 20px 30px;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  display: none;
-  text-align: center;
-`;
-orderSuccessModal.innerHTML = `
-  <p>Подробности заказа отправлены на вашу почту.</p>
-  <button id="closeOrderSuccessBtn">Закрыть</button>
-`;
-document.body.appendChild(orderSuccessModal);
-
-// Показать уведомление
-function showOrderSuccessModal() {
-  orderSuccessModal.style.display = 'block';
-}
-
-// Закрытие уведомления и очистка корзины
-document.getElementById('closeOrderSuccessBtn').addEventListener('click', () => {
-  orderSuccessModal.style.display = 'none';
-  clearCart();
-  updateCartUI();
-  closeCartModal();
-  loadProfile();  // Обновляем профиль после очистки корзины
-});
-
-// Очистка корзины
-function clearCart() {
-  for (const key in cartData) {
-    if (cartData.hasOwnProperty(key)) {
-      delete cartData[key];
-    }
-  }
-  itemCount = 0;
-  updateCartText();
-}
-
-
-
-
-
-
-async function loadOrderHistory() {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-  
-    const apiUrl = 'https://fastfoodmania-api.onrender.com/api/orders/'; // Новый API адрес (используется в первую очередь)
-  
-    try {
-      // Пробуем запросить данные с нового API
-      const response = await fetch(`${apiUrl}${userId}`);
-      const orders = await response.json();
-  
-      const container = document.getElementById("profileContent");
-      if (!orders.length) {
-        container.innerHTML = "<p>Заказов пока нет.</p>";
-        return;
-      }
-  
-      container.innerHTML = orders.map(order => {
-        const itemsHtml = order.items.map(i =>
-          `<li>${i.name} — ${i.quantity} шт. (${i.price}₽)</li>`
-        ).join("");
-  
-        return `
-          <div class="order-block">
-            <h4>Заказ от ${new Date(order.createdAt).toLocaleString()}</h4>
-            <ul>${itemsHtml}</ul>
-            <p><strong>Итого:</strong> ${order.total}₽</p>
-          </div>
-        `;
-      }).join("");
-    } catch (error) {
-      console.error("Ошибка загрузки заказов с основного API:", error);
-  
-      // Если ошибка с основным API, пробуем старый URL
-      try {
-        const oldApiUrl = 'https://fastfoodmania-github-io.onrender.com/api/orders/';
-        const response = await fetch(`${oldApiUrl}${userId}`);
-        const orders = await response.json();
-  
-        const container = document.getElementById("profileContent");
-        if (!orders.length) {
-          container.innerHTML = "<p>Заказов пока нет.</p>";
-          return;
-        }
-  
-        container.innerHTML = orders.map(order => {
-          const itemsHtml = order.items.map(i =>
-            `<li>${i.name} — ${i.quantity} шт. (${i.price}₽)</li>`
-          ).join("");
-  
-          return `
-            <div class="order-block">
-              <h4>Заказ от ${new Date(order.createdAt).toLocaleString()}</h4>
-              <ul>${itemsHtml}</ul>
-              <p><strong>Итого:</strong> ${order.total}₽</p>
-            </div>
-          `;
-        }).join("");
-      } catch (error) {
-        console.error("Ошибка загрузки заказов с резервного API:", error);
-        document.getElementById("profileContent").innerHTML = "<p>Ошибка при загрузке.</p>";
-      }
-    }
-  }
-  
-async function loadOrderHistory() {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-
-    try {
-        const response = await fetch('/api/orders', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-        });
-
-        const orders = await response.json();
-        if (response.ok) {
-            displayOrders(orders);
-        } else {
-            alert("Ошибка при загрузке истории заказов");
-        }
-    } catch (error) {
-        console.error('Ошибка при получении истории заказов:', error);
-        alert("Произошла ошибка при загрузке данных.");
-    }
-}
-
-function displayOrders(orders) {
-    const profileContent = document.getElementById('profileContent');
-    if (orders.length === 0) {
-        profileContent.innerHTML = '<p>У вас нет заказов.</p>';
-        return;
-    }
-
-    profileContent.innerHTML = '<h3>История заказов:</h3>';
-    orders.forEach(order => {
-        const orderElement = document.createElement('div');
-        orderElement.classList.add('order');
-        orderElement.innerHTML = `
-            <p><strong>Дата:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
-            <p><strong>Сумма:</strong> ${order.total} ₽</p>
-            <ul>
-                ${order.items.map(item => `<li>${item.name} - ${item.quantity} x ${item.price} ₽</li>`).join('')}
-            </ul>
-        `;
-        profileContent.appendChild(orderElement);
+    const newOrder = new Order({
+      userId,
+      items,
+      total,
+      phone,
+      address,
+      createdAt: new Date()
     });
-}
 
+    await newOrder.save();
+    console.log("Заказ сохранен в БД:", newOrder); // Проверка
 
-
-document.getElementById('checkoutButton').addEventListener('click', () => {
-  const userId = localStorage.getItem('userId');
-
-  if (!userId) {
-    // Пользователь не вошёл — открыть окно логина
-    closeCartModal();
-    document.getElementById('loginModal').style.display = 'block';
-    document.getElementById('modalOverlay').style.display = 'block';
-    return;
+    res.status(201).json({ success: true });
+  } catch (error) {
+    console.error("Ошибка сохранения заказа:", error); // Логирование ошибки
+    res.status(500).json({ error: 'Ошибка сервера' });
   }
-
-  if (userId === 'fakeUser') {
-    // Сохраняем заказ в локальное хранилище
-    saveOrderToProfile();
-
-    // Показываем окно с уведомлением
-    showOrderSuccessModal();
-
-    // Закрываем корзину
-    closeCartModal();
-
-    return;
-  }
-
-  // Для реальных пользователей — обычное оформление
-  showOrderConfirmationForm();
 });
 
+// Авторизация пользователя
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
 
-// Новая функция показа подтверждения заказа
-function showOrderConfirmation() {
-  const orderItems = Object.values(cartData).map(item => 
-    `${item.name} × ${item.quantity} — ${item.price * item.quantity} ₽`
-  ).join('<br>');
-  
-  const total = Object.values(cartData).reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
-  document.getElementById('orderSummary').innerHTML = `
-    <p><strong>Ваш заказ:</strong></p>
-    ${orderItems}
-    <hr>
-    <p><strong>Итого:</strong> ${total} ₽</p>
-    <p>Данные о заказе будут отправлены на email: ${localStorage.getItem('username')}</p>
-  `;
-  
-  openModal(document.getElementById('orderConfirmModal'));
-}
+  try {
+    // Ищем пользователя по email, а не username
+    const user = await User.findOne({ email: username });
 
-// Обработчик фейкового подтверждения
-document.getElementById('fakeConfirmButton').addEventListener('click', () => {
-  closeModal(document.getElementById('orderConfirmModal'));
-  alert('Заказ успешно оформлен! На вашу почту отправлено подтверждение.');
-  // Очищаем корзину
-  Object.keys(cartData).forEach(key => delete cartData[key]);
-  itemCount = 0;
-  updateCartUI();
-  updateCartText();
-});
-
-// Обновим функцию закрытия модальных окон
-window.onclick = function(event) {
-  const modals = [modal, loginModal, document.getElementById('orderConfirmModal')];
-  modals.forEach(modal => {
-    if (event.target === modal || event.target === modalOverlay) {
-      closeModal(modal);
+    if (!user) {
+      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
     }
-  });
-};
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    res.status(200).json({
+      message: 'Вход выполнен',
+      userId: user._id
+    });
+
+  } catch (error) {
+    console.error('Ошибка входа:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
+  }
+});
+
+// Возвращает данные пользователя и его заказы
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate("orders");
+    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+
+    res.json({
+      username: user.username,
+      email: user.email,
+      orders: user.orders
+    });
+  } catch (err) {
+    console.error("Ошибка при загрузке профиля:", err);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
 
 
+// Обработка запроса на обновление токена для ПК-версии
+app.post('/refresh', async (req, res) => {
+    const refreshToken = req.cookies.refreshTokenDesktop;
+
+    if (!refreshToken) {
+        console.error("❌ Refresh-токен отсутствует в cookies");
+        return res.status(401).json({ message: "Не авторизован" });
+    }
+
+    console.log("🔍 Полученный refreshToken:", refreshToken);
+    
+    jwt.verify(refreshToken, REFRESH_SECRET, async (err, decoded) => {
+        if (err) {
+            console.error("❌ Ошибка проверки refresh-токена:", err.message);
+            
+            res.clearCookie("refreshTokenDesktop", {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None",
+                path: "/"
+            });
+
+            return res.status(403).json({ message: "Refresh-токен недействителен или истёк" });
+        }
+
+        if (!decoded.exp || (decoded.exp * 1000 < Date.now())) {
+            console.error("❌ Refresh-токен окончательно истёк!");
+            res.clearCookie("refreshTokenDesktop", { path: "/" });
+            return res.status(403).json({ message: "Refresh-токен истёк" });
+        }
+
+        try {
+            const user = await User.findById(decoded.id);
+            if (!user) {
+                console.error("❌ Пользователь не найден по ID:", decoded.id);
+                return res.status(404).json({ message: "Пользователь не найден" });
+            }
+
+            const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
+            res.cookie("refreshTokenDesktop", newRefreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None",
+                path: "/",
+                maxAge: 30 * 24 * 60 * 60 * 1000  // 30 дней
+            });
+
+            console.log("✅ Refresh-токен обновлён успешно");
+
+            // 🚀 Отключаем кеширование
+            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            res.setHeader("Pragma", "no-cache");
+            res.setHeader("Expires", "0");
+
+            res.json({ accessToken });
+
+        } catch (error) {
+            console.error("❌ Ошибка при поиске пользователя:", error);
+            return res.status(500).json({ message: "Ошибка сервера" });
+        }
+    });
+});
 
 
+// Исправленный маршрут входа
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    console.log('Попытка входа для:', email);
+    
+    // Ищем пользователя по email
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log('Пользователь не найден:', email);
+      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+    }
+
+    // Сравниваем пароль с хешированным в базе
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      console.log('Неверный пароль для:', email);
+      return res.status(401).json({ message: 'Неверный пароль' });
+    }
+
+    // Создаём токен
+    const accessToken = jwt.sign(
+      { userId: user._id, email: user.email }, 
+      JWT_SECRET, 
+      { expiresIn: '30m' }
+    );
+
+    console.log('Успешный вход для:', email);
+    
+    res.status(200).json({
+      message: 'Вход выполнен успешно',
+      accessToken,
+      userId: user._id,
+      username: user.username
+    });
+  } catch (error) {
+    console.error('Ошибка при входе:', error);
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
+  }
+});
