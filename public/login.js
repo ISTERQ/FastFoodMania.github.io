@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 
 // Подключение к MongoDB
-mongoose.connect('mongodb://localhost:27017/fastfoodmania', {
+mongoose.connect('mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
