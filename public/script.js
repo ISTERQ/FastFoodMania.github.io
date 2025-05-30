@@ -1126,4 +1126,75 @@ function openLoginModal() {
 
 // Экспортируем функцию
 window.placeOrder = placeOrder;
+// Добавьте в script.js функцию оформления заказа
+async function submitOrder() {
+  const userId = localStorage.getItem('userId');
+  const accessToken = localStorage.getItem('accessToken');
 
+  if (!userId || !accessToken) {
+    alert('Для оформления заказа войдите в систему');
+    document.getElementById('loginModal').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+    return;
+  }
+
+  // Получаем данные корзины
+  const cartData = JSON.parse(localStorage.getItem('cartData') || '{}');
+  const items = Object.values(cartData);
+
+  if (items.length === 0) {
+    alert('Корзина пуста!');
+    return;
+  }
+
+  // Подготавливаем данные заказа
+  const orderItems = items.map(item => ({
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity
+  }));
+
+  const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  try {
+    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        items: orderItems,
+        total: total
+      })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert('Заказ успешно оформлен!');
+      
+      // Очищаем корзину
+      localStorage.removeItem('cartData');
+      
+      // Обновляем отображение корзины (добавьте вашу функцию)
+      if (typeof updateCartDisplay === 'function') {
+        updateCartDisplay();
+      }
+      
+      // Закрываем модальное окно заказа
+      const orderModal = document.getElementById('orderConfirmModal');
+      const overlay = document.getElementById('modalOverlay');
+      if (orderModal) orderModal.style.display = 'none';
+      if (overlay) overlay.style.display = 'none';
+      
+    } else {
+      alert('Ошибка при оформлении заказа: ' + result.message);
+    }
+
+  } catch (error) {
+    console.error('Ошибка при отправке заказа:', error);
+    alert('Ошибка сети. Попробуйте еще раз.');
+  }
+}
