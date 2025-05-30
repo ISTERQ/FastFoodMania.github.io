@@ -1,284 +1,333 @@
-
-Skip to content
-Chats
-Archived
-Website Development Improvements and Functionality Fixes
-7 minutes ago
-допиши сайт чтоб все было кликабельно и работало каректно
-
-GD
-
-fdgdfgd302
-Assistant
-6 minutes ago
-Я вижу, что у вас есть сайт FastFood Mania, но есть несколько проблем с функциональностью. Давайте исправим основные проблемы, чтобы все элементы были кликабельными и работали корректно.
-
-Основные проблемы, которые я вижу:
-
-Модальные окна не отображаются корректно (CSS display: none)
-Боковые панели не открываются правильно
-Некоторые стили конфликтуют
-Давайте исправим основные файлы:
-
-style.css
-script.js
-server.js
-Теперь ваш сайт должен работать корректно! Основные исправления:
-
-CSS исправления:
-
-Исправлены классы для активного состояния (.active вместо .open)
-Улучшена структура корзины
-Исправлены стили для модальных окон
-Добавлена правильная работа overlay
-JavaScript исправления:
-
-Добавлена плавная прокрутка для навигационных ссылок
-Исправлена работа с корзиной
-Улучшена обработка ошибок
-Добавлены проверки на существование элементов
-Исправлена работа уведомлений
-Сервер исправления:
-
-Добавлен правильный роутинг
-Улучшена обработка данных заказов
-Добавлены дополнительные поля в схему заказов
-Теперь все элементы должны быть кликабельными и работать корректно:
-
-✅ Меню-карточки открывают модальные окна
-✅ Корзина правильно отображается и обновляется
-✅ Аутентификация работает
-✅ Оформление заказов функционирует
-✅ Навигация по сайту с плавной прокруткой
-✅ Адаптивный дизайн для мобильных устройств
-Assistant automatically restarted your App after applying file changes. You can disable this behavior in 
-.
-Checkpoint made
-Исправлены CSS и JS для корректной работы сайта
-3 minutes ago
-•
-отправь мне код всех файлов что переделал
-
-GD
-
-fdgdfgd302
-Assistant
-just now
-Из анализа кода я вижу, что основная функциональность сайта уже реализована, но есть проблема с запуском Node.js сервера. Вот полный код всех файлов, которые я переделал для корректной работы:
-
-index.html
-Complete HTML structure with all sections and modals
-
-Scroll to latest
-Assistant mode
-
-advanced
-Claude 4.0 Sonnet
-
-Ask Assistant, use @ to include specific files...
-
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h2>Лучший фастфуд в городе!</h2>
-                <p>Быстро, вкусно, доступно</p>
-                <a href="#burgers" class="btn btn-large">Посмотреть меню</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Menu Departments -->
-    <section id="menu" class="menu">
-        <div class="container">
-            <h2 class="section-title">Наше меню</h2>
-            
-            <!-- Отдел Бургеров -->
-            <div class="department" id="burgers-department">
-                <h2 class="department-title">🍔 Отдел Бургеров</h2>
-                <section id="burgers" class="menu-section">
-                    <div class="menu-grid">
-                        <div class="menu-card" data-id="burger1">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Mexican Burger">
-                            <div class="menu-card-content">
-                                <h4>Mexican Burger</h4>
-                                <p>Этот бургер в мексиканском стиле наполнен ароматом порошка чили, кинзы и перца халапеньо. Подается на булочках с листьями салата.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger2">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Double Burger">
-                            <div class="menu-card-content">
-                                <h4>Double Burger</h4>
-                                <p>Две фирменные говяжьи котлеты, обжаренные в огне, увенчанные простым слоем расплавленного американского сыра и нарезанными солеными огурцами.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger3">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="California Burger">
-                            <div class="menu-card-content">
-                                <h4>California Burger</h4>
-                                <p>Ростки люцерны венчают эти сочные бургеры. Сочетание обычного индюшиного фарша и индюшиной грудки обеспечивает превосходную текстуру.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger4">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Mini Burger">
-                            <div class="menu-card-content">
-                                <h4>Mini Burger</h4>
-                                <p>Мини-бургеры, известные многим как слайдеры,- это самый горячий тренд в кулинарии, который охватил всю страну: их размер в два раза меньше классического бургера.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger5">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Classic Burger">
-                            <div class="menu-card-content">
-                                <h4>Classic Burger</h4>
-                                <p>Куриная говядина, приготовленная на углях с луком на гриле, острый перец, листья салата, помидоры, двойной американский сырный соус чеддер.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger6">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Chicken Burger">
-                            <div class="menu-card-content">
-                                <h4>Chicken Burger</h4>
-                                <p>Наш «Чикен Бургер» состоит из пикантной куриной котлеты-гриль, увенчанной сочными помидорами, свежим салатом и майонезом.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-48ms
- • 
-2 minutes ago
-Deploy to production
-Publish a live, stable, public version of your App, unaffected by the changes you make in the workspace Learn more.
-Basic websites with no backend server
-You only pay for outbound data transfer included in Replit plans. $0.10/GiB otherwise.
-No database or data persistence.
-Suitable for HTML, CSS, JavaScript sites.
-Security scan
-Identify potential vulnerabilities by running a security scan powered by our partner, Semgrep.
-
-                                                                                          
-                                  :::.                                                    
-                                :+++***++:..                                              
-                      :-=+=..:-=+**=======---:                                            
-                     -+++****+====-::-=====-::. ..   ..       ::                          
-                    .=++++++=::----------::-::::::--------===--:.:::::.                   
-                   :--==+++=-::----------======----------:-===-:::::::.                   
-                   ::--==+++-----=+++=+++++====----======--==------::                     
-                  ::::-====+++++++*************+==========---------::..                   
-                 ..:::---==++*****************+++++++++=------------:::::..               
-                ....:::-=+**********************++++++=--==========--:.....               
-                 ..:::-++*********+**************+++++++--+***++++==:      .::..          
-                :=+*+=+++****++==+++*+++++++***+++++++++***********+=. .::-====-::--:     
-             .:-=++=====+++*++====++++++++++++++++++=+++*************+=======++++==--.    
-           .--==-----=====++=============+=+++=====++++****************+=+=========--:.   
-     . .  :--====------=======--==========+++=====++++****+*****+****++===------====-.    
-  ...::::::::---====----------::::::-----========++++++++++***++++++++===--:::::-----.    
-   ...::::::..:::::---::::::::::...::::::::-----=++++++++++****+++++++===-:::::::::---:   
-      .::::.....:::::::::::................:::::=++++++++++*****++++++=====---:::::---::. 
-         ......   .........     ...............::=+==++++++++++++++============-----::...:
-                                    ........::---===-===============------=---:::::::::...
-                                    .......................::::::::---------:.   ..       
-                                            ....................::::::--:::::.            
-                                                             ...........                  
-                                                                                          
-                                                                                          
-Your App crashed
-- Replit
-index.html
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastFood Mania</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Fast Food Mania - Лучшая еда в городе</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <h1>🍔 FastFood Mania</h1>
-                </div>
-                <nav class="nav">
-                    <a href="#burgers" class="nav-link">Бургеры</a>
-                    <a href="#pizza" class="nav-link">Пиццы</a>
-                    <a href="#toast" class="nav-link">Тосты</a>
-                    <a href="#salads" class="nav-link">Салаты</a>
-                    <a href="#desserts" class="nav-link">Десерты</a>
-                    <a href="#combo" class="nav-link">Комбо</a>
-                    <a href="#drinks" class="nav-link">Напитки</a>
-                    <a href="#map" class="nav-link">Карта</a>
-                    <a href="#contact" class="nav-link">Контакты</a>
-                </nav>
-                <div class="header-buttons">
-                    <button id="cartButton" class="btn btn-outline">
-                        🛒 Корзина (<span id="itemCount">0</span>)
-                    </button>
-                    <button id="loginButton" class="btn btn-primary">Войти</button>
-                    <button id="profileButton" class="btn btn-primary" style="display: none;">Профиль</button>
-                </div>
-            </div>
+    <header>
+        <div class="logo">
+            <h1>🍔 Fast Food Mania</h1>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h2>Лучший фастфуд в городе!</h2>
-                <p>Быстро, вкусно, доступно</p>
-                <a href="#burgers" class="btn btn-large">Посмотреть меню</a>
+    <!-- Слайдшоу -->
+    <div class="slideshow-container">
+        <div class="mySlides active">
+            <img src="img/slider-1-1920x1080.webp" alt="Слайд 1">
+        </div>
+        <div class="mySlides">
+            <img src="img/slider-2-1920x1080.webp" alt="Слайд 2">
+        </div>
+        <div class="mySlides">
+            <img src="img/slider-3-1920x1080.webp" alt="Слайд 3">
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="nav-buttons">
+        <a href="#burger" class="nav-button">🍔 Бургеры</a>
+        <a href="#pizza" class="nav-button">🍕 Пиццы</a>
+        <a href="#toast" class="nav-button">🍞 Тосты</a>
+        <a href="#drinks" class="nav-button">🥤 Напитки</a>
+        <a href="#" class="nav-button" id="cartButton">
+            🛒 Корзина (<span id="itemCount">0</span>)
+        </a>
+        <a href="#" class="nav-button" id="loginButton">🔑 Войти</a>
+    </div>
+
+    <!-- Промо секция -->
+    <section class="promo-section">
+        <div class="promo-card">
+            <img src="img/promo-1.webp" alt="Специальное предложение 1">
+            <div class="card-content">
+                <h4>Скидка 20%</h4>
+                <p>На все бургеры при заказе от 1000₽</p>
+            </div>
+        </div>
+        <div class="promo-card">
+            <img src="img/promo-2.webp" alt="Специальное предложение 2">
+            <div class="card-content">
+                <h4>Бесплатная доставка</h4>
+                <p>При заказе от 800₽</p>
+            </div>
+        </div>
+        <div class="promo-card">
+            <img src="img/promo-3.webp" alt="Специальное предложение 3">
+            <div class="card-content">
+                <h4>Комбо-набор</h4>
+                <p>Бургер + картошка + напиток = 499₽</p>
             </div>
         </div>
     </section>
 
-    <!-- Menu Departments -->
-    <section id="menu" class="menu">
-        <div class="container">
-            <h2 class="section-title">Наше меню</h2>
-            
-            <!-- Отдел Бургеров -->
-            <div class="department" id="burgers-department">
-                <h2 class="department-title">🍔 Отдел Бургеров</h2>
-                <section id="burgers" class="menu-section">
-                    <div class="menu-grid">
-                        <div class="menu-card" data-id="burger1">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Mexican Burger">
-                            <div class="menu-card-content">
-                                <h4>Mexican Burger</h4>
-                                <p>Этот бургер в мексиканском стиле наполнен ароматом порошка чили, кинзы и перца халапеньо. Подается на булочках с листьями салата.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger2">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Double Burger">
-                            <div class="menu-card-content">
-                                <h4>Double Burger</h4>
-                                <p>Две фирменные говяжьи котлеты, обжаренные в огне, увенчанные простым слоем расплавленного американского сыра и нарезанными солеными огурцами.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger3">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="California Burger">
-                            <div class="menu-card-content">
-                                <h4>California Burger</h4>
-                                <p>Ростки люцерны венчают эти сочные бургеры. Сочетание обычного индюшиного фарша и индюшиной грудки обеспечивает превосходную текстуру.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger4">
-                            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" alt="Mini Burger">
-                            <div class="menu-card-content">
-                                <h4>Mini Burger</h4>
-                                <p>Мини-бургеры, известные многим как слайдеры,- это самый горячий тренд в кулинарии, который охватил всю страну: их размер в два раза меньше классического бургера.</p>
-                                <div class="price">350 ₽</div>
-                            </div>
-                        </div>
-                        <div class="menu-card" data-id="burger5">
-                            <img src="https://images.unsplash.com/photo-1568901346...
+    <!-- Меню Бургеров -->
+    <section class="menu-item" id="burger">
+        <h1>🍔 Бургеры</h1>
+        <div class="menu-items">
+            <div class="menu-card" data-id="burger1">
+                <img src="img/menu-modern-1-310x260.png" alt="Fish Burger">
+                <h4>Fish Burger</h4>
+                <p>Нежная рыбная котлета с хрустящими овощами и фирменным соусом</p>
+                <p class="price">Цена: 420₽</p>
+            </div>
+            <div class="menu-card" data-id="burger2">
+                <img src="img/menu-modern-3-310x260.png" alt="Beef Burger">
+                <h4>Beef Burger</h4>
+                <p>Сочная говяжья котлета с карамелизованным луком и сыром чеддер</p>
+                <p class="price">Цена: 480₽</p>
+            </div>
+            <div class="menu-card" data-id="burger3">
+                <img src="img/menu-modern-5-310x260.png" alt="Bacon Burger">
+                <h4>Bacon Burger</h4>
+                <p>Классический бургер с хрустящим беконом и фирменным BBQ соусом</p>
+                <p class="price">Цена: 450₽</p>
+            </div>
+            <div class="menu-card" data-id="burger4">
+                <img src="img/menu-modern-6-310x260.png" alt="Mini Burger">
+                <h4>Mini Burger</h4>
+                <p>Маленький бургер с большим вкусом - идеален как закуска</p>
+                <p class="price">Цена: 290₽</p>
+            </div>
+            <div class="menu-card" data-id="burger5">
+                <img src="img/menu-modern-2-310x260.webp" alt="Classic Burger">
+                <h4>Classic Burger</h4>
+                <p>Традиционный бургер с говядиной, салатом, помидорами и сыром</p>
+                <p class="price">Цена: 390₽</p>
+            </div>
+            <div class="menu-card" data-id="burger6">
+                <img src="img/menu-modern-4-310x260.png" alt="Chicken Burger">
+                <h4>Chicken Burger</h4>
+                <p>Сочная куриная грудка на гриле с авокадо и лимонным соусом</p>
+                <p class="price">Цена: 410₽</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Меню Пицц -->
+    <section class="menu-item" id="pizza">
+        <h1>🍕 Пиццы</h1>
+        <div class="menu-items">
+            <div class="menu-card" data-id="pizza1">
+                <img src="img/pizzas-1-310x260.png" alt="Funghi">
+                <h4>Funghi</h4>
+                <p>Ароматная пицца с шампиньонами, моцареллой и итальянскими травами</p>
+                <p class="price">Цена: 520₽</p>
+            </div>
+            <div class="menu-card" data-id="pizza2">
+                <img src="img/pizzas-2-310x260.png" alt="Quatro Stagioni">
+                <h4>Quatro Stagioni</h4>
+                <p>Четыре сезона в одной пицце - грибы, ветчина, артишоки и оливки</p>
+                <p class="price">Цена: 590₽</p>
+            </div>
+            <div class="menu-card" data-id="pizza3">
+                <img src="img/pizzas-3-310x260.png" alt="Hawaii">
+                <h4>Hawaii</h4>
+                <p>Экзотическое сочетание ветчины и ананасов на томатной основе</p>
+                <p class="price">Цена: 550₽</p>
+            </div>
+            <div class="menu-card" data-id="pizza4">
+                <img src="img/pizzas-4-310x260.png" alt="Margherita">
+                <h4>Margherita</h4>
+                <p>Классическая итальянская пицца с моцареллой, базиликом и томатами</p>
+                <p class="price">Цена: 480₽</p>
+            </div>
+            <div class="menu-card" data-id="pizza5">
+                <img src="img/pizzas-5-310x260.png" alt="Neapolitan">
+                <h4>Neapolitan</h4>
+                <p>Традиционная неаполитанская пицца с анчоусами и каперсами</p>
+                <p class="price">Цена: 510₽</p>
+            </div>
+            <div class="menu-card" data-id="pizza6">
+                <img src="img/pizzas-6-310x260.png" alt="Pepperoni">
+                <h4>Pepperoni</h4>
+                <p>Самая популярная пицца с острой салями пепперони</p>
+                <p class="price">Цена: 530₽</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Меню Тостов -->
+    <section class="menu-item" id="toast">
+        <h1>🍞 Тосты</h1>
+        <div class="menu-items">
+            <div class="menu-card" data-id="toast1">
+                <img src="img/toast-1-310x260.png" alt="Tomato Toast">
+                <h4>Tomato Toast</h4>
+                <p>Хрустящий тост с сочными томатами и ароматным базиликом</p>
+                <p class="price">Цена: 280₽</p>
+            </div>
+            <div class="menu-card" data-id="toast2">
+                <img src="img/toast-2-310x260.png" alt="Avocado Toast">
+                <h4>Avocado Toast</h4>
+                <p>Полезный тост с авокадо, лимоном и микрозеленью</p>
+                <p class="price">Цена: 320₽</p>
+            </div>
+            <div class="menu-card" data-id="toast3">
+                <img src="img/toast-3-310x260.png" alt="Cheese Toast">
+                <h4>Cheese Toast</h4>
+                <p>Сырный тост с тремя видами сыра и травами</p>
+                <p class="price">Цена: 290₽</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Меню Напитков -->
+    <section class="menu-item" id="drinks">
+        <h1>🥤 Напитки</h1>
+        <div class="menu-items">
+            <div class="menu-card" data-id="drink1">
+                <img src="img/drink-1-310x260.png" alt="Кола">
+                <h4>Кола</h4>
+                <p>Освежающая кола со льдом и лимоном</p>
+                <p class="price">Цена: 120₽</p>
+            </div>
+            <div class="menu-card" data-id="drink2">
+                <img src="img/drink-2-310x260.png" alt="Лимонад">
+                <h4>Лимонад</h4>
+                <p>Домашний лимонад с мятой и льдом</p>
+                <p class="price">Цена: 150₽</p>
+            </div>
+            <div class="menu-card" data-id="drink3">
+                <img src="img/drink-3-310x260.png" alt="Кофе">
+                <h4>Кофе</h4>
+                <p>Ароматный эспрессо или американо на выбор</p>
+                <p class="price">Цена: 180₽</p>
+            </div>
+            <div class="menu-card" data-id="drink4">
+                <img src="img/drink-4-310x260.png" alt="Чай">
+                <h4>Чай</h4>
+                <p>Черный или зеленый чай с лимоном</p>
+                <p class="price">Цена: 100₽</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Модальное окно для блюд -->
+    <div id="foodModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeFoodModal()">&times;</span>
+            <img id="modalImage" src="" alt="">
+            <h3 id="modalTitle"></h3>
+            <p id="modalDescription"></p>
+            <p id="modalPrice"></p>
+
+            <div class="quantity-container">
+                <button class="quantity-button" onclick="changeQuantity(-1)">-</button>
+                <input type="number" id="foodQuantity" value="1" min="1" class="quantity-input" readonly>
+                <button class="quantity-button" onclick="changeQuantity(1)">+</button>
+            </div>
+
+            <button onclick="addToCart()" style="margin-top: 20px;">Добавить в корзину</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно авторизации -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+
+            <!-- Форма входа -->
+            <form id="loginForm" style="display: block;">
+                <h2>🔑 Вход в систему</h2>
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль:</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <button type="submit">Войти</button>
+                <p>Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></p>
+            </form>
+
+            <!-- Форма регистрации -->
+            <form id="registrationForm" style="display: none;">
+                <h2>📝 Регистрация</h2>
+                <div class="form-group">
+                    <label for="registerUsername">Имя пользователя:</label>
+                    <input type="text" id="registerUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email:</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Пароль:</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                </div>
+                <button type="submit">Зарегистрироваться</button>
+                <p>Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Оверлей для модальных окон -->
+    <div id="modalOverlay" class="modal-overlay"></div>
+
+    <!-- Корзина -->
+    <div id="cart" class="cart">
+        <div class="cart-header">
+            <h2>🛒 Ваша корзина</h2>
+            <span class="close" onclick="closeCart()">&times;</span>
+        </div>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="total-price">
+            <h3>Итого: <span id="totalPrice">0₽</span></h3>
+            <button id="checkoutButton" onclick="checkout()">Оформить заказ</button>
+        </div>
+    </div>
+
+    <!-- Оверлей для корзины -->
+    <div id="cartOverlay" class="cart-overlay"></div>
+
+    <!-- Модальное окно подтверждения заказа -->
+    <div id="orderConfirmModal" class="modal">
+        <div class="modal-content">
+            <h3>📋 Подтверждение заказа</h3>
+            <div id="orderSummary"></div>
+
+            <div class="form-group">
+                <label for="customerName">Ваше имя:</label>
+                <input type="text" id="customerName" required>
+            </div>
+            <div class="form-group">
+                <label for="customerPhone">Телефон:</label>
+                <input type="text" id="customerPhone" required>
+            </div>
+            <div class="form-group">
+                <label for="customerAddress">Адрес доставки:</label>
+                <input type="text" id="customerAddress" required>
+            </div>
+
+            <button id="fakeConfirmButton">Подтвердить заказ</button>
+            <button onclick="closeOrderModal()" style="background: #666; margin-top: 10px;">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Панель профиля -->
+    <div id="profileSidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>👤 Профиль</h2>
+            <span id="closeProfileSidebar" class="closeProfileSidebar">&times;</span>
+        </div>
+        <div id="profileInfo"></div>
+        <div id="orderHistory" class="order-history"></div>
+        <button id="logoutButton" class="logout-button">Выйти</button>
+    </div>
+
+    <!-- Оверлей для профиля -->
+    <div id="profileOverlay" class="sidebar-overlay"></div>
+
+    <!-- Подключение скриптов -->
+    <script src="util.js"></script>
+    <script src="script.js"></script>
+    <script src="login.js"></script>
+    <script src="registration.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>
