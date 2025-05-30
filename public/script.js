@@ -1046,5 +1046,84 @@ window.onclick = function(event) {
 };
 
 
+// Функция оформления заказа
+async function placeOrder() {
+  const userId = localStorage.getItem('userId');
+  const accessToken = localStorage.getItem('accessToken');
 
+  // Проверяем авторизацию
+  if (!userId || !accessToken) {
+    alert('Для оформления заказа необходимо войти в систему');
+    openLoginModal();
+    return;
+  }
+
+  // Проверяем корзину
+  const cartData = JSON.parse(localStorage.getItem('cartData') || '{}');
+  const cartItems = Object.values(cartData);
+  
+  if (cartItems.length === 0) {
+    alert('Корзина пуста! Добавьте товары для оформления заказа.');
+    return;
+  }
+
+  // Подготавливаем данные заказа
+  const items = cartItems.map(item => ({
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity
+  }));
+
+  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  try {
+    // Отправляем заказ на сервер
+    const response = await fetch('https://fastfoodmania-api.onrender.com/order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        items: items,
+        total: total,
+        phone: '', // можете добавить поля для телефона и адреса
+        address: ''
+      })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert('Заказ успешно оформлен! Спасибо за покупку!');
+      
+      // Очищаем корзину
+      localStorage.removeItem('cartData');
+      updateCartDisplay(); // ваша функция обновления корзины
+      
+      // Закрываем модальное окно если открыто
+      closeOrderModal();
+      
+    } else {
+      alert('Ошибка при оформлении заказа: ' + result.message);
+    }
+
+  } catch (error) {
+    console.error('Ошибка при отправке заказа:', error);
+    alert('Ошибка сети. Попробуйте еще раз.');
+  }
+}
+
+// Функция открытия модального окна входа
+function openLoginModal() {
+  const loginModal = document.getElementById('loginModal');
+  const modalOverlay = document.getElementById('modalOverlay');
+  
+  if (loginModal) loginModal.style.display = 'block';
+  if (modalOverlay) modalOverlay.style.display = 'block';
+}
+
+// Экспортируем функцию
+window.placeOrder = placeOrder;
 
