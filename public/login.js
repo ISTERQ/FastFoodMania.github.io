@@ -1,4 +1,3 @@
-
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -9,7 +8,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const response = await fetch("https://fastfoodmania-github-io.onrender.com/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email, password }),
+      body: JSON.stringify({ email, password }),
       credentials: "include"
     });
 
