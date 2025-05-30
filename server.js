@@ -1,12 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');  // <-- только здесь!
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const User = require('./models/User');
-const bcrypt = require('bcryptjs');
+
 
 
 const app = express();
