@@ -163,3 +163,9 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({ message: 'Ресурс не найден' });
 });
+fetch('https://fastfoodmania-api.onrender.com/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password }),
+  credentials: 'include'
+});
