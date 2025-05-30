@@ -1,14 +1,13 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
-const path = require('path');
+const path = require('path');         // <-- один раз!
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const User = require('./models/User');
-const Order = require('./models/Order'); // если есть
-const path = require('path');
+const Order = require('./models/Order');
+
 
 // В начале файла
 app.use(express.static(path.join(__dirname, 'public')));
