@@ -302,39 +302,6 @@ app.get('/api/orders', async (req, res) => {
 });
 
 
-// server.js
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    // Ищем пользователя по email
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
-    }
-
-    // Сравниваем пароль с хешированным в базе
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Неверный пароль' });
-    }
-
-    // Создаём токен
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
-
-    res.status(200).json({
-      message: 'Вход выполнен',
-      accessToken,
-      userId: user._id
-    });
-  } catch (error) {
-    console.error('Ошибка при входе:', error);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
-  }
-});
-
-
 // В сервере (например, в server.js)
 app.get('/api/users/:id', async (req, res) => {
   try {
@@ -523,16 +490,17 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// Авторизация пользователя
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password } = req.body; // ИЗМЕНЕНО с email на username
 
   try {
-    // Ищем пользователя по email, а не username
-    const user = await User.findOne({ email: username });
+    // Ищем пользователя по username ИЛИ email
+    const user = await User.findOne({ 
+      $or: [{ username }, { email: username }] 
+    });
 
     if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+      return res.status(401).json({ message: 'Пользователь не найден' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -540,16 +508,32 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Неверный пароль' });
     }
 
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+
     res.status(200).json({
       message: 'Вход выполнен',
+      accessToken,
       userId: user._id
     });
-
   } catch (error) {
-    console.error('Ошибка входа:', error);
+    console.error('Ошибка при входе:', error);
     res.status(500).json({ message: 'Ошибка сервера при входе' });
   }
 });
+
+function updateCartUI() {
+  // Обновляем счетчик товаров в корзине
+  const cartCount = Object.values(cartData).reduce((sum, item) => sum + item.quantity, 0);
+  const cartCountElement = document.getElementById('cartCount');
+  if (cartCountElement) {
+    cartCountElement.textContent = cartCount;
+  }
+  
+  // Обновляем отображение корзины если она открыта
+  if (typeof displayCart === 'function') {
+    displayCart();
+  }
+}
 
 // Возвращает данные пользователя и его заказы
 app.get('/api/users/:id', async (req, res) => {
