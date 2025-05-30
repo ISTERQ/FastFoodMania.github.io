@@ -1057,6 +1057,114 @@ window.onclick = function(event) {
   });
 };
 
+document.addEventListener('DOMContentLoaded', () => {
+  const registrationForm = document.getElementById('registrationForm');
+  const loginForm = document.getElementById('loginForm');
+  const loginModal = document.getElementById('loginModal');
+  const profileButton = document.getElementById('profileButton');
+  const loginButton = document.getElementById('loginButton');
+  const modalOverlay = document.getElementById('modalOverlay');
+  
+  // Базовый URL API
+  const API_BASE = 'https://fastfoodmania-api.onrender.com';
+
+  // Функция обновления UI после успешного логина
+  function updateUIAfterLogin(username) {
+    profileButton.textContent = `Привет, ${username}`;
+    loginButton.style.display = 'none';
+  }
+
+  // Проверка, залогинен ли пользователь при загрузке страницы
+  function checkAuthOnLoad() {
+    const username = localStorage.getItem('username');
+    if (username) {
+      updateUIAfterLogin(username);
+    }
+  }
+
+  checkAuthOnLoad();
+
+  // Регистрация пользователя
+  registrationForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('registerUsername').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert('Ошибка регистрации: ' + (data.message || 'Попробуйте позже'));
+        return;
+      }
+
+      alert('Регистрация прошла успешно! Теперь войдите.');
+      registrationForm.style.display = 'none';
+      loginForm.style.display = 'block';
+
+    } catch (err) {
+      console.error('Ошибка регистрации:', err);
+      alert('Ошибка регистрации. Проверьте подключение и попробуйте снова.');
+    }
+  });
+
+  // Вход пользователя
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include' // если сервер использует куки
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert('Ошибка входа: ' + (data.message || 'Неверный email или пароль'));
+        return;
+      }
+
+      // При успешном входе сохраняем данные
+      localStorage.setItem('userId', data.userId || data.id || '');
+      localStorage.setItem('username', data.username || data.name || email);
+
+      updateUIAfterLogin(data.username || data.name || email);
+
+      // Закрываем окно входа
+      loginModal.style.display = 'none';
+      modalOverlay.style.display = 'none';
+
+      // Можно обновить страницу или загрузить профиль и т.п.
+    } catch (err) {
+      console.error('Ошибка входа:', err);
+      alert('Ошибка входа. Проверьте подключение и попробуйте снова.');
+    }
+  });
+
+  // Кнопка "Выйти" — очистка localStorage и сброс UI
+  const logoutButton = document.getElementById('logoutButton');
+  if (logoutButton) {
+    logoutButton.addEventListener('click', () => {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+
+      profileButton.textContent = 'Профиль';
+      loginButton.style.display = 'inline-block';
+
+      alert('Вы вышли из аккаунта');
+    });
+  }
+});
 
 
 
