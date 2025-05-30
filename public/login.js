@@ -1,7 +1,7 @@
 const loginForm = document.getElementById('loginForm');
 
-loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -11,32 +11,23 @@ loginForm.addEventListener('submit', async (event) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
+      credentials: 'include',
     });
 
     const data = await response.json();
 
-    if (response.ok) {
-      // Сохраняем accessToken и userId в localStorage (если нужен)
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('username', email);
-
-      alert('Вход выполнен!');
-
-      // Закрываем модальное окно
-      document.getElementById('loginModal').style.display = 'none';
-      document.getElementById('modalOverlay').style.display = 'none';
-
-      // Обновляем кнопку входа на профиль
-      updateLoginButtonToProfile();
-    } else {
+    if (!response.ok) {
       alert('Ошибка входа: ' + (data.message || 'Неверные данные'));
+      return;
     }
+
+    // Обработка успешного входа...
+
   } catch (error) {
-    console.error('Ошибка входа:', error);
-    alert('Ошибка входа. Проверьте соединение и попробуйте снова.');
+    alert('Ошибка сети или сервера. Попробуйте позже.');
   }
 });
+
 
 function updateLoginButtonToProfile() {
   const loginButton = document.getElementById('loginButton');
