@@ -2,620 +2,279 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const cors = require("cors");
-const path = require("path");
 const jwt = require("jsonwebtoken");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
+
 const app = express();
-const User = require('./models/User'); 
-const fs = require('fs');
-const reviewsFile = 'reviews.json';
-const Joi = require("joi");
-const Order = require('./models/Order');
+
+// Middleware
 app.use(express.json());
+app.use(cookieParser());
 
-const { MongoClient } = require("mongodb");
-
-const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
-const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
-
-let db;
-client.connect()
-  .then(() => {
-    db = client.db("sosaldbmoy_memberdeal");
-    console.log("✅ MongoDB подключена");
-  })
-  .catch(err => {
-    console.error("❌ Ошибка подключения к MongoDB:", err);
-  });
-
-  
-
-
-console.log("Отправка запроса на /refresh");
-
-
+// CORS настройки
 const corsOptions = {
-  origin: true,       // ⬅️ или "*" если не используешь cookies
-  credentials: true   // ⬅️ обязательно, если работаешь с логином
+  origin: [
+    "https://fastfoodmania-github-io.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500"
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // обработка preflight-запросов
+app.options('*', cors(corsOptions));
 
-
-app.use(cors(corsOptions));
-
-
-app.use(express.json());
-app.use(cors(corsOptions));
-
-// маршруты ...
-
-app.use((err, req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://fastfoodmania-github-io.onrender.com");
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  console.log("🚨 Логин упал здесь", err.message); // <-- Вот добавленный лог
-  console.error(err.stack);
-
-  res.status(500).json({ message: "Что-то пошло не так", error: err.message });
+// Модели данных
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 
+const orderSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  items: [{
+    id: String,
+    name: String,
+    price: Number,
+    quantity: Number
+  }],
+  total: { type: Number, required: true },
+  phone: String,
+  address: String,
+  status: { type: String, default: 'pending' },
+  createdAt: { type: Date, default: Date.now }
+});
 
-// Используем CORS с настройками
-app.use(cookieParser());
+const User = mongoose.model('User', userSchema);
+const Order = mongoose.model('Order', orderSchema);
+
 // Подключение к MongoDB
-
-app.options('*', cors(corsOptions)); // Ответ на preflight запросы для всех маршрутов
-
-
-
-
-const mongoURI = process.env.MONGO_URI;
-
-mongoose.connect(mongoURI, {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
-  ssl: false
+  useUnifiedTopology: true
 })
-.then(() => console.log("✅ MongoDB connected по URI из .env"))
-.catch((error) => console.error("❌ MongoDB connection error:", error));
+.then(() => console.log("✅ MongoDB подключена"))
+.catch((error) => console.error("❌ Ошибка подключения к MongoDB:", error));
 
+// Middleware для проверки JWT токена
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  ssl: false, // Включено SSL
-})
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.error("MongoDB connection error:", error));
+  if (!token) {
+    return res.status(401).json({ message: 'Токен не предоставлен' });
+  }
 
-// Middleware для обработки JSON
-
-// Функция проверки срока жизни токена
-function isTokenExpired(token) {
-    try {
-        const payload = JSON.parse(atob(token.split(".")[1])); // Декодируем токен
-        return payload.exp * 1000 < Date.now(); // Если exp в прошлом — токен истёк
-    } catch (e) {
-        return true; // Если ошибка — токен недействителен
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Недействительный токен' });
     }
-}
-
-
-// Перенаправление HTTP на HTTPS
-app.use((req, res, next) => {
-    if (process.env.NODE_ENV === "production") {
-        console.log("Проверка протокола:", req.headers["x-forwarded-proto"]);
-        if (req.headers["x-forwarded-proto"] !== "https") {
-            console.log("🔄 Перенаправление на HTTPS...");
-            return res.redirect(`https://${req.headers.host}${req.url}`);
-        }
-    }
+    req.user = user;
     next();
-});
+  });
+};
 
+// Маршруты
 
-
-// Указание папки со статическими файлами
-app.use(express.static(path.join(__dirname, "public")));
-
-
-function generateTokens(user, site) {
-    const issuedAt = Math.floor(Date.now() / 1000);
-    
-    const accessToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
-        JWT_SECRET,
-        { expiresIn: "30m" }  // ⏳ Access-токен на 30 минут
-    );
-
-    const refreshToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
-        REFRESH_SECRET,
-        { expiresIn: "7d" }  // 🔄 Refresh-токен на 7 дней
-    );
-
-    return { accessToken, refreshToken };
-}
-
-
-
-// Регистрация пользователя
+// Регистрация
 app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
-
   try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(409).json({ message: 'Пользователь с таким именем уже существует' });
+    const { username, email, password } = req.body;
+
+    // Проверка обязательных полей
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Все поля обязательны' });
     }
 
+    // Проверка существования пользователя
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }]
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ 
+        message: 'Пользователь с таким именем или email уже существует' 
+      });
+    }
+
+    // Хеширование пароля
     const hashedPassword = await bcrypt.hash(password, 12);
-    const newUser = new User({ username, email, password: hashedPassword });
+
+    // Создание пользователя
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword
+    });
 
     await newUser.save();
 
     // Генерация токена
     const accessToken = jwt.sign(
-      { id: newUser._id, username: newUser.username },
+      { userId: newUser._id, username: newUser.username },
       process.env.JWT_SECRET,
-      { expiresIn: '30m' } // Токен действителен 30 минут
+      { expiresIn: '1h' }
     );
 
-    // Отправляем токен в ответ
+    console.log(`✅ Пользователь ${username} зарегистрирован`);
+
     res.status(201).json({
       message: 'Пользователь успешно зарегистрирован',
-      accessToken, // Отправляем токен
-      userId: newUser._id // Отправляем userId
+      accessToken,
+      userId: newUser._id,
+      username: newUser.username
     });
 
-  } catch (err) {
-    console.error("Ошибка регистрации:", err);
-    res.status(500).json({ message: 'Ошибка регистрации пользователя', error: err.message });
-  }
-});
-
-app.post('/logout', (req, res) => {
-    console.log("🔄 Выход из аккаунта...");
-    
-    res.clearCookie("refreshTokenDesktop", {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'None',
-        path: "/",
-        domain: "https://fastfoodmania-github-io.onrender.com"
-    });
-
-    res.json({ message: 'Вы вышли из системы' });
-});
-
-
-// Обновление токена
-app.post('/-token', (req, res) => {
-  const { token: Token } = req.body;
-
-  if (!Token) {
-    return res.status(403).json({ message: 'Токен обновления не предоставлен' });
-  }
-
-  try {
-    const user = jwt.verify(Token, JWT_SECRET);
-    const newAccessToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token: newAccessToken });
-  } catch (err) {
-    res.status(403).json({ message: 'Недействительный токен обновления' });
-  }
-});
-
-// Обработка корневого маршрута
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// Проверка соединения
-app.get("/connect", (req, res) => {
-  res.send("Соединение с сервером успешно!");
-});
-
-// Обработчик ошибок
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Что-то пошло не так!', error: err.message });
-});
-
-// Обработка 404 ошибок
-app.use((req, res) => {
-  res.status(404).json({ message: "Ресурс не найден" });
-});
-
-// Порт, на котором будет работать сервер
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на порту ${PORT}`);
-});
-
-
-app.post('/order', async (req, res) => {
-  try {
-    const { userId, items, total } = req.body;
-
-    const newOrder = new Order({ userId, items, total });
-    await newOrder.save();
-
-    res.status(201).json({ message: "Заказ успешно оформлен" });
-  } catch (err) {
-    console.error("Ошибка при создании заказа:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-app.get('/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка при получении заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-async function loadOrders(userId) {
-  const res = await fetch(`https://fastfoodmania-github-io.onrender.com/orders/${userId}`);
-  const orders = await res.json();
-  // отображаем в модальном окне или отдельной секции
-}
-app.get('/orders/:userId', async (req, res) => {
-  const { userId } = req.params;
-  try {
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка при получении истории заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-
-app.get('/api/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка получения заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-
-// server.js
-app.get('/api/orders', async (req, res) => {
-    const userId = req.userId;  // Получаем userId из JWT
-    if (!userId) return res.status(401).json({ error: 'Пользователь не авторизован' });
-
-    try {
-        const orders = await Order.find({ userId }).populate('items');
-        res.json(orders);
-    } catch (err) {
-        res.status(500).json({ error: 'Ошибка при получении заказов', message: err.message });
-    }
-});
-
-
-// В сервере (например, в server.js)
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).populate('orders');
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-    res.json(user);
-  } catch (err) {
-    console.error('Ошибка при получении данных пользователя:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-// В сервере (например, в server.js)
-app.get('/api/orders/:id', async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
-    }
-    res.json(order);
-  } catch (err) {
-    console.error('Ошибка при получении данных заказа:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-
-
-
-
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id)
-      .populate({
-        path: 'orders',
-        options: { sort: { createdAt: -1 } } // ← Закрываем скобку здесь
-      });
-
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
-
-    res.json({
-      username: user.username,
-      email: user.email,
-      orders: user.orders
-    });
-
-  } catch (err) {
-    console.error('Ошибка при получении данных пользователя:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-
-
-
-// Добавь в server.js
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id)
-      .populate('orders') // Подгружаем связанные заказы
-      .exec();
-
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-    res.json({
-      username: user.username,
-      email: user.email,
-      orders: user.orders
-    });
-  } catch (err) {
-    console.error('Ошибка при получении профиля:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-
-
-
-// Добавить маршрут для получения заказов
-app.get('/api/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId })
-      .sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка получения заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-app.post('/api/users/:userId/merge/:tempUserId', async (req, res) => {
-  try {
-    // Переносим заказы временного пользователя
-    const orders = await Order.find({ userId: req.params.tempUserId });
-    
-    await Order.updateMany(
-      { userId: req.params.tempUserId },
-      { $set: { userId: req.params.userId } }
-    );
-
-    await User.findByIdAndUpdate(
-      req.params.userId,
-      { 
-        $push: { mergedOrders: { $each: orders.map(o => o._id) } },
-        $unset: { tempUserId: "" }
-      }
-    );
-
-    res.json({ success: true, mergedOrders: orders.length });
   } catch (error) {
-    res.status(500).json({ error: 'Ошибка объединения заказов' });
-  }
-});
- 
-
-// Оформление заказа
-app.post('/api/orders', async (req, res) => {
-  try {
-    let userId = req.body.userId;
-    
-    // Генерация временного ID если пользователь не авторизован
-    if (!userId || userId.startsWith('temp_')) {
-      userId = `temp_${crypto.randomBytes(16).toString('hex')}`;
-    }
-
-    const newOrder = new Order({
-      userId,
-      items: req.body.items,
-      total: req.body.total,
-      phone: req.body.phone,
-      address: req.body.address
+    console.error("❌ Ошибка регистрации:", error);
+    res.status(500).json({ 
+      message: 'Ошибка сервера при регистрации',
+      error: error.message 
     });
-
-    await newOrder.save();
-    
-    // Обновляем пользователя (авторизованного или временного)
-    await User.findOneAndUpdate(
-      { $or: [{ _id: userId }, { tempUserId: userId }] },
-      { $push: { orders: newOrder._id } },
-      { upsert: true, new: true }
-    );
-
-    res.status(201).json({ 
-      success: true,
-      userId // Возвращаем временный ID если был создан
-    });
-    
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка сохранения заказа' });
   }
 });
 
-// Маршрут для получения истории заказов пользователя
-app.get('/api/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId })
-      .sort({ createdAt: -1 }); // Сортировка по дате (новые сначала)
-
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка при получении заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-app.post('/api/orders', async (req, res) => {
-  try {
-    console.log("Получен заказ:", req.body); // Отладка
-    const { userId, items, total, phone, address } = req.body;
-
-    const newOrder = new Order({
-      userId,
-      items,
-      total,
-      phone,
-      address,
-      createdAt: new Date()
-    });
-
-    await newOrder.save();
-    console.log("Заказ сохранен в БД:", newOrder); // Проверка
-
-    res.status(201).json({ success: true });
-  } catch (error) {
-    console.error("Ошибка сохранения заказа:", error); // Логирование ошибки
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
-
+// Вход
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body; // ИЗМЕНЕНО с email на username
-
   try {
-    // Ищем пользователя по username ИЛИ email
-    const user = await User.findOne({ 
-      $or: [{ username }, { email: username }] 
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Имя пользователя и пароль обязательны' });
+    }
+
+    // Поиск пользователя по username или email
+    const user = await User.findOne({
+      $or: [{ username }, { email: username }]
     });
 
     if (!user) {
       return res.status(401).json({ message: 'Пользователь не найден' });
     }
 
+    // Проверка пароля
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Неверный пароль' });
     }
 
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+    // Генерация токена
+    const accessToken = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log(`✅ Пользователь ${user.username} вошел в систему`);
 
     res.status(200).json({
-      message: 'Вход выполнен',
+      message: 'Вход выполнен успешно',
       accessToken,
-      userId: user._id
+      userId: user._id,
+      username: user.username
     });
+
   } catch (error) {
-    console.error('Ошибка при входе:', error);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
-  }
-});
-
-function updateCartUI() {
-  // Обновляем счетчик товаров в корзине
-  const cartCount = Object.values(cartData).reduce((sum, item) => sum + item.quantity, 0);
-  const cartCountElement = document.getElementById('cartCount');
-  if (cartCountElement) {
-    cartCountElement.textContent = cartCount;
-  }
-  
-  // Обновляем отображение корзины если она открыта
-  if (typeof displayCart === 'function') {
-    displayCart();
-  }
-}
-
-// Возвращает данные пользователя и его заказы
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).populate("orders");
-    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
-
-    res.json({
-      username: user.username,
-      email: user.email,
-      orders: user.orders
+    console.error("❌ Ошибка входа:", error);
+    res.status(500).json({ 
+      message: 'Ошибка сервера при входе',
+      error: error.message 
     });
-  } catch (err) {
-    console.error("Ошибка при загрузке профиля:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
   }
 });
 
+// Создание заказа
+app.post('/order', authenticateToken, async (req, res) => {
+  try {
+    const { items, total, phone, address } = req.body;
+    const userId = req.user.userId;
 
-// Обработка запроса на обновление токена для ПК-версии
-app.post('/refresh', async (req, res) => {
-    const refreshToken = req.cookies.refreshTokenDesktop;
-
-    if (!refreshToken) {
-        console.error("❌ Refresh-токен отсутствует в cookies");
-        return res.status(401).json({ message: "Не авторизован" });
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Товары не указаны' });
     }
 
-    console.log("🔍 Полученный refreshToken:", refreshToken);
-    
-    jwt.verify(refreshToken, REFRESH_SECRET, async (err, decoded) => {
-        if (err) {
-            console.error("❌ Ошибка проверки refresh-токена:", err.message);
-            
-            res.clearCookie("refreshTokenDesktop", {
-                httpOnly: true,
-                secure: true,
-                sameSite: "None",
-                path: "/"
-            });
+    if (!total || total <= 0) {
+      return res.status(400).json({ message: 'Сумма заказа должна быть больше 0' });
+    }
 
-            return res.status(403).json({ message: "Refresh-токен недействителен или истёк" });
-        }
-
-        if (!decoded.exp || (decoded.exp * 1000 < Date.now())) {
-            console.error("❌ Refresh-токен окончательно истёк!");
-            res.clearCookie("refreshTokenDesktop", { path: "/" });
-            return res.status(403).json({ message: "Refresh-токен истёк" });
-        }
-
-        try {
-            const user = await User.findById(decoded.id);
-            if (!user) {
-                console.error("❌ Пользователь не найден по ID:", decoded.id);
-                return res.status(404).json({ message: "Пользователь не найден" });
-            }
-
-            const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-            res.cookie("refreshTokenDesktop", newRefreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "None",
-                path: "/",
-                maxAge: 30 * 24 * 60 * 60 * 1000  // 30 дней
-            });
-
-            console.log("✅ Refresh-токен обновлён успешно");
-
-            // 🚀 Отключаем кеширование
-            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-            res.setHeader("Pragma", "no-cache");
-            res.setHeader("Expires", "0");
-
-            res.json({ accessToken });
-
-        } catch (error) {
-            console.error("❌ Ошибка при поиске пользователя:", error);
-            return res.status(500).json({ message: "Ошибка сервера" });
-        }
+    const newOrder = new Order({
+      userId,
+      items,
+      total,
+      phone,
+      address
     });
+
+    await newOrder.save();
+
+    console.log(`✅ Заказ создан для пользователя ${req.user.username}: ${total}₽`);
+
+    res.status(201).json({
+      message: 'Заказ успешно создан',
+      orderId: newOrder._id
+    });
+
+  } catch (error) {
+    console.error("❌ Ошибка создания заказа:", error);
+    res.status(500).json({ 
+      message: 'Ошибка сервера при создании заказа',
+      error: error.message 
+    });
+  }
 });
 
+// Получение заказов пользователя
+app.get('/orders/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
 
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json(orders);
+
+  } catch (error) {
+    console.error("❌ Ошибка получения заказов:", error);
+    res.status(500).json({ 
+      message: 'Ошибка сервера при получении заказов',
+      error: error.message 
+    });
+  }
+});
+
+// Выход
+app.post('/logout', (req, res) => {
+  console.log("🔄 Пользователь вышел из системы");
+  res.json({ message: 'Выход выполнен успешно' });
+});
+
+// Проверка соединения
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Обработка ошибок
+app.use((err, req, res, next) => {
+  console.error("🚨 Ошибка сервера:", err);
+  res.status(500).json({ 
+    message: 'Внутренняя ошибка сервера',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Что-то пошло не так'
+  });
+});
+
+// Обработка 404
+app.use((req, res) => {
+  res.status(404).json({ message: 'Маршрут не найден' });
+});
+
+// Запуск сервера
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+});
