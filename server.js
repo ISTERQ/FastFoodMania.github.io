@@ -8,6 +8,15 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const User = require('./models/User');
 const Order = require('./models/Order'); // если есть
+const path = require('path');
+
+// В начале файла
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Обработчик для корня
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
