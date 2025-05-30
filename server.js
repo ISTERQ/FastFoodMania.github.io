@@ -110,18 +110,6 @@ function isTokenExpired(token) {
     return true;
   }
 }
-// Authentication middleware
-const authMiddleware = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = req.headers['x-access-token'] || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null);
-    if (!token) {
-      return res.status(401).json({ 
-        message: 'Access denied. No token provided.',
-        code: 'NO_TOKEN'
-      });
-    }
-
 
 // Validation schemas
 const registerSchema = Joi.object({
