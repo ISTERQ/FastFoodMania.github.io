@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
@@ -11,7 +12,7 @@ const orderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   phone: String,
   address: String,
-  createdAt: { type: Date, default: Date.now }
-});
+  customerName: String
+}, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);
