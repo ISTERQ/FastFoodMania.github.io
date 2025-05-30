@@ -7,7 +7,10 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const User = require('./models/User');
 const Order = require('./models/Order');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
+const { MONGO_URI, JWT_SECRET, REFRESH_SECRET } = process.env;
 
 // В начале файла
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,10 +20,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const app = express();
-const PORT = process.env.PORT || 3000;
 
-const { MONGO_URI, JWT_SECRET, REFRESH_SECRET } = process.env;
 
 // Подключение к MongoDB — один раз!
 mongoose.connect(MONGO_URI, {
