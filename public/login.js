@@ -13,7 +13,7 @@ mongoose.connect('mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0
   useUnifiedTopology: true,
 });
 
-const JWT_SECRET = 'твоя_секретная_строка_для_подписания_токенов';
+const JWT_SECRET = 'b3f59c77c06c2d4b6c0d81514f4e4fd7dc17d0f143e8f0bddc4f9306edb969e6';
 
 // Эндпоинт для логина
 app.post('/login', async (req, res) => {
