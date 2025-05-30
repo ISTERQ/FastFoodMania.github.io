@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const User = require('./models/User');
+const bcrypt = require('bcryptjs');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
