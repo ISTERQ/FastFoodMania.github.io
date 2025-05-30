@@ -1,183 +1,75 @@
-// Обработчик формы входа
-document.addEventListener('DOMContentLoaded', function() {
-  const loginForm = document.getElementById('loginForm');
-  
-  if (!loginForm) {
-    console.error('Форма входа не найдена');
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  // Изменено: получаем значение как username (может быть email или username)
+  const username = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  if (!username || !password) {
+    alert('Пожалуйста, заполните все поля');
     return;
   }
 
-  loginForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+  try {
+    const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }), // ИСПРАВЛЕНО: отправляем username
+      credentials: "include"
+    });
 
-    // Получаем данные из формы
-    const username = document.getElementById('loginEmail')?.value?.trim();
-    const password = document.getElementById('loginPassword')?.value;
+    const data = await response.json();
 
-    // Валидация
-    if (!username || !password) {
-      alert('Пожалуйста, заполните все поля');
-      return;
+    if (response.ok) {
+      // Сохраняем данные пользователя
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("userId", data.userId);
+      localStorage.setItem("username", data.username);
+
+      alert("Вход выполнен!");
+
+      // Закрываем модальное окно
+      document.getElementById("loginModal").style.display = "none";
+      document.getElementById("modalOverlay").style.display = "none";
+
+      // Обновляем кнопку входа на кнопку профиля
+      updateLoginButtonToProfile();
+
+    } else {
+      alert("Ошибка входа: " + (data.message || "Неверные данные"));
     }
-
-    const submitButton = loginForm.querySelector('button[type="submit"]');
-    const originalText = submitButton?.textContent || 'Войти';
-
-    try {
-      // Блокируем кнопку
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Вход...';
-      }
-
-      const response = await fetch('https://fastfoodmania-api.onrender.com/login', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ username, password })
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        // Сохраняем данные пользователя
-        localStorage.setItem('accessToken', result.accessToken);
-        localStorage.setItem('userId', result.userId);
-        localStorage.setItem('username', result.username);
-
-        alert('Вход выполнен успешно!');
-        
-        // Закрываем модальное окно
-        closeLoginModal();
-        
-        // Обновляем интерфейс
-        updateLoginButtonToProfile();
-        
-        // Очищаем форму
-        loginForm.reset();
-
-        // Загружаем профиль если он открыт
-        if (window.loadProfile) {
-          window.loadProfile();
-        }
-
-      } else {
-        alert('Ошибка входа: ' + result.message);
-      }
-
-    } catch (error) {
-      console.error('Ошибка при входе:', error);
-      alert('Ошибка сети. Проверьте подключение к интернету и попробуйте снова.');
-    } finally {
-      // Разблокируем кнопку
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = originalText;
-      }
-    }
-  });
-
-  // Проверяем, авторизован ли пользователь при загрузке
-  checkAuthStatus();
-});
-
-// Функция проверки статуса авторизации
-function checkAuthStatus() {
-  const userId = localStorage.getItem('userId');
-  const accessToken = localStorage.getItem('accessToken');
-  
-  if (userId && accessToken) {
-    updateLoginButtonToProfile();
+  } catch (error) {
+    console.error("Ошибка входа:", error);
+    alert("Ошибка сети. Проверьте подключение к интернету.");
   }
-}
+});
 
 // Функция обновления кнопки входа на профиль
 function updateLoginButtonToProfile() {
-  const loginButton = document.getElementById('loginButton');
-  
-  if (!loginButton) return;
-
-  // Меняем текст и ID кнопки
-  loginButton.textContent = 'Профиль';
-  loginButton.id = 'profileButton';
-  
-  // Удаляем старые обработчики и добавляем новый
-  const newButton = loginButton.cloneNode(true);
-  loginButton.parentNode.replaceChild(newButton, loginButton);
-  
-  newButton.addEventListener('click', (event) => {
-    event.preventDefault();
-    openProfileSidebar();
-  });
-}
-
-// Функция открытия профиля
-function openProfileSidebar() {
-  const profileSidebar = document.getElementById('profileSidebar');
-  const profileOverlay = document.getElementById('profileOverlay');
-  
-  if (profileSidebar) {
-    profileSidebar.classList.add('open');
-  }
-  
-  if (profileOverlay) {
-    profileOverlay.style.display = 'block';
-  }
-  
-  // Загружаем данные профиля
-  if (window.loadProfile) {
-    window.loadProfile();
-  }
-}
-
-// Функция закрытия модального окна
-function closeLoginModal() {
-  const loginModal = document.getElementById('loginModal');
-  const modalOverlay = document.getElementById('modalOverlay');
-  
-  if (loginModal) loginModal.style.display = 'none';
-  if (modalOverlay) modalOverlay.style.display = 'none';
-}
-
-// Функция выхода из системы
-async function logout() {
-  const submitButton = document.getElementById('logoutButton');
-  
-  try {
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.textContent = 'Выход...';
-    }
-
-    // Отправляем запрос на сервер
-    await fetch('https://fastfoodmania-api.onrender.com/logout', {
-      method: 'POST',
-      credentials: 'include'
+  const loginButton = document.getElementById("loginButton");
+  if (loginButton) {
+    loginButton.textContent = "Профиль";
+    loginButton.id = "profileButton";
+    
+    // Удаляем старые обработчики и добавляем новый
+    const newButton = loginButton.cloneNode(true);
+    loginButton.parentNode.replaceChild(newButton, loginButton);
+    
+    newButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("profileSidebar").classList.add("open");
+      document.getElementById("profileOverlay").style.display = "block";
+      if (window.loadProfile) {
+        window.loadProfile();
+      }
     });
-
-    // Очищаем локальные данные
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('username');
-    localStorage.removeItem('cartData');
-
-    alert('Вы успешно вышли из системы');
-    
-    // Перезагружаем страницу для сброса состояния
-    location.reload();
-
-  } catch (error) {
-    console.error('Ошибка при выходе:', error);
-    
-    // Даже если запрос не прошел, очищаем локальные данные
-    localStorage.clear();
-    location.reload();
   }
 }
 
-// Экспортируем функции для использования в других файлах
-window.updateLoginButtonToProfile = updateLoginButtonToProfile;
-window.logout = logout;
-window.closeLoginModal = closeLoginModal;
+// Проверяем при загрузке страницы, если пользователь уже вошел
+document.addEventListener("DOMContentLoaded", () => {
+  const userId = localStorage.getItem("userId");
+  if (userId) {
+    updateLoginButtonToProfile();
+  }
+});
