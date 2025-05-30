@@ -278,3 +278,17 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
+// В server.js добавьте или обновите CORS настройки
+const corsOptions = {
+  origin: [
+    "https://fastfoodmania-github-io.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500"
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
