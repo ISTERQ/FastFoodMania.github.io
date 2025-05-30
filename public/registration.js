@@ -3,33 +3,35 @@ const registerForm = document.getElementById('registrationForm');
 registerForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 
-  const username = document.getElementById('registerUsername').value.trim();
-  const email = document.getElementById('registerEmail').value.trim();
+  const username = document.getElementById('registerUsername').value;
+  const email = document.getElementById('registerEmail').value;
   const password = document.getElementById('registerPassword').value;
 
+  const data = { username, email, password };
+
   try {
-    const response = await fetch('https://fastfoodmania-api.onrender.com/register', {
+    const response = await fetch('https://fastfoodmania-github-io.onrender.com/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify(data)
     });
 
-    const data = await response.json();
+    const result = await response.json();
 
     if (response.ok) {
-      alert('Регистрация успешна! Теперь войдите в свой аккаунт.');
+      alert("Регистрация успешна! Теперь войдите в свой аккаунт.");
 
       // Переключение на форму входа
       document.getElementById('registrationForm').style.display = 'none';
       document.getElementById('loginForm').style.display = 'block';
 
-      // Подставляем email в форму входа для удобства
+      // Подставляем email в форму входа
       document.getElementById('loginEmail').value = email;
     } else {
-      alert('Ошибка регистрации: ' + (data.message || 'Попробуйте позже'));
+      alert("Ошибка: " + result.message);
     }
-  } catch (error) {
-    console.error('Ошибка при регистрации:', error);
-    alert('Ошибка при регистрации. Проверьте соединение и попробуйте снова.');
+  } catch (err) {
+    console.error('Ошибка:', err);
+    alert('Ошибка при регистрации.');
   }
 });
