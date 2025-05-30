@@ -5,7 +5,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const password = document.getElementById("loginPassword").value;
 
   try {
-    const response = await fetch("https://fastfoodmania-api.onrender.com/login", {
+    const response = await fetch("https://fastfoodmania-github-io.onrender.com/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
