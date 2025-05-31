@@ -145,6 +145,31 @@ app.get('/api/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
+
+
 // Получить заказы пользователя
 app.get('/api/orders/:userId', authMiddleware, async (req, res) => {
-  if (parse
+  if (parseInt(req.params.userId) !== req.user.id) {
+    return res.status(403).json({ message: 'Доступ запрещён' });
+  }
+  try {
+    const client = await pool.connect();
+    const ordersRes = await client.query(
+      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.id]
+    );
+    client.release();
+    res.json(ordersRes.rows.map(order => ({
+      ...order,
+      items: JSON.parse(order.items)
+    })));
+  } catch (e) {
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+// Запуск сервера
+app.listen(PORT, () => {
+  console.log(`Сервер запущен на порту ${PORT}`);
+});
+
