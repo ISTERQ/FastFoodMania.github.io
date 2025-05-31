@@ -5,7 +5,7 @@ const path = require('path');
 const url = require('url');
 const { Pool } = require('pg');
 
-const PORT = 5000;
+const PORT = 10000;
 
 // PostgreSQL connection
 const pool = new Pool({
