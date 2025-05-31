@@ -27,9 +27,33 @@ const mimeTypes = {
 // Load products and categories
 const products = require('./products.js');
 
-let filePath = pathname === '/' ? '/index.html' : pathname;
-filePath = path.join(__dirname, filePath);
-filePath = path.join(__dirname, 'public', filePath);
+const publicDir = path.join(__dirname, 'public');
+
+fs.readFile(filePath, (err, content) => {
+  if (err) {
+    if (err.code === 'ENOENT') {
+      // Попытка отдать public/index.html при ошибке
+      fs.readFile(path.join(publicDir, 'index.html'), (err2, content2) => {
+        if (err2) {
+          res.writeHead(404);
+          res.end('Страница не найдена');
+        } else {
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(content2);
+        }
+      });
+    } else {
+      res.writeHead(500);
+      res.end('Ошибка сервера');
+    }
+  } else {
+    const ext = path.extname(filePath);
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(content);
+  }
+});
+
 
 
 async function initDatabase() {
