@@ -1,637 +1,557 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const cors = require("cors");
-const path = require("path");
-const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
-const app = express();
-const User = require('./models/User'); 
+require('dotenv').config();
+const http = require('http');
 const fs = require('fs');
-const reviewsFile = 'reviews.json';
-const Joi = require("joi");
-const Order = require('./models/Order');
-app.use(express.json());
+const path = require('path');
+const url = require('url');
+const { Pool } = require('pg');
 
-const { MongoClient } = require("mongodb");
+const PORT = 5000;
 
-const mongoUrl = "mongodb://sosaldbmoy_memberdeal:cf007c3511b5f6c64e2451ee67bfd0b4804acb52@fyghg.h.filess.io:61004/sosaldbmoy_memberdeal";
-const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
+// PostgreSQL connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
 
-let db;
-client.connect()
-  .then(() => {
-    db = client.db("sosaldbmoy_memberdeal");
-    console.log("✅ MongoDB подключена");
-  })
-  .catch(err => {
-    console.error("❌ Ошибка подключения к MongoDB:", err);
-  });
-
-  
-
-
-console.log("Отправка запроса на /refresh");
-
-
-const corsOptions = {
-  origin: true,       // ⬅️ или "*" если не используешь cookies
-  credentials: true   // ⬅️ обязательно, если работаешь с логином
+// MIME types
+const mimeTypes = {
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'application/javascript',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml'
 };
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // обработка preflight-запросов
+// Load products and categories
+const products = require('./data/products.js');
+const categories = require('./data/categories.js');
 
-
-app.use(cors(corsOptions));
-
-
-app.use(express.json());
-app.use(cors(corsOptions));
-
-// маршруты ...
-
-app.use((err, req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://fastfoodmania-github-io.onrender.com");
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  console.log("🚨 Логин упал здесь", err.message); // <-- Вот добавленный лог
-  console.error(err.stack);
-
-  res.status(500).json({ message: "Что-то пошло не так", error: err.message });
-});
-
-
-// Используем CORS с настройками
-app.use(cookieParser());
-// Подключение к MongoDB
-
-app.options('*', cors(corsOptions)); // Ответ на preflight запросы для всех маршрутов
-
-
-
-
-const mongoURI = process.env.MONGO_URI;
-
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  ssl: false
-})
-.then(() => console.log("✅ MongoDB connected по URI из .env"))
-.catch((error) => console.error("❌ MongoDB connection error:", error));
-
-
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  ssl: false, // Включено SSL
-})
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.error("MongoDB connection error:", error));
-
-// Middleware для обработки JSON
-
-// Функция проверки срока жизни токена
-function isTokenExpired(token) {
-    try {
-        const payload = JSON.parse(atob(token.split(".")[1])); // Декодируем токен
-        return payload.exp * 1000 < Date.now(); // Если exp в прошлом — токен истёк
-    } catch (e) {
-        return true; // Если ошибка — токен недействителен
-    }
-}
-
-
-// Перенаправление HTTP на HTTPS
-app.use((req, res, next) => {
-    if (process.env.NODE_ENV === "production") {
-        console.log("Проверка протокола:", req.headers["x-forwarded-proto"]);
-        if (req.headers["x-forwarded-proto"] !== "https") {
-            console.log("🔄 Перенаправление на HTTPS...");
-            return res.redirect(`https://${req.headers.host}${req.url}`);
-        }
-    }
-    next();
-});
-
-
-
-// Указание папки со статическими файлами
-app.use(express.static(path.join(__dirname, "public")));
-
-
-function generateTokens(user, site) {
-    const issuedAt = Math.floor(Date.now() / 1000);
+// Initialize database
+async function initDatabase() {
+  try {
+    const client = await pool.connect();
     
-    const accessToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
-        JWT_SECRET,
-        { expiresIn: "30m" }  // ⏳ Access-токен на 30 минут
-    );
-
-    const refreshToken = jwt.sign(
-        { id: user._id, username: user.username, site: "https://fastfoodmania-api.onrender.com", iat: issuedAt },
-        REFRESH_SECRET,
-        { expiresIn: "7d" }  // 🔄 Refresh-токен на 7 дней
-    );
-
-    return { accessToken, refreshToken };
-}
-
-
-
-// Регистрация пользователя
-app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(409).json({ message: 'Пользователь с таким именем уже существует' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const newUser = new User({ username, email, password: hashedPassword });
-
-    await newUser.save();
-
-    // Генерация токена
-    const accessToken = jwt.sign(
-      { id: newUser._id, username: newUser.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '30m' } // Токен действителен 30 минут
-    );
-
-    // Отправляем токен в ответ
-    res.status(201).json({
-      message: 'Пользователь успешно зарегистрирован',
-      accessToken, // Отправляем токен
-      userId: newUser._id // Отправляем userId
-    });
-
-  } catch (err) {
-    console.error("Ошибка регистрации:", err);
-    res.status(500).json({ message: 'Ошибка регистрации пользователя', error: err.message });
-  }
-});
-
-app.post('/logout', (req, res) => {
-    console.log("🔄 Выход из аккаунта...");
+    // Users table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     
-    res.clearCookie("refreshTokenDesktop", {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'None',
-        path: "/",
-        domain: "https://fastfoodmania-github-io.onrender.com"
-    });
-
-    res.json({ message: 'Вы вышли из системы' });
-});
-
-
-// Обновление токена
-app.post('/-token', (req, res) => {
-  const { token: Token } = req.body;
-
-  if (!Token) {
-    return res.status(403).json({ message: 'Токен обновления не предоставлен' });
-  }
-
-  try {
-    const user = jwt.verify(Token, JWT_SECRET);
-    const newAccessToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token: newAccessToken });
-  } catch (err) {
-    res.status(403).json({ message: 'Недействительный токен обновления' });
-  }
-});
-
-// Обработка корневого маршрута
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// Проверка соединения
-app.get("/connect", (req, res) => {
-  res.send("Соединение с сервером успешно!");
-});
-
-// Обработчик ошибок
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Что-то пошло не так!', error: err.message });
-});
-
-// Обработка 404 ошибок
-app.use((req, res) => {
-  res.status(404).json({ message: "Ресурс не найден" });
-});
-
-// Порт, на котором будет работать сервер
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на порту ${PORT}`);
-});
-
-
-app.post('/order', async (req, res) => {
-  try {
-    const { userId, items, total } = req.body;
-
-    const newOrder = new Order({ userId, items, total });
-    await newOrder.save();
-
-    res.status(201).json({ message: "Заказ успешно оформлен" });
-  } catch (err) {
-    console.error("Ошибка при создании заказа:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-app.get('/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка при получении заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-async function loadOrders(userId) {
-  const res = await fetch(`https://fastfoodmania-github-io.onrender.com/orders/${userId}`);
-  const orders = await res.json();
-  // отображаем в модальном окне или отдельной секции
-}
-app.get('/orders/:userId', async (req, res) => {
-  const { userId } = req.params;
-  try {
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка при получении истории заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-
-app.get('/api/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка получения заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-
-// server.js
-app.get('/api/orders', async (req, res) => {
-    const userId = req.userId;  // Получаем userId из JWT
-    if (!userId) return res.status(401).json({ error: 'Пользователь не авторизован' });
-
-    try {
-        const orders = await Order.find({ userId }).populate('items');
-        res.json(orders);
-    } catch (err) {
-        res.status(500).json({ error: 'Ошибка при получении заказов', message: err.message });
-    }
-});
-
-
-// server.js
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    // Ищем пользователя по email
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
-    }
-
-    // Сравниваем пароль с хешированным в базе
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Неверный пароль' });
-    }
-
-    // Создаём токен
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30m' });
-
-    res.status(200).json({
-      message: 'Вход выполнен',
-      accessToken,
-      userId: user._id
-    });
+    // Cart table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cart (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id)
+      )
+    `);
+    
+    // Wishlist table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wishlist (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id)
+      )
+    `);
+    
+    // Orders table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        total DECIMAL(10,2) NOT NULL,
+        items TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    client.release();
+    console.log('✅ База данных инициализирована');
+    return true;
   } catch (error) {
-    console.error('Ошибка при входе:', error);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
+    console.error('❌ Ошибка инициализации БД:', error);
+    return false;
   }
-});
+}
 
+// API handler
+async function handleApiRequest(req, res, pathname) {
+  res.setHeader('Content-Type', 'application/json');
 
-// В сервере (например, в server.js)
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).populate('orders');
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-    res.json(user);
-  } catch (err) {
-    console.error('Ошибка при получении данных пользователя:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
+  // Status
+  if (pathname === '/api/status' && req.method === 'GET') {
+    res.writeHead(200);
+    res.end(JSON.stringify({ status: 'OK', message: 'FishShop API работает' }));
+    return;
   }
-});
-// В сервере (например, в server.js)
-app.get('/api/orders/:id', async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
-    }
-    res.json(order);
-  } catch (err) {
-    console.error('Ошибка при получении данных заказа:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
+
+  // Products
+  if (pathname === '/api/products' && req.method === 'GET') {
+    res.writeHead(200);
+    res.end(JSON.stringify(products));
+    return;
   }
-});
 
-
-
-
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id)
-      .populate({
-        path: 'orders',
-        options: { sort: { createdAt: -1 } } // ← Закрываем скобку здесь
-      });
-
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
-
-    res.json({
-      username: user.username,
-      email: user.email,
-      orders: user.orders
-    });
-
-  } catch (err) {
-    console.error('Ошибка при получении данных пользователя:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
+  // Categories
+  if (pathname === '/api/categories' && req.method === 'GET') {
+    res.writeHead(200);
+    res.end(JSON.stringify(categories));
+    return;
   }
-});
 
-
-
-// Добавь в server.js
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id)
-      .populate('orders') // Подгружаем связанные заказы
-      .exec();
-
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-    res.json({
-      username: user.username,
-      email: user.email,
-      orders: user.orders
-    });
-  } catch (err) {
-    console.error('Ошибка при получении профиля:', err);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-
-
-
-// Добавить маршрут для получения заказов
-app.get('/api/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId })
-      .sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка получения заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-app.post('/api/users/:userId/merge/:tempUserId', async (req, res) => {
-  try {
-    // Переносим заказы временного пользователя
-    const orders = await Order.find({ userId: req.params.tempUserId });
-    
-    await Order.updateMany(
-      { userId: req.params.tempUserId },
-      { $set: { userId: req.params.userId } }
-    );
-
-    await User.findByIdAndUpdate(
-      req.params.userId,
-      { 
-        $push: { mergedOrders: { $each: orders.map(o => o._id) } },
-        $unset: { tempUserId: "" }
+  // Registration
+  if (pathname === '/api/auth/register' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { email, password, firstName, lastName } = JSON.parse(body);
+        
+        const client = await pool.connect();
+        const result = await client.query(
+          'INSERT INTO users (email, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name',
+          [email, password, firstName, lastName]
+        );
+        client.release();
+        
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, user: result.rows[0] }));
+      } catch (error) {
+        if (error.code === '23505') {
+          res.writeHead(400);
+          res.end(JSON.stringify({ error: 'Email уже используется' }));
+        } else {
+          res.writeHead(500);
+          res.end(JSON.stringify({ error: 'Ошибка регистрации' }));
+        }
       }
-    );
-
-    res.json({ success: true, mergedOrders: orders.length });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка объединения заказов' });
+    });
+    return;
   }
-});
- 
 
-// Оформление заказа
-app.post('/api/orders', async (req, res) => {
-  try {
-    let userId = req.body.userId;
-    
-    // Генерация временного ID если пользователь не авторизован
-    if (!userId || userId.startsWith('temp_')) {
-      userId = `temp_${crypto.randomBytes(16).toString('hex')}`;
+  // Login
+  if (pathname === '/api/auth/login' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { email, password } = JSON.parse(body);
+        
+        const client = await pool.connect();
+        const result = await client.query(
+          'SELECT id, email, first_name, last_name FROM users WHERE email = $1 AND password = $2',
+          [email, password]
+        );
+        client.release();
+        
+        if (result.rows.length === 0) {
+          res.writeHead(401);
+          res.end(JSON.stringify({ error: 'Неверные данные' }));
+          return;
+        }
+        
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, user: result.rows[0] }));
+      } catch (error) {
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Ошибка входа' }));
+      }
+    });
+    return;
+  }
+
+  // Get user profile
+  if (pathname.match(/^\/api\/users\/\d+$/) && req.method === 'GET') {
+    const userId = pathname.split('/')[3];
+    try {
+      const client = await pool.connect();
+      const result = await client.query(
+        'SELECT id, email, first_name, last_name, created_at FROM users WHERE id = $1',
+        [userId]
+      );
+      client.release();
+      
+      if (result.rows.length === 0) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Пользователь не найден' }));
+        return;
+      }
+      
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true, user: result.rows[0] }));
+    } catch (error) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'Ошибка получения профиля' }));
     }
-
-    const newOrder = new Order({
-      userId,
-      items: req.body.items,
-      total: req.body.total,
-      phone: req.body.phone,
-      address: req.body.address
-    });
-
-    await newOrder.save();
-    
-    // Обновляем пользователя (авторизованного или временного)
-    await User.findOneAndUpdate(
-      { $or: [{ _id: userId }, { tempUserId: userId }] },
-      { $push: { orders: newOrder._id } },
-      { upsert: true, new: true }
-    );
-
-    res.status(201).json({ 
-      success: true,
-      userId // Возвращаем временный ID если был создан
-    });
-    
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка сохранения заказа' });
+    return;
   }
-});
 
-// Маршрут для получения истории заказов пользователя
-app.get('/api/orders/:userId', async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId })
-      .sort({ createdAt: -1 }); // Сортировка по дате (новые сначала)
-
-    res.json(orders);
-  } catch (err) {
-    console.error("Ошибка при получении заказов:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
-  }
-});
-
-app.post('/api/orders', async (req, res) => {
-  try {
-    console.log("Получен заказ:", req.body); // Отладка
-    const { userId, items, total, phone, address } = req.body;
-
-    const newOrder = new Order({
-      userId,
-      items,
-      total,
-      phone,
-      address,
-      createdAt: new Date()
+  // Update user profile - PUT
+  if (pathname.match(/^\/api\/users\/\d+$/) && req.method === 'PUT') {
+    const userId = pathname.split('/')[3];
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { firstName, lastName, email } = JSON.parse(body);
+        
+        const client = await pool.connect();
+        const result = await client.query(
+          'UPDATE users SET first_name = $1, last_name = $2, email = $3 WHERE id = $4 RETURNING id, email, first_name, last_name',
+          [firstName, lastName, email, userId]
+        );
+        client.release();
+        
+        if (result.rows.length === 0) {
+          res.writeHead(404);
+          res.end(JSON.stringify({ error: 'Пользователь не найден' }));
+          return;
+        }
+        
+        res.writeHead(200);
+        res.end(JSON.stringify({ 
+          success: true, 
+          user: result.rows[0],
+          message: 'Профиль обновлен' 
+        }));
+      } catch (error) {
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Ошибка обновления профиля' }));
+      }
     });
-
-    await newOrder.save();
-    console.log("Заказ сохранен в БД:", newOrder); // Проверка
-
-    res.status(201).json({ success: true });
-  } catch (error) {
-    console.error("Ошибка сохранения заказа:", error); // Логирование ошибки
-    res.status(500).json({ error: 'Ошибка сервера' });
+    return;
   }
-});
 
-// Авторизация пользователя
-app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    // Ищем пользователя по email, а не username
-    const user = await User.findOne({ email: username });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Пользователь с таким email не найден' });
+  // Get cart
+  if (pathname.match(/^\/api\/cart\/\d+$/) && req.method === 'GET') {
+    const userId = pathname.split('/')[3];
+    try {
+      const client = await pool.connect();
+      const result = await client.query(
+        'SELECT product_id, quantity FROM cart WHERE user_id = $1',
+        [userId]
+      );
+      client.release();
+      
+      const cartItems = result.rows.map(row => ({
+        productId: row.product_id,
+        quantity: row.quantity
+      }));
+      
+      res.writeHead(200);
+      res.end(JSON.stringify(cartItems));
+    } catch (error) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'Ошибка корзины' }));
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Неверный пароль' });
-    }
-
-    res.status(200).json({
-      message: 'Вход выполнен',
-      userId: user._id
-    });
-
-  } catch (error) {
-    console.error('Ошибка входа:', error);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
+    return;
   }
-});
 
-// Возвращает данные пользователя и его заказы
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).populate("orders");
-    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
-
-    res.json({
-      username: user.username,
-      email: user.email,
-      orders: user.orders
+  // Add to cart
+  if (pathname.match(/^\/api\/cart\/\d+$/) && req.method === 'POST') {
+    const userId = pathname.split('/')[3];
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { productId, quantity } = JSON.parse(body);
+        
+        const client = await pool.connect();
+        
+        // Update or insert
+        const updateResult = await client.query(
+          'UPDATE cart SET quantity = quantity + $1 WHERE user_id = $2 AND product_id = $3 RETURNING *',
+          [quantity, userId, productId]
+        );
+        
+        if (updateResult.rows.length === 0) {
+          await client.query(
+            'INSERT INTO cart (user_id, product_id, quantity) VALUES ($1, $2, $3)',
+            [userId, productId, quantity]
+          );
+        }
+        
+        client.release();
+        
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, message: 'Товар добавлен в корзину' }));
+      } catch (error) {
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Ошибка добавления в корзину' }));
+      }
     });
-  } catch (err) {
-    console.error("Ошибка при загрузке профиля:", err);
-    res.status(500).json({ message: "Ошибка сервера" });
+    return;
   }
-});
 
-
-// Обработка запроса на обновление токена для ПК-версии
-app.post('/refresh', async (req, res) => {
-    const refreshToken = req.cookies.refreshTokenDesktop;
-
-    if (!refreshToken) {
-        console.error("❌ Refresh-токен отсутствует в cookies");
-        return res.status(401).json({ message: "Не авторизован" });
+  // Remove from cart
+  if (pathname.match(/^\/api\/cart\/\d+\/\d+$/) && req.method === 'DELETE') {
+    const [,, , userId, productId] = pathname.split('/');
+    try {
+      const client = await pool.connect();
+      await client.query(
+        'DELETE FROM cart WHERE user_id = $1 AND product_id = $2',
+        [userId, productId]
+      );
+      client.release();
+      
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true, message: 'Товар удален' }));
+    } catch (error) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'Ошибка удаления' }));
     }
+    return;
+  }
 
-    console.log("🔍 Полученный refreshToken:", refreshToken);
-    
-    jwt.verify(refreshToken, REFRESH_SECRET, async (err, decoded) => {
-        if (err) {
-            console.error("❌ Ошибка проверки refresh-токена:", err.message);
-            
-            res.clearCookie("refreshTokenDesktop", {
-                httpOnly: true,
-                secure: true,
-                sameSite: "None",
-                path: "/"
-            });
+  // Get wishlist
+  if (pathname.match(/^\/api\/wishlist\/\d+$/) && req.method === 'GET') {
+    const userId = pathname.split('/')[3];
+    try {
+      const client = await pool.connect();
+      const result = await client.query(
+        'SELECT product_id FROM wishlist WHERE user_id = $1',
+        [userId]
+      );
+      client.release();
+      
+      const wishlistItems = result.rows.map(row => ({
+        productId: row.product_id
+      }));
+      
+      res.writeHead(200);
+      res.end(JSON.stringify(wishlistItems));
+    } catch (error) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'Ошибка избранного' }));
+    }
+    return;
+  }
 
-            return res.status(403).json({ message: "Refresh-токен недействителен или истёк" });
+  // Handle preflight requests for wishlist
+  if (pathname.match(/^\/api\/wishlist\/\d+$/) && req.method === 'OPTIONS') {
+    res.writeHead(200, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+    res.end();
+    return;
+  }
+
+  // Add to wishlist
+  if (pathname.match(/^\/api\/wishlist\/\d+$/) && req.method === 'POST') {
+    const userId = pathname.split('/')[3];
+    console.log('POST wishlist request for user:', userId);
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        console.log('Received body:', body);
+        const { productId } = JSON.parse(body);
+        console.log('Parsed productId:', productId, 'userId:', userId);
+        
+        const client = await pool.connect();
+        console.log('Database connected for wishlist insert');
+        
+        // Проверяем, есть ли уже запись
+        const existingResult = await client.query(
+          'SELECT id FROM wishlist WHERE user_id = $1 AND product_id = $2',
+          [userId, productId]
+        );
+        
+        if (existingResult.rows.length === 0) {
+          // Добавляем только если записи нет
+          const result = await client.query(
+            'INSERT INTO wishlist (user_id, product_id) VALUES ($1, $2) RETURNING *',
+            [userId, productId]
+          );
+          console.log('Insert result:', result.rows);
+        } else {
+          console.log('Item already in wishlist');
         }
 
-        if (!decoded.exp || (decoded.exp * 1000 < Date.now())) {
-            console.error("❌ Refresh-токен окончательно истёк!");
-            res.clearCookie("refreshTokenDesktop", { path: "/" });
-            return res.status(403).json({ message: "Refresh-токен истёк" });
-        }
-
-        try {
-            const user = await User.findById(decoded.id);
-            if (!user) {
-                console.error("❌ Пользователь не найден по ID:", decoded.id);
-                return res.status(404).json({ message: "Пользователь не найден" });
-            }
-
-            const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-            res.cookie("refreshTokenDesktop", newRefreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "None",
-                path: "/",
-                maxAge: 30 * 24 * 60 * 60 * 1000  // 30 дней
-            });
-
-            console.log("✅ Refresh-токен обновлён успешно");
-
-            // 🚀 Отключаем кеширование
-            res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Добавили заголовок
-            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-            res.setHeader("Pragma", "no-cache");
-            res.setHeader("Expires", "0");
-
-            res.json({ accessToken });
-
-        } catch (error) {
-            console.error("❌ Ошибка при поиске пользователя:", error);
-            return res.status(500).json({ message: "Ошибка сервера" });
-        }
+        client.release();
+        console.log('Database connection released');
+        
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, message: 'Добавлено в избранное' }));
+      } catch (error) {
+        console.error('Ошибка wishlist POST:', error);
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Ошибка избранного', details: error.message }));
+      }
     });
+    return;
+  }
+
+  // Remove from wishlist
+  if (pathname.match(/^\/api\/wishlist\/\d+\/\d+$/) && req.method === 'DELETE') {
+    const [,, , userId, productId] = pathname.split('/');
+    try {
+      const client = await pool.connect();
+      await client.query(
+        'DELETE FROM wishlist WHERE user_id = $1 AND product_id = $2',
+        [userId, productId]
+      );
+      client.release();
+      
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true, message: 'Удалено из избранного' }));
+    } catch (error) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'Ошибка удаления' }));
+    }
+    return;
+  }
+
+  // Create order
+  if (pathname.match(/^\/api\/orders\/\d+$/) && req.method === 'POST') {
+    const userId = pathname.split('/')[3];
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { items, total, totalPrice } = JSON.parse(body);
+        const finalTotal = total || totalPrice;
+        
+        const client = await pool.connect();
+        
+        // Create order
+        const orderResult = await client.query(
+          'INSERT INTO orders (user_id, total, items, status) VALUES ($1, $2, $3, $4) RETURNING *',
+          [userId, finalTotal, JSON.stringify(items), 'pending']
+        );
+        
+        // Clear cart after successful order
+        await client.query('DELETE FROM cart WHERE user_id = $1', [userId]);
+        
+        client.release();
+        
+        res.writeHead(200);
+        res.end(JSON.stringify({ 
+          success: true, 
+          order: orderResult.rows[0],
+          message: 'Заказ успешно создан' 
+        }));
+      } catch (error) {
+        console.error('❌ Ошибка создания заказа:', error);
+        console.error('Body:', body);
+        console.error('UserId:', userId);
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Ошибка создания заказа: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  // Get user orders
+  if (pathname.match(/^\/api\/orders\/\d+$/) && req.method === 'GET') {
+    const userId = pathname.split('/')[3];
+    try {
+      const client = await pool.connect();
+      const result = await client.query(
+        'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
+        [userId]
+      );
+      client.release();
+      
+      const orders = result.rows.map(row => ({
+        ...row,
+        items: JSON.parse(row.items || '[]')
+      }));
+      
+      res.writeHead(200);
+      res.end(JSON.stringify(orders));
+    } catch (error) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'Ошибка получения заказов' }));
+    }
+    return;
+  }
+
+  // 404
+  res.writeHead(404);
+  res.end(JSON.stringify({ error: 'Не найдено' }));
+}
+
+// Main server
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+  
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
+  // API routes
+  if (pathname.startsWith('/api/')) {
+    handleApiRequest(req, res, pathname);
+    return;
+  }
+
+  // Static files
+  let filePath = pathname === '/' ? '/index.html' : pathname;
+  filePath = path.join(__dirname, filePath);
+
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        fs.readFile(path.join(__dirname, 'index.html'), (err, content) => {
+          if (err) {
+            res.writeHead(404);
+            res.end('Страница не найдена');
+          } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(content);
+          }
+        });
+      } else {
+        res.writeHead(500);
+        res.end('Ошибка сервера');
+      }
+    } else {
+      const ext = path.extname(filePath);
+      const contentType = mimeTypes[ext] || 'application/octet-stream';
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(content);
+    }
+  });
 });
 
-
+// Start server
+server.listen(PORT, '0.0.0.0', async () => {
+  console.log(`🎣 FishShop сервер запущен на порту ${PORT}`);
+  console.log(`🌐 Сайт: http://localhost:${PORT}`);
+  
+  const dbReady = await initDatabase();
+  if (dbReady) {
+    console.log(`🚀 PostgreSQL база данных готова!`);
+    console.log(`📊 API готов для:`);
+    console.log(`   ✓ Профили пользователей с реальными данными`);
+    console.log(`   ✓ История заказов из базы данных`);
+    console.log(`   ✓ Корзина покупок`);
+    console.log(`   ✓ Избранные товары`);
+    console.log(`   ✓ ${products.length} товар в ${categories.length} категориях`);
+  }
+});
