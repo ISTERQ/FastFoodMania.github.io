@@ -27,6 +27,9 @@ const mimeTypes = {
 // Load products and categories
 const products = require('./products.js');
 
+let filePath = pathname === '/' ? '/index.html' : pathname;
+filePath = path.join(__dirname, filePath);
+filePath = path.join(__dirname, 'public', filePath);
 
 
 async function initDatabase() {
