@@ -28,16 +28,12 @@ const products = require('./products.js');
 
 
 
-// Initialize database
 async function initDatabase() {
   try {
     const client = await pool.connect();
 
-    // Создать схему public, если не существует
-    await client.query(`CREATE SCHEMA IF NOT EXISTS public`);
-
     await client.query(`
-      CREATE TABLE IF NOT EXISTS public.users (
+      CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
@@ -48,7 +44,7 @@ async function initDatabase() {
     `);
 
     await client.query(`
-      CREATE TABLE IF NOT EXISTS public.cart (
+      CREATE TABLE IF NOT EXISTS cart (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
@@ -59,7 +55,7 @@ async function initDatabase() {
     `);
 
     await client.query(`
-      CREATE TABLE IF NOT EXISTS public.wishlist (
+      CREATE TABLE IF NOT EXISTS wishlist (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
@@ -69,7 +65,7 @@ async function initDatabase() {
     `);
 
     await client.query(`
-      CREATE TABLE IF NOT EXISTS public.orders (
+      CREATE TABLE IF NOT EXISTS orders (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         total DECIMAL(10,2) NOT NULL,
@@ -87,6 +83,7 @@ async function initDatabase() {
     return false;
   }
 }
+
 
 
 // API handler
