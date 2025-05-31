@@ -3,56 +3,52 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const { Pool } = require('pg');
-
-const PORT = 10000;
-
-// PostgreSQL connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
-console.log('DATABASE_URL:', process.env.DATABASE_URL);
-
-// MIME types
-const mimeTypes = {
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'application/javascript',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.svg': 'image/svg+xml'
-};
-
-// Load products and categories
-const products = require('./products.js');
 
 const publicDir = path.join(__dirname, 'public');
 
-fs.readFile(filePath, (err, content) => {
-  if (err) {
-    if (err.code === 'ENOENT') {
-      // Попытка отдать public/index.html при ошибке
-      fs.readFile(path.join(publicDir, 'index.html'), (err2, content2) => {
-        if (err2) {
-          res.writeHead(404);
-          res.end('Страница не найдена');
-        } else {
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(content2);
-        }
-      });
-    } else {
-      res.writeHead(500);
-      res.end('Ошибка сервера');
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+
+  // Определяем путь к файлу
+  let filePath = pathname === '/' ? 'index.html' : pathname.substring(1);
+  filePath = path.join(publicDir, filePath);
+
+  // Читаем файл
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        res.writeHead(404);
+        res.end('Страница не найдена');
+      } else {
+        res.writeHead(500);
+        res.end('Ошибка сервера');
+      }
+      return;
     }
-  } else {
+
+    // Определяем тип контента по расширению
     const ext = path.extname(filePath);
+    const mimeTypes = {
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'application/javascript',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.svg': 'image/svg+xml'
+    };
     const contentType = mimeTypes[ext] || 'application/octet-stream';
+
     res.writeHead(200, { 'Content-Type': contentType });
     res.end(content);
-  }
+  });
 });
+
+server.listen(10000, () => {
+  console.log('Server started on port 10000');
+});
+
 
 
 
