@@ -1,175 +1,326 @@
-require('dotenv').config();
-const express = require('express');
-const path = require('path');
-const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'b3f59c77c06c2d4b6c0d81514f4e4fd7dc17d0f143e8f0bddc4f9306edb969e6';
-
-const app = express();
-app.use(express.json());
-app.use(cors({
-  origin: 'https://fastfoodmania-github-io.onrender.com', // ваш фронтенд
-  credentials: true,
-}));
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-// Инициализация таблиц (перенесите initDatabase сюда и вызовите)
-async function initDatabase() {
-  const client = await pool.connect();
-  try {
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        first_name VARCHAR(100),
-        last_name VARCHAR(100),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS cart (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        product_id INTEGER NOT NULL,
-        quantity INTEGER DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, product_id)
-      )
-    `);
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS wishlist (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        product_id INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, product_id)
-      )
-    `);
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS orders (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        total DECIMAL(10,2) NOT NULL,
-        items JSONB NOT NULL,
-        status VARCHAR(50) DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-  } finally {
-    client.release();
-  }
+// Authentication functionality
+if (typeof currentUser === 'undefined') {
+    let currentUser = null;
 }
 
-initDatabase().catch(console.error);
-
-// Middleware для проверки JWT
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader) return res.status(401).json({ message: 'Нет токена' });
-
-  const token = authHeader.split(' ')[1];
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Неверный токен' });
-    req.user = user;
-    next();
-  });
-}
-
-// Регистрация
-app.post('/api/auth/register', async (req, res) => {
-  const { email, password, firstName, lastName } = req.body;
-  if (!email || !password) return res.status(400).json({ message: 'Заполните email и пароль' });
-  try {
-    const client = await pool.connect();
-    const exists = await client.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (exists.rows.length) {
-      client.release();
-      return res.status(409).json({ message: 'Email уже используется' });
+// Initialize authentication
+function initAuth() {
+    // Load user from localStorage
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
     }
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const result = await client.query(
-      'INSERT INTO users (email, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name',
-      [email, hashedPassword, firstName, lastName]
-    );
-    client.release();
-    res.status(201).json({ success: true, user: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ message: 'Ошибка регистрации' });
-  }
-});
+    updateAuthDisplay();
+    setupAuthEventListeners();
+}
 
-// Вход
-app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ message: 'Заполните email и пароль' });
-  try {
-    const client = await pool.connect();
-    const userRes = await client.query('SELECT * FROM users WHERE email = $1', [email]);
-    client.release();
-    if (!userRes.rows.length) return res.status(401).json({ message: 'Пользователь не найден' });
+// Setup authentication event listeners
+function setupAuthEventListeners() {
+    // Profile dropdown toggle
+    const profileBtn = document.getElementById('profile-btn');
+    const dropdown = document.getElementById('dropdown-menu');
+    
+    if (profileBtn && dropdown) {
+        profileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    }
 
-    const user = userRes.rows[0];
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ message: 'Неверный пароль' });
+    // Login option
+    const loginOption = document.getElementById('login-option');
+    if (loginOption) {
+        loginOption.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLoginModal();
+        });
+    }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+    // Register option
+    const registerOption = document.getElementById('register-option');
+    if (registerOption) {
+        registerOption.addEventListener('click', (e) => {
+            e.preventDefault();
+            showRegisterModal();
+        });
+    }
 
-    res.json({ success: true, accessToken: token, userId: user.id, email: user.email });
-  } catch (e) {
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
+    // Logout option
+    const logoutOption = document.getElementById('logout-option');
+    if (logoutOption) {
+        logoutOption.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
 
-// Получить профиль пользователя (только авторизованные)
-app.get('/api/users/:id', authMiddleware, async (req, res) => {
-  if (parseInt(req.params.id) !== req.user.id) return res.status(403).json({ message: 'Доступ запрещён' });
-  try {
-    const client = await pool.connect();
-    const result = await client.query(
-      'SELECT id, email, first_name, last_name, created_at FROM users WHERE id = $1',
-      [req.user.id]
-    );
-    client.release();
-    if (!result.rows.length) return res.status(404).json({ message: 'Пользователь не найден' });
-    res.json(result.rows[0]);
-  } catch (e) {
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
+    // Login form
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLoginForm);
+    }
 
+    // Register form
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegisterForm);
+    }
 
+    // Modal switches
+    const showRegisterLink = document.getElementById('show-register');
+    const showLoginLink = document.getElementById('show-login');
+    
+    if (showRegisterLink) {
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            hideLoginModal();
+            showRegisterModal();
+        });
+    }
+    
+    if (showLoginLink) {
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            hideRegisterModal();
+            showLoginModal();
+        });
+    }
 
-// Получить заказы пользователя
-app.get('/api/orders/:userId', authMiddleware, async (req, res) => {
-  if (parseInt(req.params.userId) !== req.user.id) {
-    return res.status(403).json({ message: 'Доступ запрещён' });
-  }
-  try {
-    const client = await pool.connect();
-    const ordersRes = await client.query(
-      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
-      [req.user.id]
-    );
-    client.release();
-    res.json(ordersRes.rows.map(order => ({
-      ...order,
-      items: JSON.parse(order.items)
-    })));
-  } catch (e) {
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
+    // Modal close buttons
+    const loginModalClose = document.getElementById('login-modal-close');
+    const registerModalClose = document.getElementById('register-modal-close');
+    
+    if (loginModalClose) {
+        loginModalClose.addEventListener('click', hideLoginModal);
+    }
+    
+    if (registerModalClose) {
+        registerModalClose.addEventListener('click', hideRegisterModal);
+    }
+}
 
-// Запуск сервера
-app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
-});
+// Update authentication display
+function updateAuthDisplay() {
+    const profileBtnText = document.getElementById('profile-btn-text');
+    const authOptions = document.getElementById('auth-options');
+    const userOptions = document.getElementById('user-options');
+    
+    if (currentUser) {
+        // User is logged in
+        if (profileBtnText) {
+            profileBtnText.textContent = currentUser.firstName;
+        }
+        if (authOptions) {
+            authOptions.style.display = 'none';
+        }
+        if (userOptions) {
+            userOptions.style.display = 'block';
+        }
+    } else {
+        // User is not logged in
+        if (profileBtnText) {
+            profileBtnText.textContent = 'Профиль';
+        }
+        if (authOptions) {
+            authOptions.style.display = 'block';
+        }
+        if (userOptions) {
+            userOptions.style.display = 'none';
+        }
+    }
+}
 
+// Show login modal
+function showLoginModal() {
+    const modal = document.getElementById('login-modal');
+    if (modal) {
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        
+        // Clear form
+        const form = document.getElementById('login-form');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+// Hide login modal
+function hideLoginModal() {
+    const modal = document.getElementById('login-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+}
+
+// Show register modal
+function showRegisterModal() {
+    const modal = document.getElementById('register-modal');
+    if (modal) {
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        
+        // Clear form
+        const form = document.getElementById('register-form');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+// Hide register modal
+function hideRegisterModal() {
+    const modal = document.getElementById('register-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+}
+
+// Handle login form submission
+async function handleLoginForm(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    
+    try {
+        // Send login request to API
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Login successful
+            currentUser = data.user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            updateAuthDisplay();
+            hideLoginModal();
+            showNotification('Добро пожаловать!', 'success');
+            
+            // Hide dropdown
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            if (dropdownMenu) {
+                dropdownMenu.classList.remove('show');
+            }
+        } else {
+            // Login failed
+            showNotification(data.error || 'Ошибка входа', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showNotification('Ошибка подключения к серверу', 'error');
+    }
+}
+
+// Handle register form submission
+async function handleRegisterForm(e) {
+    e.preventDefault();
+    
+    const firstName = document.getElementById('register-firstName').value;
+    const lastName = document.getElementById('register-lastName').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    
+    try {
+        // Send registration request to API
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ firstName, lastName, email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Registration successful
+            currentUser = data.user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            updateAuthDisplay();
+            hideRegisterModal();
+            showNotification('Регистрация успешна! Добро пожаловать!', 'success');
+            
+            // Hide dropdown
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            if (dropdownMenu) {
+                dropdownMenu.classList.remove('show');
+            }
+        } else {
+            // Registration failed
+            showNotification(data.error || 'Ошибка регистрации', 'error');
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        showNotification('Ошибка подключения к серверу', 'error');
+    }
+}
+
+// Logout function
+function logout() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    updateAuthDisplay();
+    showNotification('Вы вышли из аккаунта', 'info');
+    
+    // Hide dropdown
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    if (dropdownMenu) {
+        dropdownMenu.classList.remove('show');
+    }
+
+     // Перенаправляем на главную страницу после небольшой задержки
+    setTimeout(() => {
+        if (window.location.pathname.includes('profile.html')) {
+            window.location.href = '../index.html';
+        } else if (window.location.pathname.includes('/pages/')) {
+            window.location.href = '../index.html';
+        } else if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+            window.location.href = '/';
+        }
+    }, 1500);
+    
+    // Clear cart if needed
+    // localStorage.removeItem('cart');
+    // updateCartDisplay();
+}
+
+// Check if user is authenticated
+function isAuthenticated() {
+    return currentUser !== null;
+}
+
+// Get current user
+function getCurrentUser() {
+    return currentUser;
+}
+
+// Require authentication for action
+function requireAuth(action, message = 'Для этого действия необходимо войти в аккаунт') {
+    if (!isAuthenticated()) {
+        showNotification(message, 'warning');
+        showLoginModal();
+        return false;
+    }
+    return true;
+}
+
+// Initialize authentication when DOM is loaded
+document.addEventListener('DOMContentLoaded', initAuth);
