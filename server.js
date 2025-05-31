@@ -32,10 +32,12 @@ const products = require('./products.js');
 async function initDatabase() {
   try {
     const client = await pool.connect();
-    
-    // Users table
+
+    // Создать схему public, если не существует
+    await client.query(`CREATE SCHEMA IF NOT EXISTS public`);
+
     await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS public.users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
@@ -44,10 +46,9 @@ async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    
-    // Cart table
+
     await client.query(`
-      CREATE TABLE IF NOT EXISTS cart (
+      CREATE TABLE IF NOT EXISTS public.cart (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
@@ -56,10 +57,9 @@ async function initDatabase() {
         UNIQUE(user_id, product_id)
       )
     `);
-    
-    // Wishlist table
+
     await client.query(`
-      CREATE TABLE IF NOT EXISTS wishlist (
+      CREATE TABLE IF NOT EXISTS public.wishlist (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
@@ -67,10 +67,9 @@ async function initDatabase() {
         UNIQUE(user_id, product_id)
       )
     `);
-    
-    // Orders table
+
     await client.query(`
-      CREATE TABLE IF NOT EXISTS orders (
+      CREATE TABLE IF NOT EXISTS public.orders (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         total DECIMAL(10,2) NOT NULL,
@@ -79,7 +78,7 @@ async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    
+
     client.release();
     console.log('✅ База данных инициализирована');
     return true;
@@ -88,6 +87,7 @@ async function initDatabase() {
     return false;
   }
 }
+
 
 // API handler
 async function handleApiRequest(req, res, pathname) {
