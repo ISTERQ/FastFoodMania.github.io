@@ -1,180 +1,150 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 
+const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
 const app = express();
 app.use(express.json());
-
-// Настройка CORS (дополните origin вашим фронтом)
 app.use(cors({
-  origin: '*', // заменить на ваш фронтенд домен, например: 'https://fastfoodmania-github-io.onrender.com'
-  credentials: true
+  origin: 'https://fastfoodmania-github-io.onrender.com', // ваш фронтенд
+  credentials: true,
 }));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
-
-// Инициализация таблиц
-async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      username VARCHAR(50) UNIQUE NOT NULL,
-      email VARCHAR(255) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS orders (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id),
-      items JSONB NOT NULL,
-      total NUMERIC(10,2) NOT NULL,
-      phone VARCHAR(50),
-      address TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+// Инициализация таблиц (перенесите initDatabase сюда и вызовите)
+async function initDatabase() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cart (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id)
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wishlist (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id)
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        total DECIMAL(10,2) NOT NULL,
+        items JSONB NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } finally {
+    client.release();
+  }
 }
-initDB().catch(console.error);
+
+initDatabase().catch(console.error);
 
 // Middleware для проверки JWT
-function authenticateToken(req, res, next) {
+function authMiddleware(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Нет токена доступа' });
+  if (!authHeader) return res.status(401).json({ message: 'Нет токена' });
 
+  const token = authHeader.split(' ')[1];
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Неверный или истёкший токен' });
+    if (err) return res.status(403).json({ message: 'Неверный токен' });
     req.user = user;
     next();
   });
 }
 
-// Регистрация пользователя
-app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
-
-  if (!username || !email || !password) {
-    return res.status(400).json({ message: 'Заполните все поля' });
-  }
-
-  try {
-    const existingUser = await pool.query(
-      'SELECT * FROM users WHERE email = $1 OR username = $2',
-      [email, username]
-    );
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ message: 'Пользователь с таким email или username уже существует' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const result = await pool.query(
-      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
-      [username, email, hashedPassword]
-    );
-
-    res.status(201).json({ message: 'Регистрация успешна', user: result.rows[0] });
-  } catch (err) {
-    console.error('Ошибка регистрации:', err);
-    res.status(500).json({ message: 'Ошибка сервера при регистрации' });
-  }
-});
-
-// Вход пользователя
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
+// Регистрация
+app.post('/api/auth/register', async (req, res) => {
+  const { email, password, firstName, lastName } = req.body;
   if (!email || !password) return res.status(400).json({ message: 'Заполните email и пароль' });
-
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    const user = result.rows[0];
-
-    if (!user) return res.status(401).json({ message: 'Пользователь не найден' });
-
-    const validPass = await bcrypt.compare(password, user.password);
-    if (!validPass) return res.status(401).json({ message: 'Неверный пароль' });
-
-    const token = jwt.sign(
-      { userId: user.id, username: user.username, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '1h' }
+    const client = await pool.connect();
+    const exists = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (exists.rows.length) {
+      client.release();
+      return res.status(409).json({ message: 'Email уже используется' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const result = await client.query(
+      'INSERT INTO users (email, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name',
+      [email, hashedPassword, firstName, lastName]
     );
-
-    res.json({
-      message: 'Вход успешен',
-      accessToken: token,
-      userId: user.id,
-      username: user.username,
-      email: user.email
-    });
+    client.release();
+    res.status(201).json({ success: true, user: result.rows[0] });
   } catch (err) {
-    console.error('Ошибка входа:', err);
-    res.status(500).json({ message: 'Ошибка сервера при входе' });
+    res.status(500).json({ message: 'Ошибка регистрации' });
   }
 });
 
-// Получить профиль пользователя (защищённый маршрут)
-app.get('/profile', authenticateToken, async (req, res) => {
+// Вход
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ message: 'Заполните email и пароль' });
   try {
-    const result = await pool.query(
-      'SELECT id, username, email, created_at FROM users WHERE id = $1',
-      [req.user.userId]
-    );
-    const user = result.rows[0];
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
+    const client = await pool.connect();
+    const userRes = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+    client.release();
+    if (!userRes.rows.length) return res.status(401).json({ message: 'Пользователь не найден' });
 
-    res.json({ user });
-  } catch (err) {
-    console.error('Ошибка получения профиля:', err);
+    const user = userRes.rows[0];
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(401).json({ message: 'Неверный пароль' });
+
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ success: true, accessToken: token, userId: user.id, email: user.email });
+  } catch (e) {
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
 
-// Создать заказ (защищённый маршрут)
-app.post('/orders', authenticateToken, async (req, res) => {
-  const { items, total, phone, address } = req.body;
-
-  if (!items || !total) return res.status(400).json({ message: 'Укажите товары и общую сумму' });
-
+// Получить профиль пользователя (только авторизованные)
+app.get('/api/users/:id', authMiddleware, async (req, res) => {
+  if (parseInt(req.params.id) !== req.user.id) return res.status(403).json({ message: 'Доступ запрещён' });
   try {
-    const result = await pool.query(
-      `INSERT INTO orders (user_id, items, total, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [req.user.userId, JSON.stringify(items), total, phone, address]
+    const client = await pool.connect();
+    const result = await client.query(
+      'SELECT id, email, first_name, last_name, created_at FROM users WHERE id = $1',
+      [req.user.id]
     );
-    res.status(201).json({ message: 'Заказ создан', order: result.rows[0] });
-  } catch (err) {
-    console.error('Ошибка создания заказа:', err);
-    res.status(500).json({ message: 'Ошибка сервера при создании заказа' });
-  }
-});
-
-// Получить заказы пользователя (защищённый маршрут)
-app.get('/orders', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
-      [req.user.userId]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Ошибка получения заказов:', err);
+    client.release();
+    if (!result.rows.length) return res.status(404).json({ message: 'Пользователь не найден' });
+    res.json(result.rows[0]);
+  } catch (e) {
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
 
-// Старт сервера
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на порту ${PORT}`);
-});
+// Получить заказы пользователя
+app.get('/api/orders/:userId', authMiddleware, async (req, res) => {
+  if (parse
