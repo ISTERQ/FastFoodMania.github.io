@@ -542,7 +542,7 @@ const server = http.createServer((req, res) => {
 
 // Start server
 server.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🎣 FishShop сервер запущен на порту ${PORT}`);
+  console.log(` сервер запущен на порту ${PORT}`);
   console.log(`🌐 Сайт: http://localhost:${PORT}`);
   
   const dbReady = await initDatabase();
