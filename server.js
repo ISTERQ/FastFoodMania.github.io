@@ -24,7 +24,7 @@ const mimeTypes = {
 };
 
 // Load products and categories
-const products = require('/products.js');
+const products = require('products.js');
 
 
 // Initialize database
