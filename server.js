@@ -32,6 +32,9 @@ async function initDatabase() {
   try {
     const client = await pool.connect();
 
+    // Уберите эту строку, она может вызвать ошибку:
+    // await client.query(`CREATE SCHEMA IF NOT EXISTS public`);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -83,6 +86,7 @@ async function initDatabase() {
     return false;
   }
 }
+
 
 
 
